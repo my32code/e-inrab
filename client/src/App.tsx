@@ -37,6 +37,12 @@ function App() {
               <ServiceRequest />
             </ProtectedRoute>
           } />
+
+          <Route path="/produits/demande/:productId" element={
+            <ProtectedRoute>
+              <ServiceRequest />
+            </ProtectedRoute>
+          } />
           
           <Route path="/contact" element={
             <ProtectedRoute>

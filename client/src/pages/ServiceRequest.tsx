@@ -89,6 +89,21 @@ export function ServiceRequest() {
                 </p>
               </div>
             </div>
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-5 w-5 text-blue-400" />
+              </div>
+              <div className="ml-3">
+                <ul className="list-disc list-inside text-sm text-blue-700">
+                  votre demande doit comporter :
+                  <li>Identité du demandeur</li>
+                  <li>Objet de la demande</li>
+                  <li>Description du service</li>
+                  <li>Justification du besoin</li>
+                  <li>Signature ou validation</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -105,14 +120,14 @@ export function ServiceRequest() {
                 }))}
                 rows={4}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                placeholder="Précisez les détails de votre demande..."
+                placeholder="Quel est votre besoin ?"
                 required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Documents justificatifs
+                Documents justificatifs(demande erite)
               </label>
               <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                 <div className="space-y-1 text-center">

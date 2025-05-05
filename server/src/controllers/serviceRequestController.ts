@@ -30,7 +30,7 @@ const mapStatus = (dbStatus: string) => {
 };
 
 export const createServiceRequest = async (req: AuthenticatedRequest, res: Response) => {
-  const { serviceId, quantite, description } = req.body;
+  const { serviceId, description } = req.body;
   const files = req.files as Express.Multer.File[];
   const userId = req.user?.id;
 
@@ -38,7 +38,7 @@ export const createServiceRequest = async (req: AuthenticatedRequest, res: Respo
     // Insérer la demande
     const result = await query(
       'INSERT INTO demandes (utilisateur_id, service_id, quantite, description) VALUES (?, ?, ?, ?)',
-      [userId, serviceId, quantite, description]
+      [userId, serviceId, 1, description]
     );
 
     const demandeId = (result as any).insertId;

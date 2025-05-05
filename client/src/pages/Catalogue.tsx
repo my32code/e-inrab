@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, ChevronDown } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface Produit {
   id: number;
@@ -54,7 +53,6 @@ export function Catalogue() {
   const [produits, setProduits] = useState<Produit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProduits();
@@ -91,10 +89,6 @@ export function Catalogue() {
    // Fonction pour obtenir l'image d'un produit
    const getProduitImage = (nom: string) => {
     return produitImages[nom as keyof typeof produitImages] || produitImages.default;
-  };
-
-  const handleProductRequest = (productId: number) => {
-    navigate(`/produits/demande/${productId.toString()}`);
   };
 
   return (
@@ -200,7 +194,6 @@ export function Catalogue() {
                   <div className="mt-4 flex justify-between items-center">
                     <span className="text-lg font-semibold text-green-600">{produit.prix}</span>
                     <button 
-                      onClick={() => handleProductRequest(produit.id)}
                       className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                     >
                       Commander
