@@ -2,7 +2,7 @@ import { pool } from '../services/db';
 import * as bcrypt from 'bcryptjs';
 import { RowDataPacket } from 'mysql2/promise';
 
-interface User {
+export interface User {
   id?: number;
   nom: string;
   email: string;

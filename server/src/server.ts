@@ -5,6 +5,7 @@ import authRoutes from './routes/authRoutes';
 import servicesRoutes from './routes/servicesRoutes';
 import serviceRequests from './routes/serviceRequests';
 import produitsRoutes from './routes/produitsRoutes';
+import commandesRoutes from './routes/commandesRoutes';
 import path from 'path';
 
 const app = express();
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/service-requests', serviceRequests);
 app.use('/api/produits', produitsRoutes); 
+app.use('/commandes', commandesRoutes);
 
 // Healthcheck
 app.get('/healthcheck', async (req, res) => {
