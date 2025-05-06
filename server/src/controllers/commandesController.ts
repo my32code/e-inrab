@@ -1,15 +1,19 @@
 import { Request, Response } from 'express';
 import { query } from '../services/db';
-import { User } from '../models/User';
+
+interface User {
+  id: number;
+  // Ajoutez d'autres propriétés de l'utilisateur si nécessaire
+}
 
 interface AuthenticatedRequest extends Request {
-    user: User;
-  }
-  
+  user: User;
+}
+
 export const createCommande = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { produit_id, quantite, prix_unitaire } = req.body;
-        const utilisateur_id = req.user.id; // L'utilisateur est déjà authentifié
+        const utilisateur_id = req.user.id; // Maintenant req.user est typé
 
         const result = await query(
             'INSERT INTO commandes (utilisateur_id, produit_id, quantite, prix_unitaire) VALUES (?, ?, ?, ?)',
