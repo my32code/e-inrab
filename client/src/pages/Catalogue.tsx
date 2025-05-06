@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, ChevronDown } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 interface Produit {
   id: number;
@@ -9,6 +10,7 @@ interface Produit {
   prix: string;
   pieces_requises: string;
   delai_mise_disposition: string;
+  prix_numerique: number;
 }
 
 // Images locales pour chaque type de produit
@@ -53,6 +55,7 @@ export function Catalogue() {
   const [produits, setProduits] = useState<Produit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCommandeLoading, setIsCommandeLoading] = useState<number | null>(null);
 
   useEffect(() => {
     fetchProduits();
@@ -89,6 +92,37 @@ export function Catalogue() {
    // Fonction pour obtenir l'image d'un produit
    const getProduitImage = (nom: string) => {
     return produitImages[nom as keyof typeof produitImages] || produitImages.default;
+  };
+
+  const handleCommande = async (produit: Produit) => {
+    try {
+      setIsCommandeLoading(produit.id);
+      
+      const response = await fetch('http://localhost:3000/api/commandes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          produit_id: produit.id,
+          quantite: 1,
+          prix_unitaire: produit.prix_numerique
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la commande');
+      }
+
+      const data = await response.json();
+      toast.success('Commande effectuée avec succès');
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Erreur lors de la commande');
+    } finally {
+      setIsCommandeLoading(null);
+    }
   };
 
   return (
@@ -194,9 +228,11 @@ export function Catalogue() {
                   <div className="mt-4 flex justify-between items-center">
                     <span className="text-lg font-semibold text-green-600">{produit.prix}</span>
                     <button 
-                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => handleCommande(produit)}
+                      disabled={isCommandeLoading === produit.id}
                     >
-                      Commander
+                      {isCommandeLoading === produit.id ? 'En cours...' : 'Commander'}
                     </button>
                   </div>
                 </div>

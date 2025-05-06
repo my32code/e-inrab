@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { testConnection, query } from '../services/db';
-
+import commandesRoutes from './commandesRoutes';
 
 const router = Router();
 
@@ -21,6 +21,7 @@ router.get('/db-test', async (req, res) => {
     }
 });
 
-
+// Routes pour les commandes
+router.use('/commandes', commandesRoutes);
 
 export default router;
