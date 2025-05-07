@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, ChevronDown } from 'lucide-react';
+import { Search, Filter, ChevronDown, Plus, Minus } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface Produit {
@@ -56,6 +56,7 @@ export function Catalogue() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCommandeLoading, setIsCommandeLoading] = useState<number | null>(null);
+  const [quantites, setQuantites] = useState<{ [key: number]: number }>({});
 
   useEffect(() => {
     fetchProduits();
@@ -94,20 +95,47 @@ export function Catalogue() {
     return produitImages[nom as keyof typeof produitImages] || produitImages.default;
   };
 
+  const handleQuantiteChange = (produitId: number, newQuantite: number) => {
+    if (newQuantite < 1) return;
+    setQuantites(prev => ({
+      ...prev,
+      [produitId]: newQuantite
+    }));
+  };
+
+  const handleQuantiteIncrement = (produitId: number) => {
+    setQuantites(prev => ({
+      ...prev,
+      [produitId]: (prev[produitId] || 1) + 1
+    }));
+  };
+
+  const handleQuantiteDecrement = (produitId: number) => {
+    setQuantites(prev => ({
+      ...prev,
+      [produitId]: Math.max(1, (prev[produitId] || 1) - 1)
+    }));
+  };
+
   const handleCommande = async (produit: Produit) => {
     try {
       setIsCommandeLoading(produit.id);
+      
+      const quantite = quantites[produit.id] || 1;
+      const prixUnitaire = typeof produit.prix_numerique === 'number' && !isNaN(produit.prix_numerique) 
+        ? produit.prix_numerique 
+        : parseFloat(produit.prix.replace(/[^0-9.-]+/g, ''));
       
       const response = await fetch('http://localhost:3000/api/commandes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         },
-        credentials: 'include',
         body: JSON.stringify({
           produit_id: produit.id,
-          quantite: 1,
-          prix_unitaire: produit.prix_numerique
+          quantite,
+          prix_unitaire: prixUnitaire
         })
       });
 
@@ -192,52 +220,95 @@ export function Catalogue() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {produits.map((produit) => (
-              <div
-                key={produit.id}
-                className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300"
-              > 
+            {produits.map((produit) => {
+              const quantite = quantites[produit.id] || 1;
+              const prixUnitaire = typeof produit.prix_numerique === 'number' && !isNaN(produit.prix_numerique) 
+              ? produit.prix_numerique 
+              : (produit.prix ? parseFloat(produit.prix.replace(/[^0-9.-]+/g, '')) : 0);
+              const total = !isNaN(prixUnitaire) ? quantite * prixUnitaire : 0;
+              
+              return (
+                <div
+                  key={produit.id}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300"
+                >
+                  <div className="aspect-w-16 aspect-h-9">
+                    <img
+                      src={getProduitImage(produit.nom)}
+                      alt={produit.nom}
+                      className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = produitImages.default;
+                      }}
+                    />
+                  </div>
 
-                <div className="aspect-w-16 aspect-h-9">
-                  <img
-                    src={getProduitImage(produit.nom)}
-                    alt={produit.nom}
-                    className="w-full h-48 object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = produitImages.default;
-                    }}
-                  />
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-xl font-bold">{produit.nom}</h3>
+                      <span className="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">
+                        {produit.categorie}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 mb-4">{produit.description}</p>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-500">
+                        <span className="font-medium">Pièces requises:</span> {produit.pieces_requises}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        <span className="font-medium">Délai de mise à disposition:</span> {produit.delai_mise_disposition}
+                      </p>
+                    </div>
+                    
+                    {/* Quantité et prix */}
+                    <div className="mt-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-semibold text-green-600">
+                          {produit.prix || 'Prix sur demande'}
+                        </span>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleQuantiteDecrement(produit.id)}
+                            className="p-1 rounded-full hover:bg-gray-100"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <input
+                            type="number"
+                            min="1"
+                            value={quantite}
+                            onChange={(e) => handleQuantiteChange(produit.id, parseInt(e.target.value) || 1)}
+                            className="w-16 text-center border rounded-md py-1"
+                          />
+                          <button
+                            onClick={() => handleQuantiteIncrement(produit.id)}
+                            className="p-1 rounded-full hover:bg-gray-100"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-gray-600">
+                          <span className="font-medium">Total estimé:</span>
+                          <span className="ml-2 text-lg font-semibold text-green-600">
+                            {!isNaN(total) ? `${total.toLocaleString()} FCFA` : 'Prix sur demande'}
+                          </span>
+                        </div>
+                        <button 
+                          className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => handleCommande(produit)}
+                          disabled={isCommandeLoading === produit.id || isNaN(total) || total === 0}
+                        >
+                          {isCommandeLoading === produit.id ? 'En cours...' : 'Commander'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bold">{produit.nom}</h3>
-                    <span className="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                      {produit.categorie}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 mb-4">{produit.description}</p>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-500">
-                      <span className="font-medium">Pièces requises:</span> {produit.pieces_requises}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      <span className="font-medium">Délai de mise à disposition:</span> {produit.delai_mise_disposition}
-                    </p>
-                  </div>
-                  <div className="mt-4 flex justify-between items-center">
-                    <span className="text-lg font-semibold text-green-600">{produit.prix}</span>
-                    <button 
-                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      onClick={() => handleCommande(produit)}
-                      disabled={isCommandeLoading === produit.id}
-                    >
-                      {isCommandeLoading === produit.id ? 'En cours...' : 'Commander'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

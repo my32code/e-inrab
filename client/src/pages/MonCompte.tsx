@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Settings, History, Bell, Clock, CheckCircle, AlertTriangle, FileText, DollarSign } from 'lucide-react';
+import { User, Settings, History, Bell, Clock, CheckCircle, AlertTriangle, FileText, DollarSign, ShoppingCart } from 'lucide-react';
 import { isAuthenticated, getCurrentUser } from '../services/auth';
 import { toast } from 'react-toastify';
 
@@ -16,13 +16,24 @@ interface ServiceRequest {
   documents: string[];
 }
 
+interface Commande {
+  id: string;
+  produit_id: string;
+  produit_nom: string;
+  quantite: number;
+  prix_unitaire: number;
+  status: 'pending' | 'processing' | 'preparing' | 'completed' | 'rejected';
+  createdAt: string;
+}
+
 const statusInfo = {
   pending: { label: 'En attente', icon: Clock, color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
   processing: { label: 'En traitement', icon: Clock, color: 'text-blue-600', bgColor: 'bg-blue-50' },
   awaiting_payment: { label: 'En attente de paiement', icon: DollarSign, color: 'text-orange-600', bgColor: 'bg-orange-50' },
   paid: { label: 'Payé', icon: CheckCircle, color: 'text-green-600', bgColor: 'bg-green-50' },
   preparing: { label: 'En préparation', icon: Clock, color: 'text-purple-600', bgColor: 'bg-purple-50' },
-  completed: { label: 'Terminé', icon: CheckCircle, color: 'text-green-600', bgColor: 'bg-green-50' }
+  completed: { label: 'Terminé', icon: CheckCircle, color: 'text-green-600', bgColor: 'bg-green-50' },
+  rejected: { label: 'Rejetée', icon: AlertTriangle, color: 'text-red-600', bgColor: 'bg-red-50' }
 };
 
 export function MonCompte() {
@@ -31,6 +42,7 @@ export function MonCompte() {
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'profile');
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [commandes, setCommandes] = useState<Commande[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -49,6 +61,8 @@ export function MonCompte() {
   useEffect(() => {
     if (activeTab === 'services') {
       fetchRequests();
+    } else if (activeTab === 'commandes') {
+      fetchCommandes();
     }
   }, [activeTab]);
 
@@ -77,6 +91,28 @@ export function MonCompte() {
       setRequests(data.data);
     } catch (error) {
       setError('Une erreur est survenue lors du chargement de vos demandes');
+      console.error('Erreur:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCommandes = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/commandes', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des commandes');
+      }
+
+      const data = await response.json();
+      setCommandes(data.data);
+    } catch (error) {
+      setError('Une erreur est survenue lors du chargement de vos commandes');
       console.error('Erreur:', error);
     } finally {
       setLoading(false);
@@ -156,23 +192,9 @@ export function MonCompte() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* En-tête du profil */}
-          <div className="bg-green-600 px-6 py-8">
-            <div className="flex items-center">
-              <div className="h-20 w-20 rounded-full bg-white flex items-center justify-center">
-                <User className="h-12 w-12 text-green-600" />
-              </div>
-              <div className="ml-6">
-                <h1 className="text-2xl font-bold text-white">{user.nom}</h1>
-                <p className="text-green-100">{user.email}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation des onglets */}
+        <div className="bg-white shadow rounded-lg">
           <div className="border-b border-gray-200">
             <nav className="flex -mb-px">
               <button
@@ -195,7 +217,18 @@ export function MonCompte() {
                 } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
               >
                 <History className="h-5 w-5 inline-block mr-2" />
-                Services Demandées
+                Services Demandés
+              </button>
+              <button
+                onClick={() => setActiveTab('commandes')}
+                className={`${
+                  activeTab === 'commandes'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
+              >
+                <ShoppingCart className="h-5 w-5 inline-block mr-2" />
+                Mes Commandes
               </button>
               <button
                 onClick={() => setActiveTab('notifications')}
@@ -208,21 +241,9 @@ export function MonCompte() {
                 <Bell className="h-5 w-5 inline-block mr-2" />
                 Notifications
               </button>
-              <button
-                onClick={() => setActiveTab('settings')}
-                className={`${
-                  activeTab === 'settings'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
-              >
-                <Settings className="h-5 w-5 inline-block mr-2" />
-                Paramètres
-              </button>
             </nav>
           </div>
 
-          {/* Contenu des onglets */}
           <div className="p-6">
             {activeTab === 'profile' && (
               <div>
@@ -357,6 +378,83 @@ export function MonCompte() {
                                 </div>
                               </div>
                             )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'commandes' && (
+              <div className="p-6">
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Mes Commandes</h2>
+                {loading ? (
+                  <div className="text-center py-12">
+                    <p className="text-xl text-gray-600">Chargement de vos commandes...</p>
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-12">
+                    <AlertTriangle className="mx-auto h-12 w-12 text-red-500" />
+                    <p className="mt-2 text-xl text-red-600">{error}</p>
+                  </div>
+                ) : commandes.length === 0 ? (
+                  <div className="text-center py-12">
+                    <ShoppingCart className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Aucune commande</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Vous n'avez pas encore passé de commande.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {commandes.map((commande) => {
+                      const status = statusInfo[commande.status];
+                      const StatusIcon = status.icon;
+
+                      return (
+                        <div
+                          key={commande.id}
+                          className="bg-white shadow rounded-lg overflow-hidden"
+                        >
+                          <div className="p-6">
+                            <div className="flex items-center justify-between">
+                              <h2 className="text-xl font-semibold text-gray-900">
+                                {commande.produit_nom}
+                              </h2>
+                              <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${status.bgColor} ${status.color}`}>
+                                <StatusIcon className="w-4 h-4 mr-2" />
+                                {status.label}
+                              </div>
+                            </div>
+
+                            <div className="mt-4 grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-sm text-gray-500">Quantité</p>
+                                <p className="mt-1 text-sm font-medium text-gray-900">{commande.quantite}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Prix unitaire</p>
+                                <p className="mt-1 text-sm font-medium text-gray-900">{commande.prix_unitaire} FCFA</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Total</p>
+                                <p className="mt-1 text-sm font-medium text-gray-900">
+                                  {(commande.quantite * commande.prix_unitaire).toLocaleString()} FCFA
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-500">Date de la commande</p>
+                                <p className="mt-1 text-sm font-medium text-gray-900">
+                                  {new Date(commande.createdAt).toLocaleDateString('fr-FR', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })}
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       );

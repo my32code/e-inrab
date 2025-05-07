@@ -36,7 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/service-requests', serviceRequests);
 app.use('/api/produits', produitsRoutes); 
-app.use('/commandes', commandesRoutes);
+app.use('/api/commandes', commandesRoutes);
 
 // Healthcheck
 app.get('/healthcheck', async (req, res) => {
