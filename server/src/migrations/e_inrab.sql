@@ -291,6 +291,24 @@ INSERT INTO `utilisateurs` (`id`, `nom`, `email`, `mot_de_passe`, `role`, `date_
 (2, 'DAOUDA ', 'princeadilehou@gmail.com', '$2b$12$MxIoMEjXpOPn3W0USI3rJ.7/vfQ.yFNl25Tjs9MUPNaaAN5uwL7gC', 'agriculteur', '2025-03-31 17:02:52', NULL),
 (3, 'MORGAN', 'adh@gmail.com', '$2b$12$hr9QCyPSzQkBC8IylaiBnOj6fYS6J5a/HIHLBl.5NDlsmzaik7jo.', 'agriculteur', '2025-04-02 09:31:28', '659d6493-78d2-42d4-9ff5-addfcd0653dc');
 
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `documents`
+--
+
+CREATE TABLE `documents` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `commande_id` int(11) NOT NULL,
+  `nom_fichier` varchar(255) NOT NULL,
+  `chemin_fichier` varchar(255) NOT NULL,
+  `type_document` enum('commande','service') NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `commande_id` (`commande_id`),
+  CONSTRAINT `documents_ibfk_1` FOREIGN KEY (`commande_id`) REFERENCES `commandes` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 --
 -- Index pour les tables déchargées
 --

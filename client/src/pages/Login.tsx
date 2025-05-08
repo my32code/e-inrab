@@ -28,14 +28,25 @@ export function Login() {
 
     try {
       const response = await login(formData);
+      console.log('Login response:', response);
+      console.log('User role:', response.user.role);
+      
       authLogin(response.user);
       
-      // Récupérer la page de redirection depuis le paramètre from de l'URL
-      const from = searchParams.get('from') || '/';
-      navigate(from, { replace: true });
+      // Redirection basée sur le rôle
+      if (response.user.role === 'admin') {
+        console.log('Redirecting to admin page...');
+        navigate('/admin', { replace: true });
+      } else {
+        // Pour les autres rôles, rediriger vers la page demandée ou la page d'accueil
+        const from = searchParams.get('from') || '/';
+        console.log('Redirecting to:', from);
+        navigate(from, { replace: true });
+      }
       
       toast.success('Connexion réussie !');
     } catch (error: any) {
+      console.error('Login error:', error);
       toast.error(error.message || 'Erreur lors de la connexion');
     } finally {
       setIsLoading(false);

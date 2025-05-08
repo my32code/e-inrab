@@ -13,22 +13,23 @@ export function Navbar() {
     return location.pathname === path ? 'text-green-700' : 'text-gray-700';
   };
 
-  const menuItems = [
-    { path: '/', label: 'Accueil' },
-    { path: '/services', label: 'Services' },
-    { path: '/catalogue', label: 'Catalogue' },
-    { path: '/actualites', label: 'Actualités' },
-    { path: '/contact', label: 'Contact' },
-  ];
+  const menuItems = user?.role === 'admin' 
+    ? [
+        { path: '/admin', label: 'Tableau de bord' },
+        { path: '/mon-compte', label: 'Mon compte' }
+      ]
+    : [
+        { path: '/', label: 'Accueil' },
+        { path: '/services', label: 'Services' },
+        { path: '/catalogue', label: 'Catalogue' },
+        { path: '/actualites', label: 'Actualités' },
+        { path: '/contact', label: 'Contact' },
+      ];
 
   const renderAuthButton = () => {
     if (isLoggedIn) {
       return (
         <div className="flex items-center space-x-4">
-          <Link to="/mon-compte" className="flex items-center text-gray-700 hover:text-green-700">
-            <User className="h-5 w-5 mr-1" />
-            <span>Mon compte</span>
-          </Link>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -65,7 +66,7 @@ export function Navbar() {
               alt="INRAB Logo" 
               className="h-16 w-auto"
             />
-            <Link to="/" className="text-2xl font-bold text-green-700">e-INRAB</Link>
+            <Link to={user?.role === 'admin' ? '/admin' : '/'} className="text-2xl font-bold text-green-700">e-INRAB</Link>
           </div>
 
           {/* Desktop Menu */}
@@ -114,35 +115,17 @@ export function Navbar() {
                   {item.label}
                 </Link>
               ))}
-              {isLoggedIn ? (
-                <>
-                  <Link 
-                    to="/mon-compte" 
-                    className="flex items-center px-3 py-2 text-gray-700 hover:text-green-700 hover:bg-green-50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <User className="h-5 w-5 mr-1" />
-                    Mon compte
-                  </Link>
-                  <button 
-                    onClick={() => {
-                      logout();
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full mt-2 flex items-center justify-center bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
-                  >
-                    <LogOut className="h-5 w-5 mr-1" />
-                    Déconnexion
-                  </button>
-                </>
-              ) : (
-                <Link 
-                  to="/login" 
-                  className="block w-full mt-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-center"
-                  onClick={() => setIsMenuOpen(false)}
+              {isLoggedIn && (
+                <button 
+                  onClick={() => {
+                    logout();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full mt-2 flex items-center justify-center bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
                 >
-                  Connexion
-                </Link>
+                  <LogOut className="h-5 w-5 mr-1" />
+                  Déconnexion
+                </button>
               )}
             </div>
           </motion.div>

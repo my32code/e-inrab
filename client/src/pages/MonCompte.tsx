@@ -59,12 +59,12 @@ export function MonCompte() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'services') {
+    if (user?.role !== 'admin' && activeTab === 'services') {
       fetchRequests();
-    } else if (activeTab === 'commandes') {
+    } else if (user?.role !== 'admin' && activeTab === 'commandes') {
       fetchCommandes();
     }
-  }, [activeTab]);
+  }, [activeTab, user]);
 
   const checkAuth = async () => {
     const authenticated = await isAuthenticated();
@@ -72,7 +72,9 @@ export function MonCompte() {
       navigate('/login');
       return;
     }
-    setUser(getCurrentUser());
+    const currentUser = getCurrentUser();
+    setUser(currentUser);
+    setLoading(false);
   };
 
   const fetchRequests = async () => {
@@ -208,28 +210,32 @@ export function MonCompte() {
                 <User className="h-5 w-5 inline-block mr-2" />
                 Profil
               </button>
-              <button
-                onClick={() => setActiveTab('services')}
-                className={`${
-                  activeTab === 'services'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
-              >
-                <History className="h-5 w-5 inline-block mr-2" />
-                Services Demandés
-              </button>
-              <button
-                onClick={() => setActiveTab('commandes')}
-                className={`${
-                  activeTab === 'commandes'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
-              >
-                <ShoppingCart className="h-5 w-5 inline-block mr-2" />
-                Mes Commandes
-              </button>
+              {user?.role !== 'admin' && (
+                <>
+                  <button
+                    onClick={() => setActiveTab('services')}
+                    className={`${
+                      activeTab === 'services'
+                        ? 'border-green-500 text-green-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
+                  >
+                    <History className="h-5 w-5 inline-block mr-2" />
+                    Services Demandés
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('commandes')}
+                    className={`${
+                      activeTab === 'commandes'
+                        ? 'border-green-500 text-green-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
+                  >
+                    <ShoppingCart className="h-5 w-5 inline-block mr-2" />
+                    Mes Commandes
+                  </button>
+                </>
+              )}
               <button
                 onClick={() => setActiveTab('notifications')}
                 className={`${

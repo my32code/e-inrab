@@ -11,6 +11,7 @@ import { News } from './pages/News';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { MonCompte } from './pages/MonCompte';
+import { Admin } from './pages/Admin';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 import 'react-toastify/dist/ReactToastify.css';
@@ -32,23 +33,23 @@ function App() {
           </ProtectedRoute>
         } />
         
-          <Route path="/services/demande/:serviceId" element={
-            <ProtectedRoute>
-              <ServiceRequest />
-            </ProtectedRoute>
-          } />
+        <Route path="/services/demande/:serviceId" element={
+          <ProtectedRoute>
+            <ServiceRequest />
+          </ProtectedRoute>
+        } />
 
-          <Route path="/produits/demande/:productId" element={
-            <ProtectedRoute>
-              <ServiceRequest />
-            </ProtectedRoute>
-          } />
+        <Route path="/produits/demande/:productId" element={
+          <ProtectedRoute>
+            <ServiceRequest />
+          </ProtectedRoute>
+        } />
           
-          <Route path="/contact" element={
-            <ProtectedRoute>
-              <Contact />
-            </ProtectedRoute>
-          } />
+        <Route path="/contact" element={
+          <ProtectedRoute>
+            <Contact />
+          </ProtectedRoute>
+        } />
         
         <Route path="/catalogue" element={
           <ProtectedRoute>
@@ -62,11 +63,17 @@ function App() {
           </ProtectedRoute>
         } />
 
-          <Route path="/mon-compte" element={
-            <ProtectedRoute>
-              <MonCompte />
-            </ProtectedRoute>
-          } />
+        <Route path="/mon-compte" element={
+          <ProtectedRoute>
+            <MonCompte />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <Admin />
+          </ProtectedRoute>
+        } />
       </Routes>
       <Footer />
       <ToastContainer position="bottom-right" />

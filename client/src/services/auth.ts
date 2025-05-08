@@ -29,10 +29,11 @@ export const login = async (credentials: {
   }
   
   const data = await response.json();
+  console.log('Login response data:', data);
   
   // Stocker la session et les infos utilisateur
   localStorage.setItem('sessionId', data.sessionId);
-    localStorage.setItem('user', JSON.stringify(data.user));
+  localStorage.setItem('user', JSON.stringify(data.user));
   
   return data;
 };
@@ -59,7 +60,10 @@ export const logout = async () => {
 export const isAuthenticated = async (): Promise<boolean> => {
   try {
     const sessionId = localStorage.getItem('sessionId');
-    if (!sessionId) return false;
+    const user = getCurrentUser();
+    console.log('Checking authentication:', { sessionId, user });
+    
+    if (!sessionId || !user) return false;
 
     const response = await fetch('http://localhost:3000/api/auth/verify', {
       headers: {
@@ -67,15 +71,20 @@ export const isAuthenticated = async (): Promise<boolean> => {
       }
     });
     
-    return response.ok;
+    const isAuth = response.ok;
+    console.log('Authentication status:', isAuth);
+    return isAuth;
   } catch (error) {
+    console.error('Authentication check error:', error);
     return false;
   }
 };
 
 export const getCurrentUser = () => {
   const userStr = localStorage.getItem('user');
-  return userStr ? JSON.parse(userStr) : null;
+  const user = userStr ? JSON.parse(userStr) : null;
+  console.log('Current user:', user);
+  return user;
 };
 
 export const updateProfile = async (nom: string, email: string): Promise<any> => {
