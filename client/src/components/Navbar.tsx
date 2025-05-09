@@ -19,12 +19,12 @@ export function Navbar() {
         { path: '/mon-compte', label: 'Mon compte' }
       ]
     : [
-        { path: '/', label: 'Accueil' },
-        { path: '/services', label: 'Services' },
-        { path: '/catalogue', label: 'Catalogue' },
-        { path: '/actualites', label: 'Actualités' },
-        { path: '/contact', label: 'Contact' },
-      ];
+    { path: '/', label: 'Accueil' },
+    { path: '/services', label: 'Services' },
+    { path: '/catalogue', label: 'Catalogue' },
+    { path: '/actualites', label: 'Actualités' },
+    { path: '/contact', label: 'Contact' },
+  ];
 
   const renderAuthButton = () => {
     if (isLoggedIn) {
@@ -116,16 +116,16 @@ export function Navbar() {
                 </Link>
               ))}
               {isLoggedIn && (
-                <button 
-                  onClick={() => {
-                    logout();
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full mt-2 flex items-center justify-center bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
-                >
-                  <LogOut className="h-5 w-5 mr-1" />
-                  Déconnexion
-                </button>
+                  <button 
+                    onClick={() => {
+                      logout();
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full mt-2 flex items-center justify-center bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    <LogOut className="h-5 w-5 mr-1" />
+                    Déconnexion
+                  </button>
               )}
             </div>
           </motion.div>

@@ -299,14 +299,20 @@ INSERT INTO `utilisateurs` (`id`, `nom`, `email`, `mot_de_passe`, `role`, `date_
 
 CREATE TABLE `documents` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `commande_id` int(11) NOT NULL,
+  `commande_id` int(11) DEFAULT NULL,
+  `demande_id` int(11) DEFAULT NULL,
+  `document_demande_id` int(11) DEFAULT NULL,
   `nom_fichier` varchar(255) NOT NULL,
   `chemin_fichier` varchar(255) NOT NULL,
   `type_document` enum('commande','service') NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `commande_id` (`commande_id`),
-  CONSTRAINT `documents_ibfk_1` FOREIGN KEY (`commande_id`) REFERENCES `commandes` (`id`) ON DELETE CASCADE
+  KEY `demande_id` (`demande_id`),
+  KEY `document_demande_id` (`document_demande_id`),
+  CONSTRAINT `documents_ibfk_1` FOREIGN KEY (`commande_id`) REFERENCES `commandes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `documents_ibfk_2` FOREIGN KEY (`demande_id`) REFERENCES `demandes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `documents_ibfk_3` FOREIGN KEY (`document_demande_id`) REFERENCES `documents_demandes` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --

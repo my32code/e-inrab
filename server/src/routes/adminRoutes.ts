@@ -5,7 +5,7 @@ import { getAllCommandes, updateCommandeStatus } from '../controllers/admin/comm
 import { getAllServiceRequests, updateServiceRequestStatus } from '../controllers/admin/serviceRequestsController';
 import { getAllProduits, updateProduitStock } from '../controllers/admin/produitsController';
 import { getAllDocuments, uploadDocument, getDocument } from '../controllers/admin/documentsController';
-import { authenticateRequest } from '../middleware/auth';
+import { getAllDocumentsDemandes } from '../controllers/admin/documentsDemandesController';
 import multer from 'multer';
 import path from 'path';
 
@@ -35,8 +35,28 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+const authenticateRequest = async (req: Request, res: Response, next: Function) => {
+    const sessionId = req.headers.authorization?.split(' ')[1];
+    
+    if (!sessionId) {
+        return res.status(401).json({ error: 'Non authentifié' });
+    }
+
+    const user = await findUserBySessionId(sessionId);
+    if (!user || !user.id) {
+        return res.status(401).json({ error: 'Session invalide' });
+    }
+
+    if (user.role !== 'admin') {
+        return res.status(403).json({ error: 'Accès non autorisé' });
+    }
+
+    (req as AuthenticatedRequest).user = user as User;
+    next();
+};
+
 // Middleware d'authentification pour toutes les routes admin
-router.use(authenticateRequest);
+router.use(authenticateRequest as RequestHandler);
 
 // Routes pour les commandes
 router.get('/commandes', ((req: Request, res: Response) => getAllCommandes(req as AuthenticatedRequest, res)) as RequestHandler);
@@ -54,5 +74,8 @@ router.put('/produits/:id/stock', ((req: Request, res: Response) => updateProdui
 router.get('/documents', ((req: Request, res: Response) => getAllDocuments(req as AuthenticatedRequest, res)) as RequestHandler);
 router.post('/documents', upload.single('file'), ((req: Request, res: Response) => uploadDocument(req as AuthenticatedRequest, res)) as RequestHandler);
 router.get('/documents/:id', ((req: Request, res: Response) => getDocument(req as AuthenticatedRequest, res)) as RequestHandler);
+
+// Routes pour les documents de demande
+router.get('/documents-demandes', ((req: Request, res: Response) => getAllDocumentsDemandes(req as AuthenticatedRequest, res)) as RequestHandler);
 
 export default router; 

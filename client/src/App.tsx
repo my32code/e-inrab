@@ -33,23 +33,23 @@ function App() {
           </ProtectedRoute>
         } />
         
-        <Route path="/services/demande/:serviceId" element={
-          <ProtectedRoute>
-            <ServiceRequest />
-          </ProtectedRoute>
-        } />
+          <Route path="/services/demande/:serviceId" element={
+            <ProtectedRoute>
+              <ServiceRequest />
+            </ProtectedRoute>
+          } />
 
-        <Route path="/produits/demande/:productId" element={
-          <ProtectedRoute>
-            <ServiceRequest />
-          </ProtectedRoute>
-        } />
+          <Route path="/produits/demande/:productId" element={
+            <ProtectedRoute>
+              <ServiceRequest />
+            </ProtectedRoute>
+          } />
           
-        <Route path="/contact" element={
-          <ProtectedRoute>
-            <Contact />
-          </ProtectedRoute>
-        } />
+          <Route path="/contact" element={
+            <ProtectedRoute>
+              <Contact />
+            </ProtectedRoute>
+          } />
         
         <Route path="/catalogue" element={
           <ProtectedRoute>
@@ -63,11 +63,11 @@ function App() {
           </ProtectedRoute>
         } />
 
-        <Route path="/mon-compte" element={
-          <ProtectedRoute>
-            <MonCompte />
-          </ProtectedRoute>
-        } />
+          <Route path="/mon-compte" element={
+            <ProtectedRoute>
+              <MonCompte />
+            </ProtectedRoute>
+          } />
 
         <Route path="/admin" element={
           <ProtectedRoute>

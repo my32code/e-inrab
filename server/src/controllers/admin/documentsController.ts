@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { pool } from '../../config/database';
+import { pool } from '../../services/db';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,6 +19,8 @@ export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) 
       SELECT 
         d.id,
         d.commande_id,
+        d.demande_id,
+        d.document_demande_id,
         d.nom_fichier,
         d.chemin_fichier,
         d.type_document,
@@ -27,11 +29,14 @@ export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) 
         u.email as utilisateur_email,
         c.reference_paiement,
         dm.id as demande_id,
-        dm.description as demande_description
+        dm.description as demande_description,
+        dd.nom_fichier as doc_demande_nom,
+        dd.chemin_fichier as doc_demande_chemin
       FROM documents d
       LEFT JOIN commandes c ON d.commande_id = c.id
       LEFT JOIN utilisateurs u ON c.utilisateur_id = u.id
       LEFT JOIN demandes dm ON d.demande_id = dm.id
+      LEFT JOIN documents_demandes dd ON d.document_demande_id = dd.id
       ORDER BY d.created_at DESC
     `;
 
@@ -40,6 +45,8 @@ export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) 
     const documents = (rows as any[]).map(row => ({
       id: row.id,
       commande_id: row.commande_id,
+      demande_id: row.demande_id,
+      document_demande_id: row.document_demande_id,
       nom_fichier: row.nom_fichier,
       chemin_fichier: row.chemin_fichier,
       type_document: row.type_document,
@@ -55,6 +62,11 @@ export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) 
       demande: row.demande_id ? {
         id: row.demande_id,
         description: row.demande_description
+      } : null,
+      document_demande: row.document_demande_id ? {
+        id: row.document_demande_id,
+        nom_fichier: row.doc_demande_nom,
+        chemin_fichier: row.doc_demande_chemin
       } : null
     }));
 
@@ -107,15 +119,17 @@ export const uploadDocument = async (req: AuthenticatedRequest, res: Response) =
     const insertQuery = `
       INSERT INTO documents (
         commande_id,
+        demande_id,
         nom_fichier,
         chemin_fichier,
         type_document,
         created_at
-      ) VALUES (?, ?, ?, ?, NOW())
+      ) VALUES (?, ?, ?, ?, ?, NOW())
     `;
 
     await pool.query(insertQuery, [
       documentType === 'commande' ? record.id : null,
+      documentType === 'service' ? record.id : null,
       req.file.originalname,
       fileName,
       documentType
