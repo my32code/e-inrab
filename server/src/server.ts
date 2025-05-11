@@ -31,6 +31,7 @@ app.use(express.json());
 
 // Servir les fichiers statiques
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Routes
 app.use('/api/auth', authRoutes);

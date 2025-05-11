@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Users, ShoppingCart, FileText, Upload, Package, Wrench } from 'lucide-react';
 import { isAuthenticated, getCurrentUser } from '../services/auth';
 import { toast } from 'react-toastify';
-import { CommandesList } from '../components/CommandesList';
+import { CommandesList } from '../components/admin/CommandesList';
 import { ServiceRequestsList } from '../components/ServiceRequestsList';
 import { StocksList } from '../components/StocksList';
-import { DocumentsList } from '../components/DocumentsList';
 
 interface User {
   id: number;
@@ -145,7 +144,8 @@ export function Admin() {
 
             {activeTab === 'documents' && (
               <div>
-                <DocumentsList />
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Gestion des Documents</h2>
+                {/* Le composant DocumentsList sera ajouté ici */}
               </div>
             )}
           </div>

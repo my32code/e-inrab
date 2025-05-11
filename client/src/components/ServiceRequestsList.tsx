@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, AlertTriangle, File } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { DocumentsList } from './DocumentsList';
 
 interface ServiceRequest {
   id: number;
@@ -33,6 +34,7 @@ export function ServiceRequestsList() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
 
   useEffect(() => {
     fetchRequests();
@@ -107,6 +109,33 @@ export function ServiceRequestsList() {
     }
   };
 
+  const handleGenerateFacture = async (requestId: number) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/admin/factures/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        },
+        body: JSON.stringify({
+          type: 'service',
+          id: requestId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la génération de la facture');
+      }
+
+      const data = await response.json();
+      toast.success('Facture générée avec succès');
+      fetchRequests(); // Rafraîchir la liste pour afficher le nouveau document
+    } catch (error) {
+      toast.error('Erreur lors de la génération de la facture');
+      console.error('Erreur:', error);
+    }
+  };
+
   const filteredRequests = requests.filter(request => {
     const matchesSearch = 
       request.utilisateur.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -137,8 +166,10 @@ export function ServiceRequestsList() {
     );
   }
 
+  
+
   return (
-    <div>
+    <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-medium text-gray-900">Gestion des Demandes de Services</h2>
         <div className="flex space-x-4">
@@ -202,7 +233,7 @@ export function ServiceRequestsList() {
                   const StatusIcon = status.icon;
 
                   return (
-                    <tr key={request.id}>
+                    <tr key={request.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedRequest(request)}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{request.utilisateur.nom}</div>
                         <div className="text-sm text-gray-500">{request.utilisateur.email}</div>
@@ -223,17 +254,29 @@ export function ServiceRequestsList() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <select
-                          value={request.statut}
-                          onChange={(e) => updateRequestStatus(request.id, e.target.value)}
-                          className="px-2 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        >
-                          <option value="en attente">En attente</option>
-                          <option value="validée">Validée</option>
-                          <option value="en cours">En cours</option>
-                          <option value="livrée">Livrée</option>
-                          <option value="rejetée">Rejetée</option>
-                        </select>
+                        <div className="flex space-x-2">
+                          <select
+                            value={request.statut}
+                            onChange={(e) => updateRequestStatus(request.id, e.target.value)}
+                            className="px-2 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <option value="en attente">En attente</option>
+                            <option value="validée">Validée</option>
+                            <option value="en cours">En cours</option>
+                            <option value="livrée">Livrée</option>
+                            <option value="rejetée">Rejetée</option>
+                          </select>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleGenerateFacture(request.id);
+                            }}
+                            className="px-2 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            Générer facture
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -243,6 +286,14 @@ export function ServiceRequestsList() {
           </table>
         </div>
       </div>
+
+      {selectedRequest && (
+        <DocumentsList
+          type="service"
+          referenceId={selectedRequest.id}
+          onClose={() => setSelectedRequest(null)}
+        />
+      )}
     </div>
   );
 } 
