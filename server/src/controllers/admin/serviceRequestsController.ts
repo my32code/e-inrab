@@ -13,24 +13,31 @@ interface AuthenticatedRequest extends Request {
 }
 
 const mapStatus = (status: string) => {
+  console.log('Mapping DB status:', status); // Debug log
   const statusMap: { [key: string]: string } = {
-    'en attente': 'en_attente',
-    'validée': 'en_cours',
-    'en cours': 'en_cours',
-    'livrée': 'terminee',
-    'rejetée': 'annulee'
+    'en attente': 'pending',
+    'validée': 'paid',
+    'en cours': 'preparing',
+    'livrée': 'completed',
+    'rejetée': 'cancelled'
   };
-  return statusMap[status] || status;
+  const mappedStatus = statusMap[status.toLowerCase()] || 'pending';
+  console.log('Mapped to:', mappedStatus); // Debug log
+  return mappedStatus;
 };
 
 const mapStatusToDb = (status: string) => {
+  console.log('Mapping frontend status:', status); // Debug log
   const statusMap: { [key: string]: string } = {
-    'en_attente': 'en attente',
-    'en_cours': 'en cours',
-    'terminee': 'livrée',
-    'annulee': 'rejetée'
+    'pending': 'en attente',
+    'paid': 'validée',
+    'preparing': 'en cours',
+    'completed': 'livrée',
+    'cancelled': 'rejetée'
   };
-  return statusMap[status] || status;
+  const mappedStatus = statusMap[status] || 'en attente';
+  console.log('Mapped to:', mappedStatus); // Debug log
+  return mappedStatus;
 };
 
 export const getAllServiceRequests = async (req: AuthenticatedRequest, res: Response) => {

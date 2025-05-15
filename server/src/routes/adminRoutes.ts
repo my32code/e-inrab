@@ -7,7 +7,7 @@ import { getAllProduits, updateProduitStock } from '../controllers/admin/produit
 import { getDocuments, uploadDocument, downloadDocument} from '../controllers/admin/documentsController';
 import multer from 'multer';
 import path from 'path';
-import { generateFacture } from '../controllers/admin/facturesController';
+import { generateFacture } from '../controllers/facturesController';
 
 interface User {
   id: number;

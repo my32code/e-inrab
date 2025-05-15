@@ -13,23 +13,29 @@ interface AuthenticatedRequest extends Request {
 }
 
 const mapStatus = (dbStatus: string) => {
+  console.log('Mapping DB status:', dbStatus); // Debug log
   const statusMap: { [key: string]: string } = {
     'en_attente': 'pending',
-    'payee': 'processing',
-    'expediee': 'preparing',
-    'annulee': 'rejected'
+    'payee': 'paid',
+    'expediee': 'shipped',
+    'annulee': 'cancelled'
   };
-  return statusMap[dbStatus] || dbStatus;
+  const mappedStatus = statusMap[dbStatus.toLowerCase()] || 'pending';
+  console.log('Mapped to:', mappedStatus); // Debug log
+  return mappedStatus;
 };
 
 const mapStatusToDb = (frontendStatus: string) => {
+  console.log('Mapping frontend status:', frontendStatus); // Debug log
   const statusMap: { [key: string]: string } = {
     'pending': 'en_attente',
-    'processing': 'payee',
-    'preparing': 'expediee',
-    'rejected': 'annulee'
+    'paid': 'payee',
+    'shipped': 'expediee',
+    'cancelled': 'annulee'
   };
-  return statusMap[frontendStatus] || frontendStatus;
+  const mappedStatus = statusMap[frontendStatus] || 'en_attente';
+  console.log('Mapped to:', mappedStatus); // Debug log
+  return mappedStatus;
 };
 
 export const getAllCommandes = async (req: AuthenticatedRequest, res: Response) => {

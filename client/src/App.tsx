@@ -26,6 +26,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<Home />} />
+        <Route path="/contact" element={<Contact />} />
         {/* Routes protégées */}
         <Route path="/services" element={
           <ProtectedRoute>
@@ -44,24 +45,13 @@ function App() {
               <ServiceRequest />
             </ProtectedRoute>
           } />
-          
-          <Route path="/contact" element={
-            <ProtectedRoute>
-              <Contact />
-            </ProtectedRoute>
-          } />
         
         <Route path="/catalogue" element={
           <ProtectedRoute>
             <Catalogue />
           </ProtectedRoute>
         } />
-        
-        <Route path="/actualites" element={
-          <ProtectedRoute>
-            <News />
-          </ProtectedRoute>
-        } />
+
 
           <Route path="/mon-compte" element={
             <ProtectedRoute>

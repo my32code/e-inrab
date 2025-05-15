@@ -21,10 +21,10 @@ const UPLOAD_DIR = path.join(__dirname, '../../uploads/documents');
 const mapStatus = (dbStatus: string) => {
   const statusMap: { [key: string]: string } = {
     'en attente': 'pending',
-    'validée': 'processing',
+    'validée': 'paid',
     'en cours': 'preparing',
     'livrée': 'completed',
-    'rejetée': 'rejected'
+    'rejetée': 'cancelled'
   };
   return statusMap[dbStatus] || dbStatus;
 };

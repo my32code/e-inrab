@@ -143,4 +143,37 @@ export const downloadDocument = async (req: AuthenticatedRequest, res: Response)
   }
 };
 
+// Récupérer tous les documents de l'utilisateur connecté
+export const getUserDocuments = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user.id;
+
+    const query = `
+      SELECT d.*, 
+             p.nom as produit_nom,
+             s.nom as service_nom
+      FROM documents d
+      LEFT JOIN commandes c ON d.commande_id = c.id
+      LEFT JOIN demandes de ON d.demande_id = de.id
+      LEFT JOIN produits p ON c.produit_id = p.id
+      LEFT JOIN services s ON de.service_id = s.id
+      WHERE c.utilisateur_id = ? OR de.utilisateur_id = ?
+      ORDER BY d.created_at DESC
+    `;
+
+    const [rows] = await pool.query(query, [userId, userId]);
+    
+    res.json({
+      status: 'success',
+      data: rows
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des documents:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erreur lors de la récupération des documents'
+    });
+  }
+};
+
  

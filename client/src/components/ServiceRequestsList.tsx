@@ -20,12 +20,30 @@ interface ServiceRequest {
   };
 }
 
+type DbStatus = 'en attente' | 'validée' | 'en cours' | 'livrée' | 'rejetée';
+
 const statusInfo = {
   'en attente': { label: 'En attente', icon: Clock, color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
   'validée': { label: 'Validée', icon: Clock, color: 'text-blue-600', bgColor: 'bg-blue-50' },
   'en cours': { label: 'En cours', icon: Clock, color: 'text-blue-600', bgColor: 'bg-blue-50' },
   'livrée': { label: 'Livrée', icon: CheckCircle, color: 'text-green-600', bgColor: 'bg-green-50' },
   'rejetée': { label: 'Rejetée', icon: XCircle, color: 'text-red-600', bgColor: 'bg-red-50' }
+};
+
+const statusMap: Record<DbStatus, string> = {
+  'en attente': 'pending',
+  'validée': 'paid',
+  'en cours': 'preparing',
+  'livrée': 'completed',
+  'rejetée': 'cancelled'
+};
+
+const reverseStatusMap = {
+  'pending': 'en attente',
+  'paid': 'validée',
+  'preparing': 'en cours',
+  'completed': 'livrée',
+  'cancelled': 'rejetée'
 };
 
 export function ServiceRequestsList() {
@@ -88,13 +106,14 @@ export function ServiceRequestsList() {
 
   const updateRequestStatus = async (requestId: number, newStatus: string) => {
     try {
+      const frontendStatus = statusMap[newStatus as DbStatus];
       const response = await fetch(`http://localhost:3000/api/admin/service-requests/${requestId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ status: frontendStatus })
       });
 
       if (!response.ok) {
@@ -105,33 +124,6 @@ export function ServiceRequestsList() {
       fetchRequests();
     } catch (error) {
       toast.error('Erreur lors de la mise à jour du statut');
-      console.error('Erreur:', error);
-    }
-  };
-
-  const handleGenerateFacture = async (requestId: number) => {
-    try {
-      const response = await fetch('http://localhost:3000/api/admin/factures/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
-        },
-        body: JSON.stringify({
-          type: 'service',
-          id: requestId
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la génération de la facture');
-      }
-
-      const data = await response.json();
-      toast.success('Facture générée avec succès');
-      fetchRequests(); // Rafraîchir la liste pour afficher le nouveau document
-    } catch (error) {
-      toast.error('Erreur lors de la génération de la facture');
       console.error('Erreur:', error);
     }
   };
@@ -267,15 +259,6 @@ export function ServiceRequestsList() {
                             <option value="livrée">Livrée</option>
                             <option value="rejetée">Rejetée</option>
                           </select>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleGenerateFacture(request.id);
-                            }}
-                            className="px-2 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            Générer facture
-                          </button>
                         </div>
                       </td>
                     </tr>

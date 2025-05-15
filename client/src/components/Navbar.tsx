@@ -22,8 +22,8 @@ export function Navbar() {
     { path: '/', label: 'Accueil' },
     { path: '/services', label: 'Services' },
     { path: '/catalogue', label: 'Catalogue' },
-    { path: '/actualites', label: 'Actualités' },
     { path: '/contact', label: 'Contact' },
+    { path: '/mon-compte', label: 'Mon compte' }
   ];
 
   const renderAuthButton = () => {

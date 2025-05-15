@@ -117,33 +117,6 @@ export function CommandesList() {
     }
   };
 
-  const handleGenerateFacture = async (commandeId: number) => {
-    try {
-      const response = await fetch('http://localhost:3000/api/admin/factures/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
-        },
-        body: JSON.stringify({
-          type: 'commande',
-          id: commandeId
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la génération de la facture');
-      }
-
-      const data = await response.json();
-      toast.success('Facture générée avec succès');
-      fetchCommandes(); // Rafraîchir la liste pour afficher le nouveau document
-    } catch (error) {
-      toast.error('Erreur lors de la génération de la facture');
-      console.error('Erreur:', error);
-    }
-  };
-
   const filteredCommandes = commandes.filter((commande) => {
     const matchesSearch = commande.produit_nom.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === '' || commande.status === statusFilter;
@@ -271,15 +244,6 @@ export function CommandesList() {
                             <option value="shipped">Expediee</option>
                             <option value="cancelled">Annulee</option>
                           </select>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleGenerateFacture(commande.id);
-                            }}
-                            className="px-2 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            Générer facture
-                          </button>
                         </div>
                       </td>
                     </tr>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Calendar, 
   HelpCircle,
@@ -7,29 +8,34 @@ import {
   Leaf,
   Microscope,
   GraduationCap,
-  Clock
+  Clock,
+  ShoppingCart,
+  FileText,
+  Users,
+  Building,
+  CheckCircle
 } from 'lucide-react';
 
 const services = [
   { 
-    title: 'Semences', 
+    title: 'Produits Agricoles', 
     icon: <Leaf className="w-8 h-8 text-green-600" />,
-    description: 'Catalogue complet de semences certifiées pour une agriculture durable'
+    description: 'Commandez des semences certifiées et plants de qualité pour votre exploitation'
   },
   { 
-    title: 'Recherche', 
+    title: 'Services d\'Expertise', 
     icon: <Microscope className="w-8 h-8 text-blue-600" />,
-    description: 'Expertise scientifique et consultation personnalisée'
+    description: 'Bénéficiez de diagnostics et analyses techniques pour vos cultures'
   },
   { 
-    title: 'Formation', 
+    title: 'Formations', 
     icon: <GraduationCap className="w-8 h-8 text-purple-600" />,
-    description: 'Programmes de formation agricole adaptés à vos besoins'
+    description: 'Accédez à nos programmes de formation en techniques agricoles'
   },
   { 
-    title: 'Rendez-vous', 
-    icon: <Clock className="w-8 h-8 text-orange-600" />,
-    description: 'Consultation directe avec nos experts qualifiés'
+    title: 'Partenariats', 
+    icon: <Building className="w-8 h-8 text-orange-600" />,
+    description: 'Collaborez avec l\'INRAB pour vos projets de recherche et développement'
   }
 ];
 
@@ -52,6 +58,7 @@ const slides = [
 ];
 
 export function Home() {
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = React.useState(0);
 
   const nextSlide = () => {
@@ -131,25 +138,44 @@ export function Home() {
       {/* Quick Actions */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-              <h3 className="text-2xl font-bold mb-4">Prendre un rendez-vous</h3>
+              <h3 className="text-2xl font-bold mb-4">Commander des Produits</h3>
               <p className="text-gray-600 mb-6">
-                Consultez nos experts pour des conseils personnalisés sur vos projets agricoles
+                Accédez à notre catalogue de semences et plants certifiés. Suivez vos commandes en temps réel.
               </p>
-              <button className="flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors transform hover:scale-105">
-                <Calendar className="w-5 h-5" />
-                <span>Réserver maintenant</span>
+              <button 
+                onClick={() => navigate('/catalogue')}
+                className="flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors transform hover:scale-105"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                <span>Voir le catalogue</span>
               </button>
             </div>
             <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-              <h3 className="text-2xl font-bold mb-4">FAQ Interactive</h3>
+              <h3 className="text-2xl font-bold mb-4">Demander un Service</h3>
               <p className="text-gray-600 mb-6">
-                Trouvez rapidement des réponses à vos questions sur nos services
+                Sollicitez nos services d'expertise et de diagnostic pour vos cultures et projets agricoles.
               </p>
-              <button className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors transform hover:scale-105">
-                <HelpCircle className="w-5 h-5" />
-                <span>Consulter la FAQ</span>
+              <button 
+                onClick={() => navigate('/services')}
+                className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors transform hover:scale-105"
+              >
+                <FileText className="w-5 h-5" />
+                <span>Demander un service</span>
+              </button>
+            </div>
+            <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <h3 className="text-2xl font-bold mb-4">Devenir Partenaire</h3>
+              <p className="text-gray-600 mb-6">
+                Rejoignez notre réseau de partenaires pour des collaborations fructueuses.
+              </p>
+              <button 
+                onClick={() => navigate('/partenariats')}
+                className="flex items-center space-x-2 bg-purple-600 text-white px-6 py-3 rounded-md hover:bg-purple-700 transition-colors transform hover:scale-105"
+              >
+                <Users className="w-5 h-5" />
+                <span>En savoir plus</span>
               </button>
             </div>
           </div>
@@ -169,15 +195,120 @@ export function Home() {
                 />
               </div>
               <div className="p-8 md:w-1/2">
-                <h3 className="text-2xl font-bold mb-4">Innovations Agricoles</h3>
+                <h3 className="text-2xl font-bold mb-4">L'INRAB à Votre Service</h3>
                 <p className="text-gray-600 mb-6">
-                  Découvrez nos dernières innovations technologiques pour améliorer vos rendements
-                  et la qualité de vos cultures. Nos solutions sont adaptées aux besoins locaux.
+                  L'Institut National des Recherches Agricoles du Bénin (INRAB) met à votre disposition 
+                  son expertise et ses ressources pour le développement de l'agriculture béninoise. 
+                  Que vous soyez agriculteur, chercheur ou partenaire, nous vous accompagnons dans 
+                  vos projets avec des solutions innovantes et adaptées.
                 </p>
-                <button className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors transform hover:scale-105">
-                  Découvrir nos innovations
-                </button>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span>Semences et plants certifiés</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span>Services d'expertise et de diagnostic</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span>Formations techniques spécialisées</span>
+                  </div>
+                </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Resources Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center mb-12">Ressources Utiles</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <h3 className="text-xl font-semibold mb-3">AGORA (FAO)</h3>
+              <p className="text-gray-600 mb-4">Collection bibliographique sur l'alimentation, l'agriculture, et les sciences environnementales.</p>
+              <a 
+                href="http://www.fao.org/agora/fr" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center"
+              >
+                Accéder à AGORA
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </a>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <h3 className="text-xl font-semibold mb-3">SLIRE</h3>
+              <p className="text-gray-600 mb-4">Base de références bibliographiques incluant des documents non publiés.</p>
+              <a 
+                href="http://www.sitre.net" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center"
+              >
+                Accéder à SLIRE
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </a>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <h3 className="text-xl font-semibold mb-3">INSAH (CILSS)</h3>
+              <p className="text-gray-600 mb-4">Bases de données sur les pesticides, profils socio-économiques, et expertises en Afrique de l'Ouest.</p>
+              <a 
+                href="http://www.insah.org" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center"
+              >
+                Accéder à INSAH
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </a>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <h3 className="text-xl font-semibold mb-3">Cahiers Agricultures</h3>
+              <p className="text-gray-600 mb-4">Revue scientifique francophone sur les agricultures mondiales.</p>
+              <a 
+                href="http://www.cahiersagricultures.fr/fr" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center"
+              >
+                Accéder aux Cahiers Agricultures
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </a>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <h3 className="text-xl font-semibold mb-3">RenWT (CIRAD)</h3>
+              <p className="text-gray-600 mb-4">Revue sur l'élevage et la médecine vétérinaire en zones tropicales.</p>
+              <a 
+                href="http://renwt.clrad.fr" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center"
+              >
+                Accéder à RenWT
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </a>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <h3 className="text-xl font-semibold mb-3">Économie Rurale</h3>
+              <p className="text-gray-600 mb-4">Revue sur les évolutions économiques et sociales du monde agricole et rural.</p>
+              <a 
+                href="http://economierurale.revues.org" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 flex items-center"
+              >
+                Accéder à Économie Rurale
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </a>
             </div>
           </div>
         </div>

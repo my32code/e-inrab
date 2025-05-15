@@ -13,9 +13,9 @@ interface AuthenticatedRequest extends Request {
 const mapStatus = (dbStatus: string) => {
   const statusMap: { [key: string]: string } = {
     'en_attente': 'pending',
-    'payee': 'processing',
-    'expediee': 'preparing',
-    'annulee': 'rejected'
+    'payee': 'paid',
+    'expediee': 'shipped',
+    'annulee': 'cancelled'
   };
   return statusMap[dbStatus] || dbStatus;
 };

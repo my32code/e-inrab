@@ -90,8 +90,7 @@ export function Admin() {
   const tabs = [
     { id: 'commandes', label: 'Commandes', icon: ShoppingCart },
     { id: 'services', label: 'Services', icon: Wrench },
-    { id: 'stocks', label: 'Stocks', icon: Package },
-    { id: 'documents', label: 'Documents', icon: Upload }
+    { id: 'stocks', label: 'Stocks', icon: Package }
   ];
 
   return (
@@ -140,13 +139,6 @@ export function Admin() {
 
             {activeTab === 'stocks' && (
               <StocksList />
-            )}
-
-            {activeTab === 'documents' && (
-              <div>
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Gestion des Documents</h2>
-                {/* Le composant DocumentsList sera ajouté ici */}
-              </div>
             )}
           </div>
         </div>

@@ -1,0 +1,73 @@
+<div className="flex items-center justify-center bg-gray-100">
+  {isOpen && billData && (
+    <MyModal isOpen={isOpen} setIsOpen={setIsOpen}>
+      <div className="text-center mb-8">
+        <img
+          src="/images/logo.png"
+          alt="Logo INRAB"
+          className="max-w-[200px] mb-5"
+        />
+        <div>
+          <h1 className="text-3xl font-semibold">FACTURE</h1> {/* Changement de titre */}
+          <p className="text-sm text-gray-500">Facture n°: {billData.factureNumber}</p>
+        </div>
+      </div>
+
+      <div className="mb-8 flex justify-between">
+        <div>
+          <p><strong>Date d'émission:</strong> {format(new Date(), "dd MMMM yyyy", { locale: fr })}</p>
+          {billData.datePaiement && (
+            <p><strong>Date de paiement:</strong> {format(new Date(billData.datePaiement), "dd MMMM yyyy", { locale: fr })}</p>
+          )}
+        </div>
+        <div>
+          <p><strong>Référence client:</strong> {billData.client.reference || "N/A"}</p>
+        </div>
+      </div>
+
+      <div className="mb-8">
+        <h3 className="text-xl font-medium">Client</h3>
+        <p><strong>Nom:</strong> {billData.client.nom}</p>
+        <p><strong>Adresse:</strong> {billData.client.adresse || "Non renseignée"}</p> {/* Nouveau champ */}
+        <p><strong>Email:</strong> {billData.client.email}</p>
+      </div>
+
+      <table className="w-full border-collapse mb-8">
+        <thead>
+          <tr>
+            <th className="px-4 py-2 border-b text-left bg-gray-100">Description</th>
+            <th className="px-4 py-2 border-b text-left bg-gray-100">Quantité</th>
+            <th className="px-4 py-2 border-b text-left bg-gray-100">Prix unitaire</th>
+          </tr>
+        </thead>
+        <tbody>
+          {billData.items.map((item) => (
+            <tr key={item.nom}>
+              <td className="px-4 py-2 border-b">{item.nom}</td>
+              <td className="px-4 py-2 border-b">{item.quantite}</td>
+              <td className="px-4 py-2 border-b">{item.prix_unitaire.toFixed(2)} FCFA</td>
+              <td className="px-4 py-2 border-b">{(item.quantite * item.prix_unitaire).toFixed(2)} FCFA</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="text-right mt-4 space-y-2">
+        <p className="font-bold">Total a payer: {billData.total.toFixed(2)} FCFA</p>
+        <p className="text-sm text-gray-600">Montant payé le {format(new Date(), "dd/MM/yyyy")}</p> {/* Ajout du statut */}
+      </div>
+
+      <div className="mt-12 text-center text-sm text-gray-600">
+        <p>INRAB - Institut National de Recherche Agronomique du Bénin</p>
+        <p>Email: contact@inrab.org | Tél: +229 64 28 37 02</p>
+        <p className="mt-2">N° RCCM: XXXXX | IFU: XXXXX | Statut: Établissement public</p> {/* Mentions légales */}
+      </div>
+
+      <div className="mt-8 text-center border-t pt-4">
+        <p className="text-xs text-gray-500">
+          Facture électronique valable sans signature conformément à la loi n°XXXX.
+        </p>
+      </div>
+    </MyModal>
+  )}
+</div>
