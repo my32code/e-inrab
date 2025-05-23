@@ -6,6 +6,7 @@ interface Document {
   id: number;
   commande_id?: number;
   demande_id?: number;
+  service_id?: number;
   nom_fichier: string;
   chemin_fichier: string;
   type_document: 'commande' | 'service';
@@ -66,9 +67,21 @@ export function DocumentsList({ type, referenceId, onClose }: DocumentsListProps
     formData.append('file', selectedFile);
     formData.append('categorie', categorie);
     formData.append('type', type);
-    formData.append(`${type}Id`, referenceId.toString());
+    
+    if (type === 'commande') {
+      formData.append('commandeId', referenceId.toString());
+    } else if (type === 'service') {
+      formData.append('demandeId', referenceId.toString());
+    }
 
     try {
+      console.log('Envoi des données:', {
+        type,
+        categorie,
+        referenceId,
+        fileName: selectedFile.name
+      });
+
       const response = await fetch('http://localhost:3000/api/admin/documents/upload', {
         method: 'POST',
         headers: {
@@ -78,7 +91,8 @@ export function DocumentsList({ type, referenceId, onClose }: DocumentsListProps
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de l\'upload du document');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erreur lors de l\'upload du document');
       }
 
       toast.success('Document uploadé avec succès');
@@ -86,8 +100,8 @@ export function DocumentsList({ type, referenceId, onClose }: DocumentsListProps
       setCategorie('');
       fetchDocuments();
     } catch (error) {
-      toast.error('Erreur lors de l\'upload du document');
-      console.error('Erreur:', error);
+      console.error('Erreur complète:', error);
+      toast.error(error instanceof Error ? error.message : 'Erreur lors de l\'upload du document');
     }
   };
 

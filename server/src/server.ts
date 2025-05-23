@@ -9,6 +9,7 @@ import commandesRoutes from './routes/commandesRoutes';
 import adminRoutes from './routes/adminRoutes';
 import documentsRoutes from './routes/documentsRoutes';
 import factureRoutes from './routes/factureRoutes';
+import notificationsRouter from './routes/notifications';
 import path from 'path';
 
 const app = express();
@@ -44,6 +45,7 @@ app.use('/api/commandes', commandesRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/documents', documentsRoutes);
 app.use('/api/factures', factureRoutes);
+app.use('/api/notifications', notificationsRouter);
 // Healthcheck
 app.get('/healthcheck', async (req, res) => {
     const dbConnected = await testConnection();

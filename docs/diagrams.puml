@@ -1,0 +1,267 @@
+@startuml
+
+' Diagramme de Classes
+class User {
+  +id: int
+  +nom: string
+  +email: string
+  +role: string
+}
+
+class Commande {
+  +id: int
+  +utilisateur_id: int
+  +produit_id: int
+  +quantite: int
+  +prix_unitaire: decimal
+  +statut: enum
+  +reference_paiement: string
+  +created_at: timestamp
+}
+
+class Demande {
+  +id: int
+  +utilisateur_id: int
+  +service_id: int
+  +statut: enum
+  +quantite: int
+  +description: text
+  +date_demande: timestamp
+  +montant_proforma: decimal
+}
+
+class Document {
+  +id: int
+  +commande_id: int
+  +demande_id: int
+  +nom_fichier: string
+  +chemin_fichier: string
+  +type_document: enum
+  +categorie: enum
+  +uploaded_by: enum
+  +created_at: timestamp
+}
+
+class Service {
+  +id: int
+  +nom: string
+  +description: text
+  +prix: decimal
+  +statut: enum
+  +created_at: timestamp
+}
+
+class Produit {
+  +id: int
+  +nom: string
+  +description: text
+  +prix: decimal
+  +stock: int
+  +statut: enum
+  +created_at: timestamp
+}
+
+class Notification {
+  +id: int
+  +utilisateur_id: int
+  +type: enum
+  +message: text
+  +lu: boolean
+  +created_at: timestamp
+}
+
+' Relations
+User "1" -- "*" Commande
+User "1" -- "*" Demande
+User "1" -- "*" Notification
+Commande "1" -- "*" Document
+Demande "1" -- "*" Document
+Service "1" -- "*" Demande
+Produit "1" -- "*" Commande
+
+' Diagramme de Séquence - Processus de Commande
+@startuml CommandeSequence
+actor Client
+participant "Système" as System
+participant "Paiement" as Payment
+participant "Admin" as Admin
+
+Client -> System: Créer commande
+activate System
+System -> System: Générer facture proforma
+System --> Client: Afficher facture proforma
+deactivate System
+
+Client -> Payment: Procéder au paiement
+activate Payment
+Payment --> Client: Confirmation paiement
+deactivate Payment
+
+Client -> System: Upload preuve de paiement
+activate System
+System -> Admin: Notification nouvelle preuve de paiement
+System --> Client: Confirmation réception preuve
+deactivate System
+
+Admin -> System: Vérifier preuve de paiement
+activate System
+System -> System: Mettre à jour statut commande
+System -> Admin: Confirmation mise à jour
+System --> Client: Notification validation paiement
+deactivate System
+
+@enduml
+
+' Diagramme de Séquence - Processus de Demande de Service
+@startuml ServiceRequestSequence
+actor Client
+participant "Système" as System
+participant "Admin" as Admin
+participant "Paiement" as Payment
+
+Client -> System: Soumettre demande de service
+activate System
+System -> Admin: Notification nouvelle demande
+System -> System: Générer proforma
+System --> Client: Afficher proforma
+deactivate System
+
+Client -> Payment: Procéder au paiement
+activate Payment
+Payment --> Client: Confirmation paiement
+deactivate Payment
+
+Client -> System: Upload preuve de paiement
+activate System
+System -> Admin: Notification nouvelle preuve de paiement
+System --> Client: Confirmation réception preuve
+deactivate System
+
+Admin -> System: Vérifier preuve de paiement
+activate System
+System -> System: Mettre à jour statut demande
+System -> Admin: Confirmation mise à jour
+System --> Client: Notification validation paiement
+deactivate System
+
+@enduml
+
+' Diagramme d'Activité - Flux Principal
+@startuml ActivityFlow
+start
+:Client initie demande/commande;
+
+if (Type de demande?) then (Commande)
+  :Créer commande;
+  :Générer facture proforma;
+else (Service)
+  :Créer demande de service;
+  :Générer proforma;
+endif
+
+:Client procède au paiement;
+:Client upload preuve de paiement;
+
+if (Admin valide preuve?) then (oui)
+  :Mettre à jour statut;
+  :Notifier client;
+  if (Type de demande?) then (Commande)
+    :Préparer commande;
+    :Expédier;
+  else (Service)
+    :Traiter demande;
+    :Livrer service;
+  endif
+else (non)
+  :Notifier rejet preuve;
+  :Demander nouvelle preuve;
+endif
+
+stop
+
+@enduml
+
+' Diagramme des Cas d'Utilisation
+@startuml UseCaseDiagram
+
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+
+actor "Visiteur" as Visitor
+actor "Client" as Client
+actor "Administrateur" as Admin
+
+rectangle "E-INRAB" {
+  usecase "Consulter catalogue" as UC1
+  usecase "S'inscrire" as UC2
+  usecase "Se connecter" as UC3
+  usecase "Gérer profil" as UC4
+  usecase "Passer commande" as UC5
+  usecase "Demander service" as UC6
+  usecase "Upload preuve paiement" as UC7
+  usecase "Consulter commandes" as UC8
+  usecase "Consulter demandes" as UC9
+  usecase "Gérer catalogue" as UC10
+  usecase "Valider paiements" as UC11
+  usecase "Gérer utilisateurs" as UC12
+  usecase "Générer factures" as UC13
+  usecase "Gérer documents" as UC14
+  usecase "Traiter commandes" as UC15
+  usecase "Traiter demandes" as UC16
+  usecase "Envoyer notifications" as UC17
+  usecase "Traiter paiement" as UC18
+}
+
+' Relations Visiteur
+Visitor --> UC1
+Visitor --> UC2
+Visitor --> UC3
+
+' Relations Client
+Client --> UC1
+Client --> UC3
+Client --> UC4
+Client --> UC5
+Client --> UC6
+Client --> UC7
+Client --> UC8
+Client --> UC9
+
+' Relations Admin
+Admin --> UC1
+Admin --> UC3
+Admin --> UC10
+Admin --> UC11
+Admin --> UC12
+Admin --> UC13
+Admin --> UC14
+Admin --> UC15
+Admin --> UC16
+Admin --> UC17
+
+' Inclusions
+UC5 ..> UC3 : <<include>>
+UC6 ..> UC3 : <<include>>
+UC7 ..> UC3 : <<include>>
+UC8 ..> UC3 : <<include>>
+UC9 ..> UC3 : <<include>>
+UC10 ..> UC3 : <<include>>
+UC11 ..> UC3 : <<include>>
+UC12 ..> UC3 : <<include>>
+UC13 ..> UC3 : <<include>>
+UC14 ..> UC3 : <<include>>
+UC15 ..> UC3 : <<include>>
+UC16 ..> UC3 : <<include>>
+
+' Extensions
+UC5 <.. UC7 : <<extend>>
+UC6 <.. UC7 : <<extend>>
+UC5 <.. UC18 : <<extend>>
+UC6 <.. UC18 : <<extend>>
+UC11 <.. UC17 : <<extend>>
+UC15 <.. UC17 : <<extend>>
+UC16 <.. UC17 : <<extend>>
+
+@enduml
+
+@enduml 

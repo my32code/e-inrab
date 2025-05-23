@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { query } from '../services/db';
+import { sendEmailNotification } from '../controllers/notificationsController';
 
 interface User {
   id: number;
@@ -46,6 +47,22 @@ export const createCommande = async (req: AuthenticatedRequest, res: Response) =
         const result = await query(
             'INSERT INTO commandes (utilisateur_id, produit_id, quantite, prix_unitaire, statut) VALUES (?, ?, ?, ?, ?)',
             [utilisateur_id, produit_id, quantite, prix_unitaire, 'en_attente']
+        );
+
+        // 🔔 Envoi d'email aux admins après la commande
+        const admins = await query('SELECT email FROM utilisateurs WHERE role = "admin"');
+        const destinataires = (admins as any[]).map(admin => admin.email);
+
+        await sendEmailNotification(
+        destinataires,
+        'Nouvelle commande en attente',
+        `
+            <p>Un utilisateur a soumis une nouvelle commande.</p>
+            <p><strong>Produit ID :</strong> ${produit_id}</p>
+            <p><strong>Quantité :</strong> ${quantite}</p>
+            <p><strong>Prix unitaire :</strong> ${prix_unitaire}</p>
+            <p><strong>Utilisateur ID :</strong> ${utilisateur_id}</p>
+        `
         );
 
         res.status(201).json({ 

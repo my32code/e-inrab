@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import { pool } from '../../services/db';
 import fs from 'fs';
+import path from 'path';
+import multer from 'multer';
+import { sendEmailNotification } from './notificationsController';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -11,6 +14,28 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
+// Configuration de multer pour l'upload des fichiers
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadsDir = path.join(__dirname, '../../../uploads/documents');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    const timestamp = Date.now();
+    const uniqueFilename = `${timestamp}-${file.originalname}`;
+    cb(null, uniqueFilename);
+  }
+});
+
+export const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // limite de 5MB
+  }
+});
 
 // Récupérer les documents liés à une commande ou une demande
 export const getDocuments = async (req: AuthenticatedRequest, res: Response) => {
@@ -72,19 +97,48 @@ export const uploadDocument = async (req: AuthenticatedRequest, res: Response) =
     const { type, commandeId, demandeId, categorie } = req.body;
     let query = '';
     let params: any[] = [];
+    let emailUtilisateur = '';
+
+    // Déterminer qui a uploadé le document
+    const uploadedBy = req.user.role === 'admin' ? 'admin' : 'client';
+
+    // Chemin relatif pour la base de données
+    const relativePath = `uploads/documents/${file.filename}`;
 
     if (type === 'commande' && commandeId) {
+      // Récupérer l'email de l'utilisateur lié à la commande
+      const [commandeRows] = await pool.query(
+        `SELECT u.email FROM commandes c 
+         JOIN utilisateurs u ON c.utilisateur_id = u.id 
+         WHERE c.id = ?`,
+        [commandeId]
+      );
+      emailUtilisateur = (commandeRows as any[])[0]?.email;
+
       query = `
-        INSERT INTO documents (commande_id, nom_fichier, chemin_fichier, type_document, categorie)
-        VALUES (?, ?, ?, 'commande', ?)
+        INSERT INTO documents (commande_id, nom_fichier, chemin_fichier, type_document, categorie, uploaded_by)
+        VALUES (?, ?, ?, 'commande', ?, ?)
       `;
-      params = [commandeId, file.originalname, file.path, categorie];
+      params = [commandeId, file.originalname, relativePath, categorie, uploadedBy];
+
     } else if (type === 'service' && demandeId) {
+      // Récupérer le service_id et l'email de l'utilisateur lié à la demande
+      const [demandeRows] = await pool.query(
+        `SELECT de.service_id, u.email 
+         FROM demandes de 
+         JOIN utilisateurs u ON de.utilisateur_id = u.id 
+         WHERE de.id = ?`,
+        [demandeId]
+      );
+      const serviceId = (demandeRows as any[])[0]?.service_id;
+      emailUtilisateur = (demandeRows as any[])[0]?.email;
+
       query = `
-        INSERT INTO documents (demande_id, nom_fichier, chemin_fichier, type_document, categorie)
-        VALUES (?, ?, ?, 'service', ?)
+        INSERT INTO documents (demande_id, service_id, nom_fichier, chemin_fichier, type_document, categorie, uploaded_by)
+        VALUES (?, ?, ?, ?, 'service', ?, ?)
       `;
-      params = [demandeId, file.originalname, file.path, categorie];
+      params = [demandeId, serviceId, file.originalname, relativePath, categorie, uploadedBy];
+
     } else {
       return res.status(400).json({
         status: 'error',
@@ -92,12 +146,24 @@ export const uploadDocument = async (req: AuthenticatedRequest, res: Response) =
       });
     }
 
+    // Insertion du document
     const [result] = await pool.query(query, params);
+
+    // Envoi de l'email de notification
+    if (emailUtilisateur) {
+      await sendEmailNotification(
+        [emailUtilisateur],
+        'Nouveau document disponible',
+        `Un nouveau document a été ajouté à votre espace. Veuillez le consulter.`
+      );
+    }
+
     res.json({
       status: 'success',
       message: 'Document uploadé avec succès',
       data: { id: (result as any).insertId }
     });
+
   } catch (error) {
     console.error('Erreur lors de l\'upload du document:', error);
     res.status(500).json({
@@ -106,6 +172,7 @@ export const uploadDocument = async (req: AuthenticatedRequest, res: Response) =
     });
   }
 };
+
 
 // Télécharger un document
 export const downloadDocument = async (req: AuthenticatedRequest, res: Response) => {

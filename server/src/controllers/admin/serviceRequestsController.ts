@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { query } from '../../services/db';
+import { sendEmailNotification } from './notificationsController';
 
 interface User {
   id: number;
@@ -89,10 +90,29 @@ export const updateServiceRequestStatus = async (req: AuthenticatedRequest, res:
 
     try {
         const dbStatus = mapStatusToDb(status);
+
+        // Mise à jour du statut de la demande
         await query(
             'UPDATE demandes SET statut = ? WHERE id = ?',
             [dbStatus, id]
         );
+
+        // Récupération de l'email de l'utilisateur concerné
+        const [demande]: any = await query(
+            `SELECT u.email 
+             FROM demandes d 
+             JOIN utilisateurs u ON d.utilisateur_id = u.id 
+             WHERE d.id = ?`,
+            [id]
+        );
+
+        if (demande && demande.email) {
+            await sendEmailNotification(
+                [demande.email],
+                'Mise à jour du statut de votre demande de service',
+                `Le statut de votre commande ou demande de service est passé à : ${status}.`
+            );
+        }
 
         res.json({
             status: 'success',
@@ -105,4 +125,4 @@ export const updateServiceRequestStatus = async (req: AuthenticatedRequest, res:
             message: 'Erreur lors de la mise à jour du statut'
         });
     }
-}; 
+};

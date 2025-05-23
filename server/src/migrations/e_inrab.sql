@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 15, 2025 at 05:15 PM
+-- Generation Time: May 19, 2025 at 03:57 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -80,7 +80,8 @@ CREATE TABLE `demandes` (
 --
 
 INSERT INTO `demandes` (`id`, `utilisateur_id`, `service_id`, `statut`, `quantite`, `description`, `date_demande`, `date_mise_a_jour`, `montant_proforma`) VALUES
-(5, 3, 14, 'en attente', 1, 'diagnostics', '2025-05-07 16:06:17', '2025-05-14 12:22:03', NULL);
+(5, 3, 14, 'en attente', 1, 'diagnostics', '2025-05-07 16:06:17', '2025-05-14 12:22:03', NULL),
+(6, 3, 28, 'en attente', 1, 'DIAGNOSTICS', '2025-05-16 08:22:28', '2025-05-16 08:22:28', NULL);
 
 -- --------------------------------------------------------
 
@@ -92,6 +93,7 @@ CREATE TABLE `documents` (
   `id` int(11) NOT NULL,
   `commande_id` int(11) DEFAULT NULL,
   `demande_id` int(11) DEFAULT NULL,
+  `service_id` int(11) DEFAULT NULL,
   `document_demande_id` int(11) DEFAULT NULL,
   `nom_fichier` varchar(255) NOT NULL,
   `chemin_fichier` varchar(255) NOT NULL,
@@ -105,9 +107,45 @@ CREATE TABLE `documents` (
 -- Dumping data for table `documents`
 --
 
-INSERT INTO `documents` (`id`, `commande_id`, `demande_id`, `document_demande_id`, `nom_fichier`, `chemin_fichier`, `type_document`, `categorie`, `uploaded_by`, `created_at`) VALUES
-(22, 13, NULL, NULL, 'facture_proforma_13.pdf', 'uploads/factures/facture_proforma_13.pdf', 'commande', 'facture', '', '2025-05-15 11:01:37'),
-(25, 13, NULL, NULL, 'admindash.PNG', 'C:\\Users\\princ\\Documents\\e-inrab\\uploads\\documents\\1747318584525-771313344-admindash.PNG', 'commande', '', 'admin', '2025-05-15 14:16:24');
+INSERT INTO `documents` (`id`, `commande_id`, `demande_id`, `service_id`, `document_demande_id`, `nom_fichier`, `chemin_fichier`, `type_document`, `categorie`, `uploaded_by`, `created_at`) VALUES
+(22, 13, NULL, NULL, NULL, 'facture_proforma_13.pdf', 'uploads/factures/facture_proforma_13.pdf', 'commande', 'facture', '', '2025-05-15 11:01:37'),
+(25, 13, NULL, NULL, NULL, 'admindash.PNG', 'C:\\Users\\princ\\Documents\\e-inrab\\uploads\\documents\\1747318584525-771313344-admindash.PNG', 'commande', '', 'admin', '2025-05-15 14:16:24'),
+(26, 13, NULL, NULL, NULL, 'c.PNG', 'C:\\Users\\princ\\Documents\\e-inrab\\server\\uploads\\1747322913110-706347701.PNG', 'commande', 'autre', 'admin', '2025-05-15 15:28:33'),
+(27, 13, NULL, NULL, NULL, 'Captu.PNG', 'C:\\Users\\princ\\Documents\\e-inrab\\uploads\\documents\\1747325710114-317557162-Captu.PNG', 'commande', '', 'client', '2025-05-15 16:15:10'),
+(28, 13, NULL, NULL, NULL, 'Captur.PNG', 'C:\\Users\\princ\\Documents\\e-inrab\\server\\uploads\\1747325789105-539341500.PNG', 'commande', 'autre', 'admin', '2025-05-15 16:16:29'),
+(29, NULL, 5, 14, NULL, 'facture_proforma_5.pdf', 'uploads/factures/facture_proforma_5.pdf', 'service', 'facture', '', '2025-05-16 08:18:59'),
+(30, NULL, 5, 14, NULL, 'facture_proforma_5.pdf', 'uploads/factures/facture_proforma_5.pdf', 'service', 'facture', '', '2025-05-16 08:19:18'),
+(31, NULL, 5, 14, NULL, 'facture_proforma_5.pdf', 'uploads/factures/facture_proforma_5.pdf', 'service', 'facture', '', '2025-05-16 08:19:18'),
+(32, NULL, 5, 14, NULL, 'facture_proforma_5.pdf', 'uploads/factures/facture_proforma_5.pdf', 'service', 'facture', '', '2025-05-16 08:19:18'),
+(33, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-16 08:27:04'),
+(34, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-16 10:56:16'),
+(35, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-16 11:18:21'),
+(36, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-16 11:19:02'),
+(37, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-16 11:21:41'),
+(38, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-16 11:24:56'),
+(39, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-16 12:26:19'),
+(40, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-16 12:31:18'),
+(41, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-16 12:32:21'),
+(42, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-16 12:38:40'),
+(43, 13, NULL, NULL, NULL, 'k.PNG', 'uploads/documents/1747406945297-k.PNG', 'commande', 'facture', 'admin', '2025-05-16 14:49:05'),
+(44, NULL, 6, 28, NULL, 'c.PNG', 'uploads/documents/1747407779820-c.PNG', 'service', 'facture', 'admin', '2025-05-16 15:02:59'),
+(45, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-16 16:42:52'),
+(46, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/documents/1747413868038-facture_proforma_6.pdf', 'service', 'facture', 'admin', '2025-05-16 16:44:28'),
+(47, NULL, 6, 28, NULL, 'facture_6.html', 'uploads/factures/facture_6.html', 'service', 'facture', '', '2025-05-16 16:57:03'),
+(48, NULL, 6, 28, NULL, 'facture_6.html', 'uploads/documents/1747414675687-facture_6.html', 'service', 'facture', 'admin', '2025-05-16 16:57:55'),
+(49, NULL, 6, 28, NULL, 'facture_6.html', 'uploads/factures/facture_6.html', 'service', 'facture', '', '2025-05-16 18:17:30'),
+(50, NULL, 6, 28, NULL, 'facture_6.html', 'uploads/factures/facture_6.html', 'service', 'facture', '', '2025-05-16 18:23:54'),
+(51, NULL, 6, 28, NULL, 'facture_6.html', 'uploads/factures/facture_6.html', 'service', 'facture', '', '2025-05-16 18:28:30'),
+(52, NULL, 6, 28, NULL, 'facture_6.html', 'uploads/factures/facture_6.html', 'service', 'facture', '', '2025-05-16 18:33:26'),
+(53, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-17 20:02:34'),
+(54, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-17 22:50:24'),
+(55, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-17 22:59:34'),
+(56, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-17 23:19:56'),
+(57, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-17 23:52:07'),
+(58, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-18 00:10:59'),
+(59, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-18 01:19:42'),
+(60, NULL, 6, 28, NULL, 'facture_proforma_6.pdf', 'uploads/factures/facture_proforma_6.pdf', 'service', 'facture', '', '2025-05-18 02:45:24'),
+(61, 13, NULL, NULL, NULL, 'facture_proforma_13.pdf', 'uploads/factures/facture_proforma_13.pdf', 'commande', 'facture', '', '2025-05-19 13:39:58');
 
 -- --------------------------------------------------------
 
@@ -143,7 +181,8 @@ CREATE TABLE `documents_demandes` (
 --
 
 INSERT INTO `documents_demandes` (`id`, `demande_id`, `nom_fichier`, `chemin_fichier`, `date_upload`) VALUES
-(2, 5, 'mode.PNG', '1746633977978-mode.PNG', '2025-05-07 16:06:17');
+(2, 5, 'mode.PNG', '1746633977978-mode.PNG', '2025-05-07 16:06:17'),
+(3, 6, 'maquette_projet_depanage.pdf', '1747383748179-maquette_projet_depanage.pdf', '2025-05-16 08:22:28');
 
 -- --------------------------------------------------------
 
@@ -370,9 +409,9 @@ CREATE TABLE `utilisateurs` (
 INSERT INTO `utilisateurs` (`id`, `nom`, `email`, `mot_de_passe`, `role`, `date_inscription`, `session_id`) VALUES
 (1, 'ADILEHOU ', 'wilmathadilehou@gmail.com', '$2b$12$IOVS.5c9ta3U4gJOpkETE.3ymk/bbo5BffG0WJJhSnqNKea9olrPG', 'agriculteur', '2025-03-31 14:36:12', '471db172-24e1-4d7e-bec1-180ddeea6af0'),
 (2, 'DAOUDA ', 'princeadilehou@gmail.com', '$2b$12$MxIoMEjXpOPn3W0USI3rJ.7/vfQ.yFNl25Tjs9MUPNaaAN5uwL7gC', 'agriculteur', '2025-03-31 17:02:52', NULL),
-(3, 'MORGAN', 'adh@gmail.com', '$2b$12$hr9QCyPSzQkBC8IylaiBnOj6fYS6J5a/HIHLBl.5NDlsmzaik7jo.', 'agriculteur', '2025-04-02 09:31:28', '44fe4acb-5706-49f3-bd75-ca29a87f98fb'),
+(3, 'MORGAN', 'adh@gmail.com', '$2b$12$hr9QCyPSzQkBC8IylaiBnOj6fYS6J5a/HIHLBl.5NDlsmzaik7jo.', 'agriculteur', '2025-04-02 09:31:28', '37c0808a-7e74-446f-a6c4-fda279395e40'),
 (4, 'GAKPE', 'gkp@gmail.com', '$2b$12$BCCwBQfGns2BreuiFdnp7ejhebKIMtmOFqv.WTeca50hdvAT.dYy6', 'agriculteur', '2025-05-07 09:24:43', NULL),
-(5, 'ADMIN', 'admin@gmail.com', '$2b$12$SGHUNGm7Z/OQK1a9j31XfetuwRPaJcF1RYqvmcwkjrDcy3kfEvGwK', 'admin', '2025-05-08 09:20:21', NULL);
+(5, 'ADMIN', 'admin@gmail.com', '$2b$12$SGHUNGm7Z/OQK1a9j31XfetuwRPaJcF1RYqvmcwkjrDcy3kfEvGwK', 'admin', '2025-05-08 09:20:21', '81d90be2-d69d-4f9f-93dc-95cdc9958469');
 
 --
 -- Indexes for dumped tables
@@ -401,7 +440,8 @@ ALTER TABLE `documents`
   ADD PRIMARY KEY (`id`),
   ADD KEY `commande_id` (`commande_id`),
   ADD KEY `demande_id` (`demande_id`),
-  ADD KEY `document_demande_id` (`document_demande_id`);
+  ADD KEY `document_demande_id` (`document_demande_id`),
+  ADD KEY `fk_documents_service` (`service_id`);
 
 --
 -- Indexes for table `documentsold`
@@ -489,13 +529,13 @@ ALTER TABLE `commandes`
 -- AUTO_INCREMENT for table `demandes`
 --
 ALTER TABLE `demandes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `documents`
 --
 ALTER TABLE `documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
 -- AUTO_INCREMENT for table `documentsold`
@@ -507,7 +547,7 @@ ALTER TABLE `documentsold`
 -- AUTO_INCREMENT for table `documents_demandes`
 --
 ALTER TABLE `documents_demandes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `old_d`
@@ -580,7 +620,8 @@ ALTER TABLE `demandes`
 ALTER TABLE `documents`
   ADD CONSTRAINT `documents_ibfk_1` FOREIGN KEY (`commande_id`) REFERENCES `commandes` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `documents_ibfk_2` FOREIGN KEY (`demande_id`) REFERENCES `demandes` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `documents_ibfk_3` FOREIGN KEY (`document_demande_id`) REFERENCES `documents_demandes` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `documents_ibfk_3` FOREIGN KEY (`document_demande_id`) REFERENCES `documents_demandes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_documents_service` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `documentsold`
@@ -631,3 +672,142 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- Table pour les notifications
+CREATE TABLE `notifications` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `utilisateur_id` int(11) NOT NULL,
+  `type` enum('commande','service','document') NOT NULL,
+  `titre` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `lien` varchar(255) DEFAULT NULL,
+  `lu` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `utilisateur_id` (`utilisateur_id`),
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Trigger pour les notifications de commande
+DELIMITER //
+CREATE TRIGGER after_commande_insert
+AFTER INSERT ON commandes
+FOR EACH ROW
+BEGIN
+    INSERT INTO notifications (utilisateur_id, type, titre, message, lien)
+    VALUES (NEW.utilisateur_id, 'commande', 'Nouvelle commande', 
+            CONCAT('Votre commande de ', NEW.quantite, ' ', 
+            (SELECT nom FROM produits WHERE id = NEW.produit_id), ' a été enregistrée'),
+            CONCAT('/commandes/', NEW.id));
+END//
+DELIMITER ;
+
+-- Trigger pour les notifications de service
+DELIMITER //
+CREATE TRIGGER after_demande_insert
+AFTER INSERT ON demandes
+FOR EACH ROW
+BEGIN
+    INSERT INTO notifications (utilisateur_id, type, titre, message, lien)
+    VALUES (NEW.utilisateur_id, 'service', 'Nouvelle demande de service', 
+            CONCAT('Votre demande de service "', 
+            (SELECT nom FROM services WHERE id = NEW.service_id), '" a été enregistrée'),
+            CONCAT('/services/', NEW.id));
+END//
+DELIMITER ;
+
+-- Trigger pour les notifications de document
+DELIMITER //
+CREATE TRIGGER after_document_insert
+AFTER INSERT ON documents
+FOR EACH ROW
+BEGIN
+    DECLARE utilisateur_id INT;
+    DECLARE log_message VARCHAR(255);
+    
+    -- Log de début
+    INSERT INTO logs (message, created_at) 
+    VALUES (CONCAT('Début du trigger after_document_insert pour document_id: ', NEW.id), NOW());
+    
+    -- Log des valeurs insérées
+    INSERT INTO logs (message, created_at) 
+    VALUES (CONCAT('Nouveau document - nom_fichier: ', NEW.nom_fichier, 
+                   ', commande_id: ', IFNULL(NEW.commande_id, 'NULL'),
+                   ', demande_id: ', IFNULL(NEW.demande_id, 'NULL')), NOW());
+    
+    IF NEW.commande_id IS NOT NULL THEN
+        -- Log avant la requête
+        INSERT INTO logs (message, created_at) 
+        VALUES (CONCAT('Recherche utilisateur pour commande_id: ', NEW.commande_id), NOW());
+        
+        SELECT c.utilisateur_id INTO utilisateur_id 
+        FROM commandes c 
+        WHERE c.id = NEW.commande_id;
+        
+        -- Log après la requête
+        INSERT INTO logs (message, created_at) 
+        VALUES (CONCAT('Résultat recherche utilisateur commande - utilisateur_id: ', IFNULL(utilisateur_id, 'NULL')), NOW());
+        
+    ELSEIF NEW.demande_id IS NOT NULL THEN
+        -- Log avant la requête
+        INSERT INTO logs (message, created_at) 
+        VALUES (CONCAT('Recherche utilisateur pour demande_id: ', NEW.demande_id), NOW());
+        
+        -- Modification de la requête pour être plus explicite et utiliser une jointure
+        SELECT d.utilisateur_id INTO utilisateur_id 
+        FROM demandes d 
+        INNER JOIN utilisateurs u ON d.utilisateur_id = u.id
+        WHERE d.id = NEW.demande_id;
+        
+        -- Log après la requête
+        INSERT INTO logs (message, created_at) 
+        VALUES (CONCAT('Résultat recherche utilisateur demande - utilisateur_id: ', IFNULL(utilisateur_id, 'NULL')), NOW());
+        
+        -- Vérification supplémentaire de la demande
+        INSERT INTO logs (message, created_at) 
+        SELECT CONCAT('Détails de la demande - statut: ', d.statut, 
+                     ', description: ', d.description,
+                     ', utilisateur_id: ', d.utilisateur_id)
+        FROM demandes d
+        WHERE d.id = NEW.demande_id;
+    END IF;
+    
+    IF utilisateur_id IS NOT NULL THEN
+        -- Log avant l'insertion de la notification
+        INSERT INTO logs (message, created_at) 
+        VALUES (CONCAT('Création notification pour utilisateur_id: ', utilisateur_id), NOW());
+        
+        -- Vérification de l'existence de l'utilisateur avant l'insertion
+        IF EXISTS (SELECT 1 FROM utilisateurs WHERE id = utilisateur_id) THEN
+            INSERT INTO notifications (utilisateur_id, type, titre, message, lien)
+            VALUES (utilisateur_id, 'document', 'Nouveau document', 
+                    CONCAT('Un nouveau document "', NEW.nom_fichier, '" a été ajouté'),
+                    CONCAT('/documents/', NEW.id));
+            
+            -- Log après l'insertion
+            INSERT INTO logs (message, created_at) 
+            VALUES (CONCAT('Notification créée avec succès pour utilisateur_id: ', utilisateur_id), NOW());
+        ELSE
+            INSERT INTO logs (message, created_at) 
+            VALUES (CONCAT('Utilisateur non trouvé dans la table utilisateurs - utilisateur_id: ', utilisateur_id), NOW());
+        END IF;
+    ELSE
+        INSERT INTO logs (message, created_at) 
+        VALUES (CONCAT('Aucun utilisateur trouvé pour la notification - commande_id: ', 
+                      IFNULL(NEW.commande_id, 'NULL'), 
+                      ', demande_id: ', IFNULL(NEW.demande_id, 'NULL')), NOW());
+    END IF;
+    
+    -- Log de fin
+    INSERT INTO logs (message, created_at) 
+    VALUES (CONCAT('Fin du trigger after_document_insert pour document_id: ', NEW.id), NOW());
+END//
+DELIMITER ;
+
+-- Table pour les logs
+CREATE TABLE IF NOT EXISTS `logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `message` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

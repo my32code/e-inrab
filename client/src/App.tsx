@@ -7,7 +7,6 @@ import { Home } from './pages/Home';
 import { Services } from './pages/Services';
 import { Contact } from './pages/Contact';
 import { Catalogue } from './pages/Catalogue';
-import { News } from './pages/News';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { MonCompte } from './pages/MonCompte';
@@ -26,7 +25,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<Home />} />
-        <Route path="/contact" element={<Contact />} />
         {/* Routes protégées */}
         <Route path="/services" element={
           <ProtectedRoute>
@@ -45,13 +43,18 @@ function App() {
               <ServiceRequest />
             </ProtectedRoute>
           } />
+          
+          <Route path="/contact" element={
+            <ProtectedRoute>
+              <Contact />
+            </ProtectedRoute>
+          } />
         
         <Route path="/catalogue" element={
           <ProtectedRoute>
             <Catalogue />
           </ProtectedRoute>
         } />
-
 
           <Route path="/mon-compte" element={
             <ProtectedRoute>

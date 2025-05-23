@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { query } from '../services/db';
 import path from 'path';
 import fs from 'fs/promises';
+import { sendEmailNotification } from '../controllers/notificationsController';
 
 interface AuthenticatedRequest extends Request {
   user?: { id: number };
@@ -57,6 +58,20 @@ export const createServiceRequest = async (req: AuthenticatedRequest, res: Respo
         );
       }
     }
+
+    const admins = await query('SELECT email FROM utilisateurs WHERE role = "admin"');
+    const destinataires = (admins as any[]).map(admin => admin.email);
+
+    await sendEmailNotification(
+      destinataires, // tableau d'emails
+      'Nouvelle demande de service',
+      `
+        <p>Un utilisateur a soumis une nouvelle demande de service.</p>
+        <p><strong>Service ID :</strong> ${serviceId}</p>
+        <p><strong>Description :</strong> ${description}</p>
+      `
+    );
+
 
     res.status(201).json({
       status: 'success',
@@ -128,7 +143,8 @@ export const getServiceRequest = async (req: AuthenticatedRequest, res: Response
     const [request] = await query(`
       SELECT 
         d.*,
-        s.nom as serviceName
+        s.nom as serviceName,
+        s.prix as servicePrice
       FROM demandes d
       JOIN services s ON d.service_id = s.id
       WHERE d.id = ? AND d.utilisateur_id = ?
@@ -161,4 +177,4 @@ export const getServiceRequest = async (req: AuthenticatedRequest, res: Response
       message: 'Erreur lors de la récupération de la demande'
     });
   }
-}; 
+};

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { pool } from "../services/db";
+import { pool } from "../../services/db";
 import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
@@ -16,7 +16,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 // Génère l'image en base64
-const logoPath = path.join(__dirname, "../../public/logo.png");
+const logoPath = path.join(__dirname, "../../../public/logo.png");
 const logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
 const logoDataUri = `data:image/png;base64,${logoBase64}`;
 
@@ -35,6 +35,16 @@ const generateFactureNumber = async () => {
 const generateFactureHTML = (data: any) => {
   const validUntil = new Date();
   validUntil.setDate(validUntil.getDate() + 7);
+
+  // Fonction pour formater les prix
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'XOF',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(price);
+  };
 
   return `
     <!DOCTYPE html>
@@ -138,8 +148,8 @@ const generateFactureHTML = (data: any) => {
             <tr>
               <td>${item.nom}</td>
               <td>${item.quantite}</td>
-              <td>${item.prix_unitaire.toFixed(2)} FCFA</td>
-              <td>${(item.quantite * item.prix_unitaire).toFixed(2)} FCFA</td>
+              <td>${formatPrice(item.prix_unitaire)}</td>
+              <td>${formatPrice(item.quantite * item.prix_unitaire)}</td>
             </tr>
           `
             )
@@ -148,7 +158,7 @@ const generateFactureHTML = (data: any) => {
       </table>
 
       <div class="total">
-        <p>Total TTC: ${data.total.toFixed(2)} FCFA</p>
+        <p>Total TTC: ${formatPrice(data.total)}</p>
       </div>
 
       <div class="valid-until">
@@ -169,6 +179,16 @@ const generateFactureHTML = (data: any) => {
 
 // Fonction pour générer le HTML de la facture finale
 const generateFinalFactureHTML = (data: any) => {
+  // Fonction pour formater les prix
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'XOF',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(price);
+  };
+
   return `
     <!DOCTYPE html>
     <html>
@@ -266,8 +286,8 @@ const generateFinalFactureHTML = (data: any) => {
             <tr>
               <td>${item.nom}</td>
               <td>${item.quantite}</td>
-              <td>${item.prix_unitaire.toFixed(2)} FCFA</td>
-              <td>${(item.quantite * item.prix_unitaire).toFixed(2)} FCFA</td>
+              <td>${formatPrice(item.prix_unitaire)}</td>
+              <td>${formatPrice(item.quantite * item.prix_unitaire)}</td>
             </tr>
           `
             )
@@ -276,7 +296,7 @@ const generateFinalFactureHTML = (data: any) => {
       </table>
 
       <div class="total">
-        <p>Total a payer: ${data.total.toFixed(2)} FCFA</p>
+        <p>Total a payer: ${formatPrice(data.total)}</p>
         <p class="text-sm text-gray-600">Montant payé le ${format(new Date(), "dd/MM/yyyy")}</p>
       </div>
 
@@ -302,8 +322,8 @@ export const generateFacture = async (
   res: Response
 ) => {
   try {
-    const { type, id, isFinal } = req.body;
-    console.log("Génération de facture pour:", { type, id, isFinal });
+    const { type, id } = req.body;
+    console.log("Génération de facture pour:", { type, id });
 
     let query = "";
     let params: any[] = [];
@@ -328,7 +348,7 @@ export const generateFacture = async (
       `;
       params = [id];
     } else {
-      return res.status(400).json({
+      res.status(400).json({
         status: "error",
         message: 'Type invalide. Doit être "commande" ou "service"',
       });
@@ -339,7 +359,7 @@ export const generateFacture = async (
 
     if (!rows || (rows as any[]).length === 0) {
       console.log("Aucun résultat trouvé pour:", { type, id });
-      return res.status(404).json({
+      res.status(404).json({
         status: "error",
         message: "Commande ou demande non trouvée",
       });
@@ -350,6 +370,17 @@ export const generateFacture = async (
 
     const factureNumber = await generateFactureNumber();
     console.log("Numéro de facture généré:", factureNumber);
+
+    // Fonction pour extraire le prix numérique d'une chaîne
+    const extractPrice = (priceStr: string) => {
+      // Extraire les nombres de la chaîne
+      const matches = priceStr.match(/\d[\d\s]*/);
+      if (matches) {
+        // Enlever les espaces et convertir en nombre
+        return parseInt(matches[0].replace(/\s/g, ''));
+      }
+      return 0;
+    };
 
     // Préparer les données pour le template
     const templateData = {
@@ -362,38 +393,27 @@ export const generateFacture = async (
         {
           nom: type === "commande" ? data.produit_nom : data.service_nom,
           quantite: type === "commande" ? parseInt(data.quantite) : 1,
-          prix_unitaire:
-            type === "commande"
-              ? parseFloat(data.prix_unitaire)
-              : parseFloat(data.prix),
+          prix_unitaire: type === "commande" 
+            ? parseFloat(data.prix_unitaire) 
+            : extractPrice(data.prix),
         },
       ],
-      total:
-        type === "commande"
-          ? parseInt(data.quantite) * parseFloat(data.prix_unitaire)
-          : parseFloat(data.prix),
+      total: type === "commande"
+        ? parseInt(data.quantite) * parseFloat(data.prix_unitaire)
+        : extractPrice(data.prix),
     };
 
     console.log("Données du template:", templateData);
 
-    // Générer le HTML avec le bon template
-    const html = isFinal 
-      ? generateFinalFactureHTML(templateData) 
-      : generateFactureHTML(templateData);
+    // Générer le HTML
+    const html = req.body.isFinal ? generateFinalFactureHTML(templateData) : generateFactureHTML(templateData);
 
     // Créer le dossier factures s'il n'existe pas
-    const facturesDir = path.join(__dirname, "../../uploads/factures");
+    const facturesDir = path.join(__dirname, "../../../uploads/factures");
     if (!fs.existsSync(facturesDir)) {
       console.log("Création du dossier factures:", facturesDir);
       fs.mkdirSync(facturesDir, { recursive: true });
     }
-
-    // Nom du fichier différent pour les factures finales
-    const filename = isFinal 
-      ? `facture_${factureNumber}_final.pdf` 
-      : `facture_proforma_${id}.pdf`;
-
-    const pdfPath = path.join(facturesDir, filename);
 
     // Générer le PDF avec Puppeteer
     console.log("Démarrage de Puppeteer...");
@@ -403,6 +423,7 @@ export const generateFacture = async (
     });
     const page = await browser.newPage();
     await page.setContent(html);
+    const pdfPath = path.join(facturesDir, `facture_proforma_${id}.pdf`);
     console.log("Génération du PDF:", pdfPath);
 
     await page.pdf({
@@ -416,30 +437,25 @@ export const generateFacture = async (
     // Enregistrer le document dans la base de données
     console.log("Enregistrement dans la base de données...");
     const [result] = await pool.query(
-      `INSERT INTO documents 
-       (commande_id, demande_id, nom_fichier, chemin_fichier, 
-        type_document, categorie, uploaded_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      "INSERT INTO documents (commande_id, demande_id, nom_fichier, chemin_fichier, type_document, categorie, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
         type === "commande" ? id : null,
         type === "service" ? id : null,
-        filename,
-        `uploads/factures/${filename}`,
+        `facture_proforma_${id}.pdf`,
+        `uploads/factures/facture_proforma_${id}.pdf`,
         type,
-        "facture", // Toujours "facture" comme demandé
-        req.user.id
+        "facture",
+        req.user.id,
       ]
     );
 
     console.log("Document enregistré avec succès");
     res.json({
       status: "success",
-      message: isFinal ? "Facture finale générée" : "Facture proforma générée",
+      message: "Facture générée avec succès",
       data: {
         documentId: (result as any).insertId,
         factureNumber,
-        isFinal,
-        filePath: `uploads/factures/${filename}`
       },
     });
   } catch (error) {
@@ -520,6 +536,9 @@ export const getFacture = async (req: AuthenticatedRequest, res: Response) => {
           : parseFloat(data.prix),
     };
 
+    // const html = generateFactureHTML(templateData);
+
+    // Retourner juste le HTML et les métadonnées
     res.json({
       status: "success",
       factureNumber,

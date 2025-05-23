@@ -33,6 +33,9 @@ interface Commande {
 
 interface Document {
   id: number;
+  commande_id?: number;
+  demande_id?: number;
+  service_id?: number;
   nom_fichier: string;
   chemin_fichier: string;
   type_document: 'commande' | 'service';
@@ -58,6 +61,16 @@ interface BillData {
   client: Client;
   items: Item[];
   total: number;
+}
+
+interface Notification {
+  id: number;
+  type: 'commande' | 'service' | 'document';
+  titre: string;
+  message: string;
+  lien: string;
+  lu: boolean;
+  created_at: string;
 }
 
 const commandeStatusInfo: { [key: string]: { label: string; color: string; bgColor: string; icon: any } } = {
@@ -117,7 +130,9 @@ export function MonCompte() {
   const { openKkiapayWidget, addKkiapayListener, removeKkiapayListener } = useKKiaPay();
   const [isOpen, setIsOpen] = useState(false);
   const [billCommande, setBillCommande] = useState<Commande | null>(null);
+  const [billService, setBillService] = useState<ServiceRequest | null>(null);
   const [billData, setBillData] = useState<BillData | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
     
 
   useEffect(() => {
@@ -133,6 +148,12 @@ export function MonCompte() {
       } else if (activeTab === 'documents') {
         fetchDocuments();
       }
+    }
+  }, [activeTab, user]);
+
+  useEffect(() => {
+    if (user && activeTab === 'notifications') {
+      fetchNotifications();
     }
   }, [activeTab, user]);
 
@@ -209,6 +230,7 @@ export function MonCompte() {
 
   const fetchDocuments = async () => {
     try {
+      console.log('Début de la récupération des documents...');
       const response = await fetch('http://localhost:3000/api/documents/user', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
@@ -216,14 +238,36 @@ export function MonCompte() {
       });
 
       if (!response.ok) {
+        console.error('Erreur HTTP:', response.status, response.statusText);
         throw new Error('Erreur lors de la récupération des documents');
       }
 
       const data = await response.json();
+      console.log('Documents récupérés:', data.data);
       setDocuments(data.data);
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('Erreur complète lors de la récupération des documents:', error);
       toast.error('Erreur lors de la récupération des documents');
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/notifications', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des notifications');
+      }
+
+      const data = await response.json();
+      setNotifications(data.data);
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Erreur lors du chargement des notifications');
     }
   };
 
@@ -379,12 +423,31 @@ export function MonCompte() {
     });
   };
 
-  // Gestionnaire de succès de paiement
-  const successHandler = (response: any) => {
-    console.log("Paiement réussi :", response);
-    if (billCommande) {
-      handlePayment(billCommande.id, billCommande.quantite * billCommande.prix_unitaire);
-      handleGenerateFacture(billCommande.id);
+  const successHandler = async (response: any) => {
+    try {
+      if (billService) {
+        // Utilisez votre endpoint existant avec isFinal: true
+        const res = await fetch("http://localhost:3000/api/factures/generate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("sessionId")}`,
+          },
+          body: JSON.stringify({
+            type: "service",
+            id: billService.id,
+            isFinal: true, // Ce flag déclenchera generateFinalFactureHTML
+          }),
+        });
+  
+        if (!res.ok) throw new Error("Erreur génération facture");
+        
+        toast.success("Paiement confirmé ! Facture disponible dans vos documents");
+        fetchDocuments();
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+      toast.error("Erreur lors de la confirmation du paiement");
     }
   };
 
@@ -392,41 +455,6 @@ export function MonCompte() {
   const failureHandler = (error: any) => {
     console.error("Échec du paiement :", error);
     toast.error("Échec du paiement");
-  };
-
-  // Fonction pour générer la facture après paiement
-  const handleGenerateFacture = async (commandeId: string) => {
-    try {
-      const response = await fetch(
-        "http://localhost:3000/api/factures/generate",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("sessionId")}`,
-          },
-          body: JSON.stringify({
-            type: "commande",
-            id: commandeId,
-            isFinal: true
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de la génération de la facture");
-      }
-
-      const data = await response.json();
-      setIsOpen(false);
-      setBillData(null);
-      setBillCommande(null);
-      toast.success("Facture générée avec succès");
-      fetchCommandes();
-    } catch (error) {
-      toast.error("Erreur lors de la génération de la facture");
-      console.error("Erreur:", error);
-    }
   };
 
   // Ajoutez les listeners KkiaPay
@@ -439,6 +467,51 @@ export function MonCompte() {
       removeKkiapayListener("failed", failureHandler);
     };
   }, [addKkiapayListener, removeKkiapayListener, billCommande]);
+
+  const markNotificationAsRead = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/notifications/${id}/read`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la mise à jour de la notification');
+      }
+
+      setNotifications(prev => 
+        prev.map(notif => 
+          notif.id === id ? { ...notif, lu: true } : notif
+        )
+      );
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Erreur lors de la mise à jour de la notification');
+    }
+  };
+
+  const deleteNotification = async (id: number) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/notifications/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la suppression de la notification');
+      }
+
+      setNotifications(prev => prev.filter(notif => notif.id !== id));
+      toast.success('Notification supprimée avec succès');
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Erreur lors de la suppression de la notification');
+    }
+  };
 
   if (!user) {
     return <div>Chargement...</div>;
@@ -461,6 +534,20 @@ export function MonCompte() {
                 <User className="h-5 w-5 inline-block mr-2" />
                 Profil
               </button>
+              <button
+                onClick={() => setActiveTab('notifications')}
+                className={`${
+                  activeTab === 'notifications'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm relative`}
+              >
+                <Bell className="h-5 w-5 inline-block mr-2" />
+                Notifications
+                {notifications.some(n => !n.lu) && (
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full"></span>
+                )}
+              </button>
               {user?.role !== 'admin' && (
                 <>
               <button
@@ -473,42 +560,31 @@ export function MonCompte() {
               >
                 <History className="h-5 w-5 inline-block mr-2" />
                     Services Demandés
-                  </button>
-                  <button
+              </button>
+              <button
                     onClick={() => setActiveTab('commandes')}
-                    className={`${
+                className={`${
                       activeTab === 'commandes'
-                        ? 'border-green-500 text-green-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
-                  >
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
+              >
                     <ShoppingCart className="h-5 w-5 inline-block mr-2" />
                     Mes Commandes
-                  </button>
-                  <button
+              </button>
+              <button
                     onClick={() => setActiveTab('documents')}
-                    className={`${
+                className={`${
                       activeTab === 'documents'
-                        ? 'border-green-500 text-green-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
-                  >
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
+              >
                     <File className="h-5 w-5 inline-block mr-2" />
                     Mes Documents
               </button>
                 </>
               )}
-              <button
-                onClick={() => setActiveTab('notifications')}
-                className={`${
-                  activeTab === 'notifications'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm`}
-              >
-                <Bell className="h-5 w-5 inline-block mr-2" />
-                Notifications
-              </button>
             </nav>
           </div>
 
@@ -769,33 +845,108 @@ export function MonCompte() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {documents.map((doc) => (
-                      <div
-                        key={doc.id}
-                        className="bg-white shadow rounded-lg p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50"
-                        onClick={() => setSelectedDocument(doc)}
-                      >
-                        <div className="flex items-center">
-                          <File className="h-5 w-5 text-gray-400 mr-3" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{doc.nom_fichier}</p>
-                            <p className="text-xs text-gray-500">
-                              {doc.type_document === 'commande' ? doc.produit_nom : doc.service_nom} - 
-                              {new Date(doc.created_at).toLocaleDateString('fr-FR')}
-                            </p>
+                    {documents.map((doc) => {
+                      
+                      return (
+                        <div
+                          key={doc.id}
+                          className="bg-white shadow rounded-lg p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                          onClick={() => {
+                            console.log('Document sélectionné:', doc);
+                            setSelectedDocument(doc);
+                          }}
+                        >
+                          <div className="flex items-center">
+                            <File className="h-5 w-5 text-gray-400 mr-3" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{doc.nom_fichier}</p>
+                              <p className="text-xs text-gray-500">
+                                {doc.type_document === 'commande' ? doc.produit_nom : doc.service_nom} - 
+                                {new Date(doc.created_at).toLocaleDateString('fr-FR')}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex space-x-4">
+                            {doc.categorie === 'facture' && doc.type_document === 'service' && doc.nom_fichier.includes('proforma') && (
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    const response = await fetch(`http://localhost:3000/api/service-requests/${doc.demande_id}`, {
+                                      headers: {
+                                        'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+                                      }
+                                    });
+                                    
+                                    if (!response.ok) {
+                                      throw new Error('Erreur lors de la récupération des détails de la demande');
+                                    }
+
+                                    const requestData = await response.json();
+                                    
+                                    // Extraction du prix numérique du format "15 000 FCFA/echantillon" ou "15000fcfa/echantillon"
+                                    const prixString = requestData.data.servicePrice;
+                                    console.log('Prix brut:', prixString); // Pour le débogage
+
+                                    // Nouvelle expression régulière qui capture tous les chiffres avant "fcfa" ou "FCFA", en ignorant les espaces
+                                    const prixMatch = prixString.match(/(\d[\d\s]*)fcfa/i);
+                                    const prix = prixMatch ? parseInt(prixMatch[1].replace(/\s/g, '')) : 0;
+
+                                    console.log('Prix extrait:', prix); // Pour le débogage
+
+                                    if (prix === 0) {
+                                      throw new Error('Prix invalide');
+                                    }
+
+                                    // Stocker d'abord les informations de la demande
+                                    setBillService({
+                                      id: doc.demande_id?.toString() || '',
+                                      serviceId: doc.service_id?.toString() || '',
+                                      serviceName: doc.service_nom || '',
+                                      status: 'pending',
+                                      quantite: 1,
+                                      description: requestData.data.description || '',
+                                      createdAt: requestData.data.date_demande,
+                                      documents: []
+                                    });
+
+                                    // Attendre que l'état soit mis à jour
+                                    await new Promise(resolve => setTimeout(resolve, 100));
+
+                                    // Ouvrir le widget KkiaPay
+                                    openKkiapayWidget({
+                                      amount: prix,
+                                      api_key: "79429420652011efbf02478c5adba4b8",
+                                      sandbox: true,
+                                      name: user.nom,
+                                      email: user.email,
+                                      phone: "97000000",
+                                    });
+
+                                  } catch (error) {
+                                    console.error('Erreur:', error);
+                                    toast.error('Erreur lors du traitement du paiement');
+                                  }
+                                }}
+                                className="text-sm text-green-600 hover:text-green-700"
+                              >
+                                Payer
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log('Téléchargement du document:', doc);
+                                handleDownload(doc);
+                              }}
+                              className="text-sm text-green-600 hover:text-green-700"
+                            >
+                              Télécharger
+                            </button>
                           </div>
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownload(doc);
-                          }}
-                          className="text-sm text-green-600 hover:text-green-700"
-                        >
-                          Télécharger
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
@@ -812,9 +963,62 @@ export function MonCompte() {
             {activeTab === 'notifications' && (
               <div>
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Notifications</h2>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-500">Aucune notification pour le moment.</p>
+                {notifications.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Bell className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Aucune notification</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Vous n'avez pas encore de notifications.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`bg-white shadow rounded-lg p-4 ${
+                          !notification.lu ? 'border-l-4 border-green-500' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-sm font-medium text-gray-900">
+                              {notification.titre}
+                            </h3>
+                            <p className="mt-1 text-sm text-gray-500">
+                              {notification.message}
+                            </p>
+                            <p className="mt-2 text-xs text-gray-400">
+                              {new Date(notification.created_at).toLocaleDateString('fr-FR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                          <div className="ml-4 flex space-x-2">
+                            {!notification.lu && (
+                              <button
+                                onClick={() => markNotificationAsRead(notification.id)}
+                                className="text-sm text-green-600 hover:text-green-700"
+                              >
+                                Marquer comme lu
+                              </button>
+                            )}
+                            <button
+                              onClick={() => deleteNotification(notification.id)}
+                              className="text-sm text-red-600 hover:text-red-700"
+                            >
+                              Supprimer
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                 </div>
+                )}
               </div>
             )}
 

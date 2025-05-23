@@ -11,6 +11,9 @@ interface UserDocument {
   created_at: string;
   produit_nom?: string;
   service_nom?: string;
+  commande_id?: number;
+  demande_id?: number;
+  service_id?: number;
 }
 
 interface DocumentDetailModalProps {
@@ -31,7 +34,14 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
   const fetchRelatedDocuments = async () => {
     try {
       const paramName = document.type_document === 'commande' ? 'commandeId' : 'demandeId';
-      const response = await fetch(`http://localhost:3000/api/documents/user?${paramName}=${document.id}`, {
+      const referenceId = document.type_document === 'commande' ? document.commande_id : document.demande_id;
+      
+      if (!referenceId) {
+        console.error('ID de référence manquant:', document);
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3000/api/documents/user?${paramName}=${referenceId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -42,7 +52,11 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
       }
 
       const data = await response.json();
-      setRelatedDocuments(data.data);
+      // Filtrer les documents pour n'avoir que ceux du même type
+      const filteredDocuments = data.data.filter((doc: UserDocument) => 
+        doc.type_document === document.type_document
+      );
+      setRelatedDocuments(filteredDocuments);
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Erreur lors du chargement des documents associés');

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { pool } from '../services/db';
 import fs from 'fs';
+import { sendEmailNotification } from '../controllers/notificationsController';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -16,6 +17,7 @@ interface AuthenticatedRequest extends Request {
 export const getDocuments = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { commandeId, demandeId } = req.query;
+    console.log('Récupération documents avec params:', { commandeId, demandeId });
     let query = '';
     let params: any[] = [];
 
@@ -28,6 +30,7 @@ export const getDocuments = async (req: AuthenticatedRequest, res: Response) => 
         WHERE d.commande_id = ?
       `;
       params = [commandeId];
+      console.log('Requête commande:', { query, params });
     } else if (demandeId) {
       query = `
         SELECT d.*, s.nom as service_nom 
@@ -37,7 +40,9 @@ export const getDocuments = async (req: AuthenticatedRequest, res: Response) => 
         WHERE d.demande_id = ?
       `;
       params = [demandeId];
+      console.log('Requête service:', { query, params });
     } else {
+      console.log('Paramètres manquants');
       return res.status(400).json({
         status: 'error',
         message: 'ID de commande ou de demande requis'
@@ -45,6 +50,7 @@ export const getDocuments = async (req: AuthenticatedRequest, res: Response) => 
     }
 
     const [rows] = await pool.query(query, params);
+    console.log('Documents trouvés:', rows);
     res.json({
       status: 'success',
       data: rows
@@ -72,7 +78,7 @@ export const uploadDocument = async (req: AuthenticatedRequest, res: Response) =
     const { type, commandeId, demandeId, categorie } = req.body;
     let query = '';
     let params: any[] = [];
-
+    let docContextInfo = '';
     // Déterminer qui a uploadé le document
     const uploadedBy = req.user.role === 'admin' ? 'admin' : 'client';
 
@@ -90,6 +96,10 @@ export const uploadDocument = async (req: AuthenticatedRequest, res: Response) =
           message: 'Commande non trouvée'
         });
       }
+
+      const commande = (commandeRows as any[])[0];
+      docContextInfo = `Commande ID : ${commande.id} (Produit : ${commande.produit_nom})`;
+
 
       query = `
         INSERT INTO documents (commande_id, nom_fichier, chemin_fichier, type_document, categorie, uploaded_by)
@@ -110,6 +120,10 @@ export const uploadDocument = async (req: AuthenticatedRequest, res: Response) =
         });
       }
 
+      const demande = (demandeRows as any[])[0];
+      docContextInfo = `Demande ID : ${demande.id} (Service : ${demande.service_nom})`;
+
+
       query = `
         INSERT INTO documents (demande_id, nom_fichier, chemin_fichier, type_document, categorie, uploaded_by)
         VALUES (?, ?, ?, 'service', ?, ?)
@@ -123,6 +137,22 @@ export const uploadDocument = async (req: AuthenticatedRequest, res: Response) =
     }
 
     const [result] = await pool.query(query, params);
+
+     // ✅ ENVOYER NOTIFICATION PAR EMAIL AUX ADMINS
+     const [admins] = await pool.query('SELECT email FROM utilisateurs WHERE role = "admin"');
+     const destinataires = (admins as any[]).map(admin => admin.email);
+ 
+     await sendEmailNotification(
+       destinataires,
+       'Nouveau document uploadé',
+       `
+         <p>Un document a été uploadé par <strong>${req.user.nom}</strong> (${req.user.email})</p>
+         ${docContextInfo}
+         <p><strong>Fichier :</strong> ${file.originalname}</p>
+         <p><strong>Catégorie :</strong> ${categorie}</p>
+       `
+     );
+
     res.json({
       status: 'success',
       message: 'Document uploadé avec succès',

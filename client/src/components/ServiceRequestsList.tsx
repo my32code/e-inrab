@@ -128,6 +128,33 @@ export function ServiceRequestsList() {
     }
   };
 
+  const handleGenerateFacture = async (requestId: number) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/admin/factures/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        },
+        body: JSON.stringify({
+          type: 'service',
+          id: requestId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la génération de la facture');
+      }
+
+      const data = await response.json();
+      toast.success('Facture générée avec succès');
+      fetchRequests(); // Rafraîchir la liste pour afficher le nouveau document
+    } catch (error) {
+      toast.error('Erreur lors de la génération de la facture');
+      console.error('Erreur:', error);
+    }
+  };
+
   const filteredRequests = requests.filter(request => {
     const matchesSearch = 
       request.utilisateur.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -259,6 +286,15 @@ export function ServiceRequestsList() {
                             <option value="livrée">Livrée</option>
                             <option value="rejetée">Rejetée</option>
                           </select>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleGenerateFacture(request.id);
+                            }}
+                            className="px-2 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            Générer facture
+                          </button>
                         </div>
                       </td>
                     </tr>
