@@ -99,7 +99,7 @@ CREATE TABLE `documents` (
   `chemin_fichier` varchar(255) NOT NULL,
   `type_document` enum('commande','service') NOT NULL,
   `categorie` enum('facture','preuve_paiement','piece_complementaire','autre') NOT NULL,
-  `uploaded_by` enum('admin','client') NOT NULL,
+  'uploaded_by' enum('admin','client') NOT NULL DEFAULT 'admin',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -722,85 +722,42 @@ CREATE TRIGGER after_document_insert
 AFTER INSERT ON documents
 FOR EACH ROW
 BEGIN
-    DECLARE utilisateur_id INT;
-    DECLARE log_message VARCHAR(255);
+    DECLARE utilisateur_id INT DEFAULT NULL;
+    DECLARE logs_exist INT DEFAULT 0;
+    DECLARE notifications_exist INT DEFAULT 0;
     
-    -- Log de début
-    INSERT INTO logs (message, created_at) 
-    VALUES (CONCAT('Début du trigger after_document_insert pour document_id: ', NEW.id), NOW());
+    -- Vérifier si la table logs existe
+    SELECT COUNT(*) INTO logs_exist FROM information_schema.tables 
+    WHERE table_schema = DATABASE() AND table_name = 'logs';
     
-    -- Log des valeurs insérées
-    INSERT INTO logs (message, created_at) 
-    VALUES (CONCAT('Nouveau document - nom_fichier: ', NEW.nom_fichier, 
-                   ', commande_id: ', IFNULL(NEW.commande_id, 'NULL'),
-                   ', demande_id: ', IFNULL(NEW.demande_id, 'NULL')), NOW());
+    -- Vérifier si la table notifications existe
+    SELECT COUNT(*) INTO notifications_exist FROM information_schema.tables 
+    WHERE table_schema = DATABASE() AND table_name = 'notifications';
     
+    -- Trouver l'utilisateur concerné
     IF NEW.commande_id IS NOT NULL THEN
-        -- Log avant la requête
-        INSERT INTO logs (message, created_at) 
-        VALUES (CONCAT('Recherche utilisateur pour commande_id: ', NEW.commande_id), NOW());
-        
         SELECT c.utilisateur_id INTO utilisateur_id 
-        FROM commandes c 
-        WHERE c.id = NEW.commande_id;
-        
-        -- Log après la requête
-        INSERT INTO logs (message, created_at) 
-        VALUES (CONCAT('Résultat recherche utilisateur commande - utilisateur_id: ', IFNULL(utilisateur_id, 'NULL')), NOW());
-        
+        FROM commandes c WHERE c.id = NEW.commande_id;
     ELSEIF NEW.demande_id IS NOT NULL THEN
-        -- Log avant la requête
-        INSERT INTO logs (message, created_at) 
-        VALUES (CONCAT('Recherche utilisateur pour demande_id: ', NEW.demande_id), NOW());
-        
-        -- Modification de la requête pour être plus explicite et utiliser une jointure
         SELECT d.utilisateur_id INTO utilisateur_id 
-        FROM demandes d 
-        INNER JOIN utilisateurs u ON d.utilisateur_id = u.id
-        WHERE d.id = NEW.demande_id;
-        
-        -- Log après la requête
-        INSERT INTO logs (message, created_at) 
-        VALUES (CONCAT('Résultat recherche utilisateur demande - utilisateur_id: ', IFNULL(utilisateur_id, 'NULL')), NOW());
-        
-        -- Vérification supplémentaire de la demande
-        INSERT INTO logs (message, created_at) 
-        SELECT CONCAT('Détails de la demande - statut: ', d.statut, 
-                     ', description: ', d.description,
-                     ', utilisateur_id: ', d.utilisateur_id)
-        FROM demandes d
-        WHERE d.id = NEW.demande_id;
+        FROM demandes d WHERE d.id = NEW.demande_id;
     END IF;
     
-    IF utilisateur_id IS NOT NULL THEN
-        -- Log avant l'insertion de la notification
-        INSERT INTO logs (message, created_at) 
-        VALUES (CONCAT('Création notification pour utilisateur_id: ', utilisateur_id), NOW());
-        
-        -- Vérification de l'existence de l'utilisateur avant l'insertion
-        IF EXISTS (SELECT 1 FROM utilisateurs WHERE id = utilisateur_id) THEN
-            INSERT INTO notifications (utilisateur_id, type, titre, message, lien)
-            VALUES (utilisateur_id, 'document', 'Nouveau document', 
-                    CONCAT('Un nouveau document "', NEW.nom_fichier, '" a été ajouté'),
-                    CONCAT('/documents/', NEW.id));
-            
-            -- Log après l'insertion
-            INSERT INTO logs (message, created_at) 
-            VALUES (CONCAT('Notification créée avec succès pour utilisateur_id: ', utilisateur_id), NOW());
-        ELSE
-            INSERT INTO logs (message, created_at) 
-            VALUES (CONCAT('Utilisateur non trouvé dans la table utilisateurs - utilisateur_id: ', utilisateur_id), NOW());
-        END IF;
-    ELSE
-        INSERT INTO logs (message, created_at) 
-        VALUES (CONCAT('Aucun utilisateur trouvé pour la notification - commande_id: ', 
-                      IFNULL(NEW.commande_id, 'NULL'), 
-                      ', demande_id: ', IFNULL(NEW.demande_id, 'NULL')), NOW());
+    -- Créer la notification si possible
+    IF utilisateur_id IS NOT NULL AND notifications_exist > 0 THEN
+        INSERT INTO notifications (utilisateur_id, type, titre, message, lien)
+        VALUES (utilisateur_id, 'document', 'Nouveau document', 
+                CONCAT('Un nouveau document "', NEW.nom_fichier, '" a été ajouté'),
+                CONCAT('/documents/', NEW.id));
     END IF;
     
-    -- Log de fin
-    INSERT INTO logs (message, created_at) 
-    VALUES (CONCAT('Fin du trigger after_document_insert pour document_id: ', NEW.id), NOW());
+    -- Logger l'action si possible
+    IF logs_exist > 0 THEN
+        INSERT INTO logs (message, created_at) 
+        VALUES (CONCAT('Document inséré: ', NEW.nom_fichier, 
+                      ' pour utilisateur: ', IFNULL(utilisateur_id, 'inconnu')), 
+                NOW());
+    END IF;
 END//
 DELIMITER ;
 

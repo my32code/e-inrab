@@ -7,7 +7,13 @@ import {
   Leaf,
   Microscope,
   GraduationCap,
-  Clock
+  Clock,
+  FileText,
+  ShoppingCart,
+  Upload,
+  CheckCircle,
+  Package,
+  Settings
 } from 'lucide-react';
 
 const services = [
@@ -48,6 +54,45 @@ const slides = [
     image: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200",
     title: "Expertise Scientifique",
     description: "Bénéficiez des conseils de nos experts pour optimiser votre production"
+  }
+];
+
+const processSteps = [
+  {
+    title: "Création de demande/commande",
+    description: "Le client initie une demande de service ou une commande de produits",
+    icon: <FileText className="w-6 h-6 text-green-600" />,
+    color: "bg-green-100"
+  },
+  {
+    title: "Génération du proforma",
+    description: "Le système génère automatiquement une facture proforma",
+    icon: <ShoppingCart className="w-6 h-6 text-blue-600" />,
+    color: "bg-blue-100"
+  },
+  {
+    title: "Paiement",
+    description: "Le client procède au paiement et obtient une confirmation",
+    icon: <CheckCircle className="w-6 h-6 text-purple-600" />,
+    color: "bg-purple-100"
+  },
+  {
+    title: "Upload de preuve",
+    description: "Le client upload la preuve de paiement dans le système",
+    icon: <Upload className="w-6 h-6 text-orange-600" />,
+    color: "bg-orange-100"
+  },
+  {
+    title: "Validation admin",
+    description: "L'administrateur vérifie la preuve et valide le paiement",
+    icon: <Settings className="w-6 h-6 text-red-600" />,
+    color: "bg-red-100"
+  },
+  {
+    title: "Traitement final",
+    description: "La commande est préparée ou le service est livré",
+    icon: <Package className="w-6 h-6 text-indigo-600" />,
+    color: "bg-indigo-100"
   }
 ];
 
@@ -106,6 +151,80 @@ export function Home() {
           <ChevronRight className="w-6 h-6" />
         </button>
       </div>
+
+      {/* Comment ça marche Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center mb-12">Comment ça marche</h2>
+          
+          <div className="mb-12">
+            <h3 className="text-xl font-semibold mb-6 text-center">Processus de commande et demande de service</h3>
+            <div className="relative">
+              {/* Timeline bar */}
+              <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-green-500"></div>
+              
+              {/* Steps */}
+              <div className="space-y-12">
+                {processSteps.map((step, index) => (
+                  <div 
+                    key={index} 
+                    className={`relative flex ${index % 2 === 0 ? 'justify-start' : 'justify-end'}`}
+                  >
+                    <div className={`w-5/12 p-6 rounded-lg shadow-md ${step.color} transition-all duration-300 hover:shadow-lg`}>
+                      <div className="flex items-center mb-3">
+                        <div className="flex-shrink-0 mr-4">
+                          {step.icon}
+                        </div>
+                        <h4 className="text-lg font-semibold">{step.title}</h4>
+                      </div>
+                      <p className="text-gray-600">{step.description}</p>
+                    </div>
+                    {/* Timeline dot */}
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-green-600 border-4 border-white"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Diagrammes de séquence */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-white p-6 rounded-xl shadow-lg">
+              <h3 className="text-xl font-semibold mb-4 flex items-center">
+                <FileText className="w-5 h-5 mr-2 text-blue-600" />
+                Processus de commande
+              </h3>
+              <div className="bg-gray-100 p-4 rounded-lg">
+                <ol className="list-decimal pl-5 space-y-3">
+                  <li>Client crée une commande</li>
+                  <li>Système génère facture proforma</li>
+                  <li>Client procède au paiement</li>
+                  <li>Client upload preuve de paiement</li>
+                  <li>Admin vérifie la preuve</li>
+                  <li>Statut mis à jour et client notifié</li>
+                </ol>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-lg">
+              <h3 className="text-xl font-semibold mb-4 flex items-center">
+                <Settings className="w-5 h-5 mr-2 text-purple-600" />
+                Processus de demande de service
+              </h3>
+              <div className="bg-gray-100 p-4 rounded-lg">
+                <ol className="list-decimal pl-5 space-y-3">
+                  <li>Client soumet une demande</li>
+                  <li>Système notifie l'admin</li>
+                  <li>Système génère proforma</li>
+                  <li>Client procède au paiement</li>
+                  <li>Client upload preuve de paiement</li>
+                  <li>Admin valide et statut mis à jour</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Services Section */}
       <section className="py-16 bg-white">

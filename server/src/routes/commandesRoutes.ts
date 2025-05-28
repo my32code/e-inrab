@@ -1,5 +1,5 @@
 import { Router, RequestHandler } from 'express';
-import { createCommande, getUserCommandes, getCommande } from '../controllers/commandesController';
+import { createCommande, getUserCommandes, getCommande, confirmCommande } from '../controllers/commandesController';
 import { Request, Response } from 'express';
 import { findUserBySessionId } from '../models/User';
 
@@ -43,5 +43,8 @@ router.get('/', ((req: Request, res: Response) => getUserCommandes(req as Authen
 
 // Récupérer une commande spécifique
 router.get('/:id', ((req: Request, res: Response) => getCommande(req as AuthenticatedRequest, res)) as RequestHandler);
+
+// Confirmer une commande en attente
+router.post('/:orderId/confirm', ((req: Request, res: Response) => confirmCommande(req as AuthenticatedRequest, res)) as RequestHandler);
 
 export default router; 

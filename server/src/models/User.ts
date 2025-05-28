@@ -6,6 +6,7 @@ export interface User {
   id?: number;
   nom: string;
   email: string;
+  telephone: string;
   mot_de_passe: string;
   role: string;
   date_inscription: Date;
@@ -14,10 +15,11 @@ export interface User {
 
 export const createUser = async (user: User): Promise<void> => {
   const [result] = await pool.execute(
-    'INSERT INTO utilisateurs (nom, email, mot_de_passe, role, date_inscription) VALUES (?, ?, ?, ?, NOW())',
+    'INSERT INTO utilisateurs (nom, email, telephone, mot_de_passe, role, date_inscription) VALUES (?, ?, ?, ?, ?, NOW())',
     [
       user.nom,
       user.email,
+      user.telephone,
       user.mot_de_passe, // Champ conforme à votre table
       user.role || 'agriculteur', // Valeur par défaut si non spécifié
       // date_inscription est géré automatiquement par NOW()
@@ -35,6 +37,7 @@ export const findUserByEmail = async (email: string): Promise<User | null> => {
     id: rows[0].id,
     nom: rows[0].nom,
     email: rows[0].email,
+    telephone: rows[0].telephone,
     mot_de_passe: rows[0].mot_de_passe,
     role: rows[0].role,
     date_inscription: rows[0].date_inscription
@@ -58,6 +61,7 @@ export const findUserBySessionId = async (sessionId: string): Promise<User | nul
     id: rows[0].id,
     nom: rows[0].nom,
     email: rows[0].email,
+    telephone: rows[0].telephone,
     mot_de_passe: rows[0].mot_de_passe,
     role: rows[0].role,
     date_inscription: rows[0].date_inscription,

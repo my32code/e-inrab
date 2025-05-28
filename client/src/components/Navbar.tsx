@@ -66,7 +66,7 @@ export function Navbar() {
               alt="INRAB Logo" 
               className="h-16 w-auto"
             />
-            <Link to={user?.role === 'admin' ? '/admin' : '/'} className="text-2xl font-bold text-green-700">e-INRAB</Link>
+            <Link to={user?.role === 'admin' ? '/admin' : '/'} className="text-2xl font-bold text-green-700">e-services INRAB</Link>
           </div>
 
           {/* Desktop Menu */}

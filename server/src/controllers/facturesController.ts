@@ -5,12 +5,14 @@ import path from "path";
 import fs from "fs";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { sendEmailNotification } from '../controllers/notificationsController';
 
 interface AuthenticatedRequest extends Request {
   user: {
     id: number;
     nom: string;
     email: string;
+    telephone: string;
     role: string;
   };
 }
@@ -120,6 +122,7 @@ const generateFactureHTML = (data: any) => {
         <h3>Client</h3>
         <p><strong>Nom:</strong> ${data.client.nom}</p>
         <p><strong>Email:</strong> ${data.client.email}</p>
+        <p><strong>Téléphone:</strong> ${data.client.telephone}</p>
       </div>
 
       <table>
@@ -248,6 +251,7 @@ const generateFinalFactureHTML = (data: any) => {
         <h3>Client</h3>
         <p><strong>Nom:</strong> ${data.client.nom}</p>
         <p><strong>Email:</strong> ${data.client.email}</p>
+        <p><strong>Téléphone:</strong> ${data.client.telephone}</p>
       </div>
 
       <table>
@@ -266,8 +270,8 @@ const generateFinalFactureHTML = (data: any) => {
             <tr>
               <td>${item.nom}</td>
               <td>${item.quantite}</td>
-              <td>${item.prix_unitaire.toFixed(2)} FCFA</td>
-              <td>${(item.quantite * item.prix_unitaire).toFixed(2)} FCFA</td>
+              <td>${item.prix_unitaire.toLocaleString()} FCFA</td>
+              <td>${(item.quantite * item.prix_unitaire).toLocaleString()} FCFA</td>
             </tr>
           `
             )
@@ -276,7 +280,7 @@ const generateFinalFactureHTML = (data: any) => {
       </table>
 
       <div class="total">
-        <p>Total a payer: ${data.total.toFixed(2)} FCFA</p>
+        <p>Total a payer: ${data.total.toLocaleString()} FCFA</p>
         <p class="text-sm text-gray-600">Montant payé le ${format(new Date(), "dd/MM/yyyy")}</p>
       </div>
 
@@ -296,14 +300,67 @@ const generateFinalFactureHTML = (data: any) => {
   `;
 };
 
+// Fonction pour générer le template HTML de l'email de paiement
+const generatePaymentEmailTemplate = (params: {
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  amount: number;
+  invoiceNumber: string;
+  details: string;
+  isAdmin: boolean;
+}) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #f8f9fa; padding: 10px; text-align: center; }
+        .content { margin: 20px 0; }
+        .footer { margin-top: 20px; font-size: 0.8em; color: #666; text-align: center; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>INRAB - Confirmation de Paiement</h2>
+        </div>
+        
+        <div class="content">
+          <p>Bonjour ${params.isAdmin ? 'Administrateur' : params.clientName},</p>
+          
+          ${params.isAdmin 
+            ? `<p>Un paiement a été effectué par ${params.clientName} (${params.clientEmail}).</p>
+               <p>Téléphone: ${params.clientPhone}</p>
+               <p>Montant: ${params.amount} FCFA</p>
+               <p>Facture N°: ${params.invoiceNumber}</p>
+               ${params.details}`
+            : `<p>Nous accusons réception de votre déclaration de paiement de ${params.amount} FCFA.</p>
+              <p>Votre facture N° ${params.invoiceNumber} a bien été enregistrée et est disponible dans votre espace documents.</p>
+              <p>Pour toute question, vous pouvez nous contacter au +229 64 28 37 02.</p>
+              <p>Nous vous remercions pour votre confiance et restons à votre disposition pour toute information complémentaire.</p>`}
+        </div>
+        
+        <div class="footer">
+          <p>Cet email est envoyé automatiquement, merci de ne pas y répondre.</p>
+          <p>© ${new Date().getFullYear()} INRAB - Tous droits réservés</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
 // Contrôleur pour générer une facture
 export const generateFacture = async (
   req: AuthenticatedRequest,
   res: Response
 ) => {
   try {
-    const { type, id, isFinal } = req.body;
-    console.log("Génération de facture pour:", { type, id, isFinal });
+    const { type, id,isFinal } = req.body;
+    console.log("Génération de facture pour:", { type, id });
 
     let query = "";
     let params: any[] = [];
@@ -311,16 +368,17 @@ export const generateFacture = async (
     // Récupérer les informations selon le type (commande ou demande de service)
     if (type === "commande") {
       query = `
-        SELECT c.*, u.nom as client_nom, u.email as client_email, p.nom as produit_nom
+        SELECT c.*, u.nom as client_nom, u.email as client_email, u.telephone as client_telephone, p.nom as produit_nom
         FROM commandes c
         JOIN utilisateurs u ON c.utilisateur_id = u.id
         JOIN produits p ON c.produit_id = p.id
         WHERE c.id = ?
       `;
       params = [id];
-    } else if (type === "service") {
+    } else if (type === "service" && isFinal) {
+      console.log("Génération de la facture finale pour le service:", id);
       query = `
-        SELECT d.*, u.nom as client_nom, u.email as client_email, s.nom as service_nom, s.prix
+        SELECT d.*, u.nom as client_nom, u.email as client_email, u.telephone as client_telephone, s.nom as service_nom, s.prix
         FROM demandes d
         JOIN utilisateurs u ON d.utilisateur_id = u.id
         JOIN services s ON d.service_id = s.id
@@ -328,7 +386,7 @@ export const generateFacture = async (
       `;
       params = [id];
     } else {
-      return res.status(400).json({
+      res.status(400).json({
         status: "error",
         message: 'Type invalide. Doit être "commande" ou "service"',
       });
@@ -339,7 +397,7 @@ export const generateFacture = async (
 
     if (!rows || (rows as any[]).length === 0) {
       console.log("Aucun résultat trouvé pour:", { type, id });
-      return res.status(404).json({
+      res.status(404).json({
         status: "error",
         message: "Commande ou demande non trouvée",
       });
@@ -357,29 +415,30 @@ export const generateFacture = async (
       client: {
         nom: data.client_nom,
         email: data.client_email,
+        telephone: data.client_telephone
       },
       items: [
         {
           nom: type === "commande" ? data.produit_nom : data.service_nom,
           quantite: type === "commande" ? parseInt(data.quantite) : 1,
-          prix_unitaire:
-            type === "commande"
+          prix_unitaire: type === "commande" 
               ? parseFloat(data.prix_unitaire)
-              : parseFloat(data.prix),
+            : parseFloat(data.prix.replace(/[^0-9]/g, '')),
         },
       ],
-      total:
-        type === "commande"
+      total: type === "commande"
           ? parseInt(data.quantite) * parseFloat(data.prix_unitaire)
-          : parseFloat(data.prix),
+        : parseFloat(data.prix.replace(/[^0-9]/g, '')),
     };
 
     console.log("Données du template:", templateData);
 
-    // Générer le HTML avec le bon template
-    const html = isFinal 
-      ? generateFinalFactureHTML(templateData) 
-      : generateFactureHTML(templateData);
+    const filename = isFinal 
+      ? `facture_finale_${id}.pdf` 
+      : `facture_proforma_${id}.pdf`;
+
+    // Générer le HTML
+    const html = req.body.isFinal ? generateFinalFactureHTML(templateData) : generateFactureHTML(templateData);
 
     // Créer le dossier factures s'il n'existe pas
     const facturesDir = path.join(__dirname, "../../uploads/factures");
@@ -387,13 +446,6 @@ export const generateFacture = async (
       console.log("Création du dossier factures:", facturesDir);
       fs.mkdirSync(facturesDir, { recursive: true });
     }
-
-    // Nom du fichier différent pour les factures finales
-    const filename = isFinal 
-      ? `facture_${factureNumber}_final.pdf` 
-      : `facture_proforma_${id}.pdf`;
-
-    const pdfPath = path.join(facturesDir, filename);
 
     // Générer le PDF avec Puppeteer
     console.log("Démarrage de Puppeteer...");
@@ -403,6 +455,7 @@ export const generateFacture = async (
     });
     const page = await browser.newPage();
     await page.setContent(html);
+    const pdfPath = path.join(facturesDir, filename);
     console.log("Génération du PDF:", pdfPath);
 
     await page.pdf({
@@ -416,30 +469,73 @@ export const generateFacture = async (
     // Enregistrer le document dans la base de données
     console.log("Enregistrement dans la base de données...");
     const [result] = await pool.query(
-      `INSERT INTO documents 
-       (commande_id, demande_id, nom_fichier, chemin_fichier, 
-        type_document, categorie, uploaded_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      "INSERT INTO documents (commande_id, demande_id, nom_fichier, chemin_fichier, type_document, categorie, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
         type === "commande" ? id : null,
         type === "service" ? id : null,
         filename,
         `uploads/factures/${filename}`,
         type,
-        "facture", // Toujours "facture" comme demandé
-        req.user.id
+        "facture",
+        req.user.role.toLowerCase() === 'admin' ? 'admin' : 'client'
       ]
     );
+
+    if (isFinal) {
+      try {
+        const [admins] = await pool.query('SELECT email FROM utilisateurs WHERE role = "admin"');
+        const adminEmails = (admins as any[]).map(admin => admin.email);
+        const allAdminEmails = [...adminEmails, 'princeadilehou@gmail.com'];
+        
+        const details = type === "commande" 
+          ? `<p>Produit: ${data.produit_nom} (x${data.quantite})</p>`
+          : `<p>Service: ${data.service_nom}</p>`;
+
+        // Email aux admins
+        await sendEmailNotification(
+          allAdminEmails,
+          `[INRAB] Paiement reçu - Facture ${factureNumber}`,
+          generatePaymentEmailTemplate({
+            clientName: templateData.client.nom,
+            clientEmail: templateData.client.email,
+            clientPhone: templateData.client.telephone,
+            amount: templateData.total,
+            invoiceNumber: factureNumber,
+            details,
+            isAdmin: true
+          })
+        );
+
+        // Email au client
+        await sendEmailNotification(
+          [templateData.client.email],
+          `[INRAB] Confirmation de paiement - Facture ${factureNumber}`,
+          generatePaymentEmailTemplate({
+            clientName: templateData.client.nom,
+            clientEmail: templateData.client.email,
+            clientPhone: templateData.client.telephone,
+            amount: templateData.total,
+            invoiceNumber: factureNumber,
+            details: '',
+            isAdmin: false
+          })
+        );
+
+        console.log('Emails de confirmation envoyés avec succès');
+      } catch (emailError) {
+        console.error("Erreur lors de l'envoi des emails:", emailError);
+        // Ne pas bloquer la réponse même si l'email échoue
+      }
+    }
+
 
     console.log("Document enregistré avec succès");
     res.json({
       status: "success",
-      message: isFinal ? "Facture finale générée" : "Facture proforma générée",
+      message: "Facture générée avec succès",
       data: {
         documentId: (result as any).insertId,
         factureNumber,
-        isFinal,
-        filePath: `uploads/factures/${filename}`
       },
     });
   } catch (error) {
@@ -464,7 +560,7 @@ export const getFacture = async (req: AuthenticatedRequest, res: Response) => {
 
     if (type === "commande") {
       query = `
-        SELECT c.*, u.nom as client_nom, u.email as client_email, p.nom as produit_nom
+        SELECT c.*, u.nom as client_nom, u.email as client_email, u.telephone as client_telephone, p.nom as produit_nom
         FROM commandes c
         JOIN utilisateurs u ON c.utilisateur_id = u.id
         JOIN produits p ON c.produit_id = p.id
@@ -473,7 +569,7 @@ export const getFacture = async (req: AuthenticatedRequest, res: Response) => {
       params = [id];
     } else if (type === "service") {
       query = `
-        SELECT d.*, u.nom as client_nom, u.email as client_email, s.nom as service_nom, s.prix
+        SELECT d.*, u.nom as client_nom, u.email as client_email, u.telephone as client_telephone, s.nom as service_nom, s.prix
         FROM demandes d
         JOIN utilisateurs u ON d.utilisateur_id = u.id
         JOIN services s ON d.service_id = s.id
@@ -503,6 +599,7 @@ export const getFacture = async (req: AuthenticatedRequest, res: Response) => {
       client: {
         nom: data.client_nom,
         email: data.client_email,
+        telephone: data.client_telephone
       },
       items: [
         {
@@ -520,6 +617,9 @@ export const getFacture = async (req: AuthenticatedRequest, res: Response) => {
           : parseFloat(data.prix),
     };
 
+    // const html = generateFactureHTML(templateData);
+
+    // Retourner juste le HTML et les métadonnées
     res.json({
       status: "success",
       factureNumber,

@@ -11,6 +11,7 @@ interface AuthenticatedRequest extends Request {
     id: number;
     nom: string;
     email: string;
+    telephone: string;
     role: string;
   };
 }
@@ -130,6 +131,7 @@ const generateFactureHTML = (data: any) => {
         <h3>Client</h3>
         <p><strong>Nom:</strong> ${data.client.nom}</p>
         <p><strong>Email:</strong> ${data.client.email}</p>
+        <p><strong>Tél:</strong> ${data.client.telephone}</p>
       </div>
 
       <table>
@@ -388,6 +390,7 @@ export const generateFacture = async (
       client: {
         nom: data.client_nom,
         email: data.client_email,
+        telephone: data.client_telephone,
       },
       items: [
         {
@@ -436,16 +439,19 @@ export const generateFacture = async (
 
     // Enregistrer le document dans la base de données
     console.log("Enregistrement dans la base de données...");
+
     const [result] = await pool.query(
-      "INSERT INTO documents (commande_id, demande_id, nom_fichier, chemin_fichier, type_document, categorie, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO documents (commande_id, demande_id, service_id, document_demande_id, nom_fichier, chemin_fichier, type_document, categorie, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         type === "commande" ? id : null,
         type === "service" ? id : null,
+        type === "service" ? data.service_id : null,
+        null, // document_demande_id
         `facture_proforma_${id}.pdf`,
         `uploads/factures/facture_proforma_${id}.pdf`,
         type,
         "facture",
-        req.user.id,
+        req.user.role.toLowerCase() === 'admin' ? 'admin' : 'client'
       ]
     );
 
@@ -519,6 +525,7 @@ export const getFacture = async (req: AuthenticatedRequest, res: Response) => {
       client: {
         nom: data.client_nom,
         email: data.client_email,
+        telephone: data.client_telephone,
       },
       items: [
         {

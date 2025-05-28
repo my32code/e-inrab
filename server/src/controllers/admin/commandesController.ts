@@ -90,26 +90,54 @@ export const updateCommandeStatus = async (req: AuthenticatedRequest, res: Respo
     try {
         const dbStatus = mapStatusToDb(status);
 
+        // Récupérer les informations de la commande avant la mise à jour
+        const [commande]: any = await query(
+            `SELECT c.*, u.email, u.telephone, p.stock 
+             FROM commandes c 
+             JOIN utilisateurs u ON c.utilisateur_id = u.id 
+             JOIN produits p ON c.produit_id = p.id
+             WHERE c.id = ?`,
+            [id]
+        );
+
+        if (!commande) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Commande non trouvée'
+            });
+        }
+
+        // Si le statut passe à "expediee", mettre à jour le stock
+        if (status === 'shipped') {
+            const nouveauStock = commande.stock - commande.quantite;
+            
+            if (nouveauStock < 0) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Stock insuffisant pour expédier la commande'
+                });
+            }
+
+            // Mettre à jour le stock du produit
+            await query(
+                'UPDATE produits SET stock = ? WHERE id = ?',
+                [nouveauStock, commande.produit_id]
+            );
+        }
+
         // Mise à jour du statut dans la base de données
         await query(
             'UPDATE commandes SET statut = ? WHERE id = ?',
             [dbStatus, id]
         );
 
-        // Récupérer l'email de l'utilisateur concerné
-        const [commande]: any = await query(
-            `SELECT u.email 
-             FROM commandes c 
-             JOIN utilisateurs u ON c.utilisateur_id = u.id 
-             WHERE c.id = ?`,
-            [id]
-        );
-
-        if (commande && commande.email) {
+        // Envoyer l'email de notification
+        if (commande.email) {
             await sendEmailNotification(
                 [commande.email],
                 'Mise à jour du statut de votre commande',
-                `Le statut de votre commande ou demande de service est passé à : ${status}.`
+                `Le statut de votre commande à été mis à jour.
+                Pour toute question, vous pouvez nous contacter au +229 64 28 37 02.`
             );
         }
 
@@ -125,3 +153,4 @@ export const updateCommandeStatus = async (req: AuthenticatedRequest, res: Respo
         });
     }
 };
+ 

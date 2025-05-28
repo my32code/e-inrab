@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { query } from '../services/db';
 import { sendEmailNotification } from '../controllers/notificationsController';
+import { savePendingOrder, getUserPendingOrders, removePendingOrder } from '../services/pendingOrders';
+import { v4 as uuidv4 } from 'uuid';
 
 interface User {
   id: number;
@@ -41,42 +43,59 @@ export const createCommande = async (req: AuthenticatedRequest, res: Response) =
 
         const utilisateur_id = req.user.id;
 
-        console.log("Création commande pour utilisateur_id:", utilisateur_id);
-        console.log("Body reçu:", req.body);
+        // Récupérer le nom du produit
+        const [produit] = await query(
+            'SELECT nom FROM produits WHERE id = ?',
+            [produit_id]
+        ) as any[];
 
-        const result = await query(
-            'INSERT INTO commandes (utilisateur_id, produit_id, quantite, prix_unitaire, statut) VALUES (?, ?, ?, ?, ?)',
-            [utilisateur_id, produit_id, quantite, prix_unitaire, 'en_attente']
-        );
+        if (!produit) {
+            return res.status(404).json({
+                success: false,
+                message: 'Produit non trouvé'
+            });
+        }
 
-        // 🔔 Envoi d'email aux admins après la commande
-        const admins = await query('SELECT email FROM utilisateurs WHERE role = "admin"');
-        const destinataires = (admins as any[]).map(admin => admin.email);
+        // Créer une commande en attente
+        const pendingOrder = {
+            id: uuidv4(),
+            utilisateur_id,
+            produit_id,
+            produit_nom: produit.nom,
+            quantite,
+            prix_unitaire,
+            createdAt: new Date().toISOString()
+        };
 
-        await sendEmailNotification(
-        destinataires,
-        'Nouvelle commande en attente',
-        `
-            <p>Un utilisateur a soumis une nouvelle commande.</p>
-            <p><strong>Produit ID :</strong> ${produit_id}</p>
-            <p><strong>Quantité :</strong> ${quantite}</p>
-            <p><strong>Prix unitaire :</strong> ${prix_unitaire}</p>
-            <p><strong>Utilisateur ID :</strong> ${utilisateur_id}</p>
-        `
-        );
+        await savePendingOrder(pendingOrder);
 
+        // Envoyer la réponse immédiatement
         res.status(201).json({ 
             success: true, 
             message: 'Commande créée avec succès',
-            commande: {
-                id: (result as any).insertId,
-                utilisateur_id,
-                produit_id,
-                quantite,
-                prix_unitaire,
-                statut: 'en_attente'
-            }
+            commande: pendingOrder
         });
+
+        // Envoyer l'email de manière asynchrone après la réponse
+        try {
+            const admins = await query('SELECT email FROM utilisateurs WHERE role = "admin"');
+            const destinataires = (admins as any[]).map(admin => admin.email);
+
+            await sendEmailNotification(
+                destinataires,
+                'Nouvelle commande en attente',
+                `
+                    <p>Un utilisateur a soumis une nouvelle commande.</p>
+                    <p><strong>Produit :</strong> ${produit.nom}</p>
+                    <p><strong>Quantité :</strong> ${quantite}</p>
+                    <p><strong>Prix unitaire :</strong> ${prix_unitaire}</p>
+                    <p><strong>Utilisateur ID :</strong> ${utilisateur_id}</p>
+                `
+            );
+        } catch (emailError) {
+            console.error('Erreur lors de l\'envoi de l\'email:', emailError);
+            // Ne pas propager l'erreur car la commande a déjà été créée
+        }
     } catch (error) {
         console.error('Erreur lors de la création de la commande:', error);
         res.status(500).json({ 
@@ -90,7 +109,11 @@ export const getUserCommandes = async (req: AuthenticatedRequest, res: Response)
     const userId = req.user.id;
 
     try {
-        const commandes = await query(`
+        // Récupérer les commandes en attente
+        const pendingOrders = await getUserPendingOrders(userId);
+
+        // Récupérer les commandes en base de données
+        const dbCommandes = await query(`
             SELECT 
                 c.id,
                 c.produit_id,
@@ -105,14 +128,21 @@ export const getUserCommandes = async (req: AuthenticatedRequest, res: Response)
             ORDER BY c.created_at DESC
         `, [userId]);
 
-        const commandesWithStatus = (commandes as any[]).map(commande => ({
-            ...commande,
-            status: mapStatus(commande.statut)
-        }));
+        // Combiner les commandes en attente et les commandes en base de données
+        const allCommandes = [
+            ...pendingOrders.map(order => ({
+                ...order,
+                status: 'pending'
+            })),
+            ...(dbCommandes as any[]).map(commande => ({
+                ...commande,
+                status: mapStatus(commande.statut)
+            }))
+        ];
 
         res.json({
             status: 'success',
-            data: commandesWithStatus
+            data: allCommandes
         });
     } catch (error) {
         console.error('Erreur lors de la récupération des commandes:', error);
@@ -156,6 +186,49 @@ export const getCommande = async (req: AuthenticatedRequest, res: Response) => {
         res.status(500).json({
             status: 'error',
             message: 'Erreur lors de la récupération de la commande'
+        });
+    }
+};
+
+export const confirmCommande = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { orderId } = req.params;
+        const userId = req.user.id;
+
+        // Récupérer la commande en attente
+        const pendingOrders = await getUserPendingOrders(userId);
+        const pendingOrder = pendingOrders.find(order => order.id === orderId);
+
+        if (!pendingOrder) {
+            return res.status(404).json({
+                success: false,
+                message: 'Commande en attente non trouvée'
+            });
+        }
+
+        // Insérer la commande en base de données
+        const result = await query(
+            'INSERT INTO commandes (utilisateur_id, produit_id, quantite, prix_unitaire, statut) VALUES (?, ?, ?, ?, ?)',
+            [userId, pendingOrder.produit_id, pendingOrder.quantite, pendingOrder.prix_unitaire, 'payee']
+        );
+
+        // Supprimer la commande en attente
+        await removePendingOrder(orderId);
+
+        res.json({
+            success: true,
+            message: 'Commande confirmée avec succès',
+            commande: {
+                db_id: (result as any).insertId,
+                ...pendingOrder,
+                status: 'paid'
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de la confirmation de la commande:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur lors de la confirmation de la commande'
         });
     }
 }; 

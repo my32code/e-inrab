@@ -192,24 +192,26 @@ actor "Client" as Client
 actor "Administrateur" as Admin
 
 rectangle "E-INRAB" {
-  usecase "Consulter catalogue" as UC1
-  usecase "S'inscrire" as UC2
-  usecase "Se connecter" as UC3
-  usecase "Gérer profil" as UC4
-  usecase "Passer commande" as UC5
-  usecase "Demander service" as UC6
-  usecase "Upload preuve paiement" as UC7
-  usecase "Consulter commandes" as UC8
-  usecase "Consulter demandes" as UC9
-  usecase "Gérer catalogue" as UC10
-  usecase "Valider paiements" as UC11
-  usecase "Gérer utilisateurs" as UC12
-  usecase "Générer factures" as UC13
-  usecase "Gérer documents" as UC14
-  usecase "Traiter commandes" as UC15
-  usecase "Traiter demandes" as UC16
-  usecase "Envoyer notifications" as UC17
-  usecase "Traiter paiement" as UC18
+  usecase "Consulter page d'accueil" as UC1
+  usecase "Consulter page contact" as UC2
+  usecase "S'inscrire" as UC3
+  usecase "Se connecter" as UC4
+  usecase "Consulter catalogue" as UC5
+  usecase "Gérer profil" as UC6
+  usecase "Passer commande" as UC7
+  usecase "Demander service" as UC8
+  usecase "Upload preuve paiement" as UC9
+  usecase "Consulter commandes" as UC10
+  usecase "Consulter demandes" as UC11
+  usecase "Gérer catalogue" as UC12
+  usecase "Valider paiements" as UC13
+  usecase "Gérer utilisateurs" as UC14
+  usecase "Générer factures" as UC15
+  usecase "Gérer documents" as UC16
+  usecase "Traiter commandes" as UC17
+  usecase "Traiter demandes" as UC18
+  usecase "Envoyer notifications" as UC19
+  usecase "Traiter paiement" as UC20
 }
 
 ' Relations Visiteur
@@ -219,48 +221,54 @@ Visitor --> UC3
 
 ' Relations Client
 Client --> UC1
-Client --> UC3
+Client --> UC2
 Client --> UC4
 Client --> UC5
 Client --> UC6
 Client --> UC7
 Client --> UC8
 Client --> UC9
+Client --> UC10
+Client --> UC11
 
 ' Relations Admin
 Admin --> UC1
-Admin --> UC3
-Admin --> UC10
-Admin --> UC11
+Admin --> UC2
+Admin --> UC4
+Admin --> UC5
 Admin --> UC12
 Admin --> UC13
 Admin --> UC14
 Admin --> UC15
 Admin --> UC16
 Admin --> UC17
+Admin --> UC18
+Admin --> UC19
 
 ' Inclusions
-UC5 ..> UC3 : <<include>>
-UC6 ..> UC3 : <<include>>
-UC7 ..> UC3 : <<include>>
-UC8 ..> UC3 : <<include>>
-UC9 ..> UC3 : <<include>>
-UC10 ..> UC3 : <<include>>
-UC11 ..> UC3 : <<include>>
-UC12 ..> UC3 : <<include>>
-UC13 ..> UC3 : <<include>>
-UC14 ..> UC3 : <<include>>
-UC15 ..> UC3 : <<include>>
-UC16 ..> UC3 : <<include>>
+UC4 ..> UC3 : <<include>>
+UC5 ..> UC4 : <<include>>
+UC7 ..> UC4 : <<include>>
+UC8 ..> UC4 : <<include>>
+UC9 ..> UC4 : <<include>>
+UC10 ..> UC4 : <<include>>
+UC11 ..> UC4 : <<include>>
+UC12 ..> UC4 : <<include>>
+UC13 ..> UC4 : <<include>>
+UC14 ..> UC4 : <<include>>
+UC15 ..> UC4 : <<include>>
+UC16 ..> UC4 : <<include>>
+UC17 ..> UC4 : <<include>>
+UC18 ..> UC4 : <<include>>
 
 ' Extensions
-UC5 <.. UC7 : <<extend>>
-UC6 <.. UC7 : <<extend>>
-UC5 <.. UC18 : <<extend>>
-UC6 <.. UC18 : <<extend>>
-UC11 <.. UC17 : <<extend>>
-UC15 <.. UC17 : <<extend>>
-UC16 <.. UC17 : <<extend>>
+UC7 <.. UC9 : <<extend>>
+UC8 <.. UC9 : <<extend>>
+UC7 <.. UC20 : <<extend>>
+UC8 <.. UC20 : <<extend>>
+UC13 <.. UC19 : <<extend>>
+UC17 <.. UC19 : <<extend>>
+UC18 <.. UC19 : <<extend>>
 
 @enduml
 

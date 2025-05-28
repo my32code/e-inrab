@@ -43,6 +43,9 @@ interface Document {
   created_at: string;
   produit_nom?: string;
   service_nom?: string;
+  request?: {
+    status: string;
+  };
 }
 
 interface Item {
@@ -54,6 +57,7 @@ interface Item {
 interface Client {
   nom: string;
   email: string;
+  telephone: string;
 }
 
 interface BillData {
@@ -208,21 +212,43 @@ export function MonCompte() {
 
   const fetchCommandes = async () => {
     try {
+      console.log('Début de la récupération des commandes...');
+      const sessionId = localStorage.getItem('sessionId');
+      
+      if (!sessionId) {
+        console.log('Pas de session ID trouvé, redirection vers la page de connexion');
+        navigate('/login');
+        return;
+      }
+
       const response = await fetch('http://localhost:3000/api/commandes', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+          'Authorization': `Bearer ${sessionId}`
         }
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des commandes');
+        if (response.status === 401) {
+          console.log('Session expirée, redirection vers la page de connexion');
+          localStorage.removeItem('sessionId');
+          localStorage.removeItem('user');
+          navigate('/login');
+          return;
+        }
+        throw new Error(`Erreur HTTP: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('Commandes récupérées:', data);
       setCommandes(data.data);
     } catch (error) {
+      console.error('Erreur détaillée:', error);
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        toast.error('Impossible de se connecter au serveur. Veuillez vérifier que le serveur est en cours d\'exécution.');
+      } else {
+        toast.error('Une erreur est survenue lors du chargement de vos commandes');
+      }
       setError('Une erreur est survenue lors du chargement de vos commandes');
-      console.error('Erreur:', error);
     } finally {
       setLoading(false);
     }
@@ -244,7 +270,28 @@ export function MonCompte() {
 
       const data = await response.json();
       console.log('Documents récupérés:', data.data);
-      setDocuments(data.data);
+
+      // Récupérer les statuts des demandes de service
+      const documentsWithStatus = await Promise.all(data.data.map(async (doc: Document) => {
+        if (doc.type_document === 'service' && doc.demande_id) {
+          try {
+            const serviceResponse = await fetch(`http://localhost:3000/api/service-requests/${doc.demande_id}`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+              }
+            });
+            if (serviceResponse.ok) {
+              const serviceData = await serviceResponse.json();
+              return { ...doc, request: serviceData.data };
+            }
+          } catch (error) {
+            console.error('Erreur lors de la récupération du statut du service:', error);
+          }
+        }
+        return doc;
+      }));
+
+      setDocuments(documentsWithStatus);
     } catch (error) {
       console.error('Erreur complète lors de la récupération des documents:', error);
       toast.error('Erreur lors de la récupération des documents');
@@ -367,14 +414,19 @@ export function MonCompte() {
   };
 
   const handlePayment = async (commandeId: string, amount: number) => {
-    // On ouvre d'abord le modal de facture
-    const commande = commandes.find(c => c.id === commandeId);
-    if (commande) {
-      await handleGetFacture(commande);
+    try {
+      // On ouvre d'abord le modal de facture
+      const commande = commandes.find(c => c.id === commandeId);
+      if (commande) {
+        await handleGetFacture(commande);
+      }
+    } catch (error) {
+      console.error('Erreur lors du paiement:', error);
+      toast.error('Erreur lors du paiement');
     }
   };
 
-    // Fonction pour ouvrir le modal de facture
+  // Fonction pour ouvrir le modal de facture
   const handleGetFacture = async (commande: Commande) => {
     try {
       const response = await fetch(
@@ -398,6 +450,7 @@ export function MonCompte() {
       }
 
       const data = await response.json();
+      console.log('Données de la facture:', data?.meta);
 
       setBillData(data?.meta);
       setBillCommande(data?.commande);
@@ -411,45 +464,72 @@ export function MonCompte() {
   };
 
   // Fonction pour ouvrir le widget de paiement
-  const openPaymentWidget = (commande: Commande) => {
+  const openPaymentWidget = async (commande: Commande) => {
     setBillCommande(commande);
     openKkiapayWidget({
       amount: commande.quantite * commande.prix_unitaire,
-      api_key: "79429420652011efbf02478c5adba4b8", // Remplacez par votre clé API
-      sandbox: true, // Mettez à false en production
+      api_key: "79429420652011efbf02478c5adba4b8",
+      sandbox: true,
       name: user.nom,
       email: user.email,
-      phone: "97000000", // Numéro de test
+      phone: "97000000",
     });
   };
 
-  const successHandler = async (response: any) => {
+  //Fonction pour generer facture finale
+  const handleGenerateFacture = async (type: 'commande' | 'service', id: string, isFinal: boolean) => {
     try {
-      if (billService) {
-        // Utilisez votre endpoint existant avec isFinal: true
-        const res = await fetch("http://localhost:3000/api/factures/generate", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("sessionId")}`,
-          },
-          body: JSON.stringify({
-            type: "service",
-            id: billService.id,
-            isFinal: true, // Ce flag déclenchera generateFinalFactureHTML
-          }),
-        });
+      const response = await fetch("http://localhost:3000/api/factures/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" ,
+          Authorization: `Bearer ${localStorage.getItem("sessionId")}`},
+        body: JSON.stringify({ type, id, isFinal })
+      });
   
-        if (!res.ok) throw new Error("Erreur génération facture");
-        
-        toast.success("Paiement confirmé ! Facture disponible dans vos documents");
-        fetchDocuments();
-      }
+      if (!response.ok) throw new Error("Erreur de génération");
+      
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error("Erreur:", error);
-      toast.error("Erreur lors de la confirmation du paiement");
+      throw error;
     }
-  };
+  }
+
+  // Gestionnaire de succès de paiement
+  const successHandler = async (response: any) => {
+    try {
+      console.log('Paiement réussi, données:', response);
+      console.log('billService:', billService);
+      console.log('billCommande:', billCommande);
+    
+      if (billService) {
+        console.log('Génération facture service:', billService.id);
+        await handleGenerateFacture('service', billService.id, true);
+      } 
+      if (billCommande) {
+        // Confirmer la commande après paiement réussi
+        const confirmResponse = await fetch(`http://localhost:3000/api/commandes/${billCommande.id}/confirm`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+          }
+        });
+
+        if (!confirmResponse.ok) {
+          throw new Error('Erreur lors de la confirmation de la commande');
+        }
+
+        await handleGenerateFacture('commande', billCommande.id, true);
+      }
+      
+      toast.success("Paiement et facture validés");
+      fetchCommandes(); // Rafraîchir la liste des commandes
+    } catch (error) {
+      console.error("Erreur:", error);
+      toast.error("Paiement accepté mais erreur de facturation");
+    }
+  }
 
   // Gestionnaire d'échec de paiement
   const failureHandler = (error: any) => {
@@ -466,7 +546,7 @@ export function MonCompte() {
       removeKkiapayListener("success", successHandler);
       removeKkiapayListener("failed", failureHandler);
     };
-  }, [addKkiapayListener, removeKkiapayListener, billCommande]);
+  }, [addKkiapayListener, removeKkiapayListener, billCommande, billService]);
 
   const markNotificationAsRead = async (id: number) => {
     try {
@@ -846,7 +926,15 @@ export function MonCompte() {
                 ) : (
                   <div className="space-y-4">
                     {documents.map((doc) => {
-                      
+                      console.log('Rendu du document:', {
+                        id: doc.id,
+                        nom: doc.nom_fichier,
+                        type: doc.type_document,
+                        categorie: doc.categorie,
+                        service_id: doc.service_id,
+                        commande_id: doc.commande_id,
+                        demande_id: doc.demande_id
+                      });
                       return (
                         <div
                           key={doc.id}
@@ -867,7 +955,7 @@ export function MonCompte() {
                             </div>
                           </div>
                           <div className="flex space-x-4">
-                            {doc.categorie === 'facture' && doc.type_document === 'service' && doc.nom_fichier.includes('proforma') && (
+                            {doc.categorie === 'facture' && doc.type_document === 'service' && doc.nom_fichier.includes('proforma') && doc.request?.status !== 'paid' && (
                               <button
                                 onClick={async (e) => {
                                   e.stopPropagation();
@@ -899,7 +987,7 @@ export function MonCompte() {
                                     }
 
                                     // Stocker d'abord les informations de la demande
-                                    setBillService({
+                                    const serviceData = {
                                       id: doc.demande_id?.toString() || '',
                                       serviceId: doc.service_id?.toString() || '',
                                       serviceName: doc.service_nom || '',
@@ -908,10 +996,15 @@ export function MonCompte() {
                                       description: requestData.data.description || '',
                                       createdAt: requestData.data.date_demande,
                                       documents: []
-                                    });
+                                    };
+
+                                    setBillService(serviceData as ServiceRequest);
 
                                     // Attendre que l'état soit mis à jour
-                                    await new Promise(resolve => setTimeout(resolve, 100));
+                                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                                    // Vérifier que billService est bien mis à jour
+                                    console.log('billService avant paiement:', serviceData);
 
                                     // Ouvrir le widget KkiaPay
                                     openKkiapayWidget({
@@ -1098,6 +1191,9 @@ export function MonCompte() {
                     </p>
                     <p>
                       <strong>Email:</strong> {billData.client.email}
+                    </p>
+                    <p>
+                      <strong>Tél:</strong> {billData.client.telephone || 'Non renseigné'}
                     </p>
                   </div>
 

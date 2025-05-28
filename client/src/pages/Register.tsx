@@ -14,6 +14,7 @@ const registerSchema = z.object({
   role: z.enum(['agriculteur', 'chercheur', 'entreprise', 'partenaire', 'admin']),
   mot_de_passe: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
   confirmPassword: z.string(),
+  telephone: z.string().regex(/^\+?[0-9\s\-\(\)]{8,15}$/, 'Numéro de téléphone invalide'),
 }).refine((data) => data.mot_de_passe === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas",
   path: ["confirmPassword"],
@@ -43,7 +44,8 @@ export function Register() {
           nom: data.nom,
           email: data.email,
           mot_de_passe: data.mot_de_passe,
-          role: data.role
+          role: data.role,
+          telephone: data.telephone
         })
       });
   
@@ -96,19 +98,17 @@ export function Register() {
               )}
             </div>
 
-            {/* Champ Rôle */}
+            {/* Champ Téléphone */}
             <div>
-              <label htmlFor="role" className="sr-only">Rôle</label>
-              <select
-                {...formregister('role')}
+              <label htmlFor="telephone" className="sr-only">Numéro de téléphone</label>
+              <input
+                {...formregister('telephone')}
+                type="tel"
+                placeholder="Numéro de téléphone (ex: +229 64 28 37 02)"
                 className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
-              >
-                <option value="agriculteur">Agriculteur</option>
-                <option value="chercheur">Chercheur</option>
-                <option value="entreprise">Entreprise</option>
-                <option value="partenaire">Partenaire</option>
-                <option value="admin">Administrateur</option>
-              </select>
+                pattern="^\+?[0-9\s\-\(\)]{8,15}$"
+                title="Format: +XXX XX XX XX XX (ex: +229 64 28 37 02)"
+              />
             </div>
 
             {/* Champ Mot de passe */}

@@ -110,7 +110,8 @@ export const updateServiceRequestStatus = async (req: AuthenticatedRequest, res:
             await sendEmailNotification(
                 [demande.email],
                 'Mise à jour du statut de votre demande de service',
-                `Le statut de votre commande ou demande de service est passé à : ${status}.`
+                `Le statut de votre demande de service à été mis à jour.
+                Pour toute question, vous pouvez nous contacter au +229 64 28 37 02.`
             );
         }
 

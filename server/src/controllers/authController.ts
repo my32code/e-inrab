@@ -6,10 +6,16 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { nom, email, mot_de_passe, role } = req.body;
+    const { nom, email, mot_de_passe, telephone } = req.body;
     
-    if (!nom || !email || !mot_de_passe || !role) {
+    if (!nom || !email || !mot_de_passe || !telephone) {
       return res.status(400).json({ error: 'Tous les champs sont requis' });
+    }
+
+    // Validation du format du numéro de téléphone
+    const phoneRegex = /^\+?[0-9\s\-\(\)]{8,15}$/;
+    if (!phoneRegex.test(telephone)) {
+      return res.status(400).json({ error: 'Format de numéro de téléphone invalide' });
     }
 
     const hashedPassword = await bcrypt.hash(mot_de_passe, 12);
@@ -18,7 +24,8 @@ export const register = async (req: Request, res: Response) => {
       nom,
       email,
       mot_de_passe: hashedPassword,
-      role,
+      role: 'agriculteur', // Rôle par défaut
+      telephone,
       date_inscription: new Date(),
     });
     
@@ -58,7 +65,8 @@ export const login = async (req: Request, res: Response) => {
         id: user.id,
         nom: user.nom,
         email: user.email,
-        role: user.role
+        role: user.role,
+        telephone: user.telephone
       }
     });
 

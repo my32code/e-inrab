@@ -97,7 +97,7 @@ export function ServiceRequest() {
                 <ul className="list-disc list-inside text-sm text-blue-700">
                   votre demande doit comporter :
                   <li>Identité du demandeur</li>
-                  <li>Objet de la demande</li>
+                  <li>Objet de la demande(Demande de facture Proforma pour [nom service])</li>
                   <li>Description du service</li>
                   <li>Justification du besoin</li>
                   <li>Signature ou validation</li>

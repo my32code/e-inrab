@@ -126,25 +126,46 @@ export function Catalogue() {
         ? produit.prix_numerique 
         : parseFloat(produit.prix.replace(/[^0-9.-]+/g, ''));
       
-      const response = await fetch('http://localhost:3000/api/commandes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
-        },
-        body: JSON.stringify({
-          produit_id: produit.id,
-          quantite,
-          prix_unitaire: prixUnitaire
-        })
-      });
+      const maxRetries = 3;
+      let retryCount = 0;
+      let success = false;
 
-      if (!response.ok) {
-        throw new Error('Erreur lors de la commande');
+      while (retryCount < maxRetries && !success) {
+        try {
+          console.log(`Tentative ${retryCount + 1} de création de la commande...`);
+          const response = await fetch('http://localhost:3000/api/commandes', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+            },
+            body: JSON.stringify({
+              produit_id: produit.id,
+              quantite,
+              prix_unitaire: prixUnitaire
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log('Commande créée avec succès:', data);
+          toast.success('Commande effectuée avec succès');
+          success = true;
+        } catch (error) {
+          retryCount++;
+          console.log(`Tentative ${retryCount} échouée:`, error);
+          
+          if (retryCount === maxRetries) {
+            throw error;
+          }
+          
+          // Attendre avant de réessayer (temps d'attente croissant)
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        }
       }
-
-      const data = await response.json();
-      toast.success('Commande effectuée avec succès');
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Erreur lors de la commande');
@@ -228,37 +249,37 @@ export function Catalogue() {
               const total = !isNaN(prixUnitaire) ? quantite * prixUnitaire : 0;
               
               return (
-                <div
-                  key={produit.id}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300"
-                >
-                  <div className="aspect-w-16 aspect-h-9">
-                    <img
-                      src={getProduitImage(produit.nom)}
-                      alt={produit.nom}
-                      className="w-full h-48 object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = produitImages.default;
-                      }}
-                    />
-                  </div>
+              <div
+                key={produit.id}
+                className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300"
+              > 
+                <div className="aspect-w-16 aspect-h-9">
+                  <img
+                    src={getProduitImage(produit.nom)}
+                    alt={produit.nom}
+                    className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = produitImages.default;
+                    }}
+                  />
+                </div>
 
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-xl font-bold">{produit.nom}</h3>
-                      <span className="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                        {produit.categorie}
-                      </span>
-                    </div>
-                    <p className="text-gray-600 mb-4">{produit.description}</p>
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-500">
-                        <span className="font-medium">Pièces requises:</span> {produit.pieces_requises}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        <span className="font-medium">Délai de mise à disposition:</span> {produit.delai_mise_disposition}
-                      </p>
-                    </div>
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-bold">{produit.nom}</h3>
+                    <span className="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">
+                      {produit.categorie}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 mb-4">{produit.description}</p>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-500">
+                      <span className="font-medium">Pièces requises:</span> {produit.pieces_requises}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      <span className="font-medium">Délai de mise à disposition:</span> {produit.delai_mise_disposition}
+                    </p>
+                  </div>
                     
                     {/* Quantité et prix */}
                     <div className="mt-4 space-y-4">
@@ -296,16 +317,16 @@ export function Catalogue() {
                             {!isNaN(total) ? `${total.toLocaleString()} FCFA` : 'Prix sur demande'}
                           </span>
                         </div>
-                        <button 
-                          className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          onClick={() => handleCommande(produit)}
+                    <button 
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => handleCommande(produit)}
                           disabled={isCommandeLoading === produit.id || isNaN(total) || total === 0}
-                        >
-                          {isCommandeLoading === produit.id ? 'En cours...' : 'Commander'}
-                        </button>
-                      </div>
-                    </div>
+                    >
+                      {isCommandeLoading === produit.id ? 'En cours...' : 'Commander'}
+                    </button>
                   </div>
+                </div>
+              </div>
                 </div>
               );
             })}

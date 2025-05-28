@@ -45,9 +45,7 @@ function App() {
           } />
           
           <Route path="/contact" element={
-            <ProtectedRoute>
-              <Contact />
-            </ProtectedRoute>
+            <Contact />
           } />
         
         <Route path="/catalogue" element={

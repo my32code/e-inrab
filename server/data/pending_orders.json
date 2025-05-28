@@ -1,0 +1,83 @@
+[
+  {
+    "id": "b9cfc79b-fc3b-4ff4-9772-dfd29b33805d",
+    "utilisateur_id": 7,
+    "produit_id": 1,
+    "produit_nom": "Graines germées de palmier à huile",
+    "quantite": 1,
+    "prix_unitaire": 250,
+    "createdAt": "2025-05-28T14:51:28.182Z"
+  },
+  {
+    "id": "2700fe09-395e-4615-aaec-9b1c54adbf71",
+    "utilisateur_id": 7,
+    "produit_id": 1,
+    "produit_nom": "Graines germées de palmier à huile",
+    "quantite": 1,
+    "prix_unitaire": 250,
+    "createdAt": "2025-05-28T15:01:58.040Z"
+  },
+  {
+    "id": "d6cc3b03-e94b-4642-a40c-a37f19b9e1f2",
+    "utilisateur_id": 7,
+    "produit_id": 2,
+    "produit_nom": "Plants de palmier à huile",
+    "quantite": 1,
+    "prix_unitaire": 705,
+    "createdAt": "2025-05-28T15:07:53.337Z"
+  },
+  {
+    "id": "6af80a34-720b-463d-9f53-760a7f5d871b",
+    "utilisateur_id": 7,
+    "produit_id": 1,
+    "produit_nom": "Graines germées de palmier à huile",
+    "quantite": 1,
+    "prix_unitaire": 250,
+    "createdAt": "2025-05-28T15:28:39.541Z"
+  },
+  {
+    "id": "dc83e520-3e90-4f0c-89b3-e069ca2e14ad",
+    "utilisateur_id": 7,
+    "produit_id": 1,
+    "produit_nom": "Graines germées de palmier à huile",
+    "quantite": 1,
+    "prix_unitaire": 250,
+    "createdAt": "2025-05-28T15:34:07.311Z"
+  },
+  {
+    "id": "ff0ec7d4-f63a-4b89-9f02-78dca0bdbc89",
+    "utilisateur_id": 7,
+    "produit_id": 1,
+    "produit_nom": "Graines germées de palmier à huile",
+    "quantite": 1,
+    "prix_unitaire": 250,
+    "createdAt": "2025-05-28T15:56:49.381Z"
+  },
+  {
+    "id": "b4b4663c-7365-4119-9ce6-e365622ba21b",
+    "utilisateur_id": 7,
+    "produit_id": 1,
+    "produit_nom": "Graines germées de palmier à huile",
+    "quantite": 1,
+    "prix_unitaire": 250,
+    "createdAt": "2025-05-28T16:18:14.852Z"
+  },
+  {
+    "id": "1907438b-e462-4500-bdc4-208c7b97ecc3",
+    "utilisateur_id": 7,
+    "produit_id": 2,
+    "produit_nom": "Plants de palmier à huile",
+    "quantite": 1,
+    "prix_unitaire": 705,
+    "createdAt": "2025-05-28T16:28:41.589Z"
+  },
+  {
+    "id": "af4daf4f-2d16-4a4f-baac-49d5aac39223",
+    "utilisateur_id": 7,
+    "produit_id": 2,
+    "produit_nom": "Plants de palmier à huile",
+    "quantite": 1,
+    "prix_unitaire": 705,
+    "createdAt": "2025-05-28T16:29:46.541Z"
+  }
+]
