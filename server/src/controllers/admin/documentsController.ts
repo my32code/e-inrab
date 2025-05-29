@@ -243,4 +243,77 @@ export const getUserDocuments = async (req: AuthenticatedRequest, res: Response)
   }
 };
 
+// Récupérer tous les documents
+export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const query = `
+            SELECT d.*, 
+                   p.nom as produit_nom,
+                   s.nom as service_nom,
+                   u.nom as utilisateur_nom,
+                   u.email as utilisateur_email
+            FROM documents d
+            LEFT JOIN commandes c ON d.commande_id = c.id
+            LEFT JOIN demandes de ON d.demande_id = de.id
+            LEFT JOIN produits p ON c.produit_id = p.id
+            LEFT JOIN services s ON de.service_id = s.id
+            LEFT JOIN utilisateurs u ON c.utilisateur_id = u.id OR de.utilisateur_id = u.id
+            ORDER BY d.created_at DESC
+        `;
+
+        const [rows] = await pool.query(query);
+        
+        res.json({
+            status: 'success',
+            data: rows
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des documents:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Erreur lors de la récupération des documents'
+        });
+    }
+};
+
+// Supprimer un document
+export const deleteDocument = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        // Récupérer le chemin du fichier avant de le supprimer
+        const [document] = await pool.query(
+            'SELECT chemin_fichier FROM documents WHERE id = ?',
+            [id]
+        ) as any[];
+
+        if (!document) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Document non trouvé'
+            });
+        }
+
+        // Supprimer le fichier physique
+        const filePath = path.join(__dirname, '../../../', document.chemin_fichier);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+
+        // Supprimer l'enregistrement de la base de données
+        await pool.query('DELETE FROM documents WHERE id = ?', [id]);
+
+        res.json({
+            status: 'success',
+            message: 'Document supprimé avec succès'
+        });
+    } catch (error) {
+        console.error('Erreur lors de la suppression du document:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Erreur lors de la suppression du document'
+        });
+    }
+};
+
  

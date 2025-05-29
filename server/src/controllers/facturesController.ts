@@ -359,24 +359,32 @@ export const generateFacture = async (
   res: Response
 ) => {
   try {
-    const { type, id,isFinal } = req.body;
-    console.log("Génération de facture pour:", { type, id });
+    const { type, id, isFinal, commande } = req.body;
+    console.log("Génération de facture pour:", { type, id, commande });
 
+    let data;
     let query = "";
     let params: any[] = [];
 
-    // Récupérer les informations selon le type (commande ou demande de service)
+    // Si c'est une commande, utiliser directement les données envoyées
     if (type === "commande") {
-      query = `
-        SELECT c.*, u.nom as client_nom, u.email as client_email, u.telephone as client_telephone, p.nom as produit_nom
-        FROM commandes c
-        JOIN utilisateurs u ON c.utilisateur_id = u.id
-        JOIN produits p ON c.produit_id = p.id
-        WHERE c.id = ?
-      `;
-      params = [id];
-    } else if (type === "service" && isFinal) {
-      console.log("Génération de la facture finale pour le service:", id);
+      if (!commande) {
+        return res.status(400).json({
+          status: "error",
+          message: "Données de la commande manquantes",
+        });
+      }
+      try {
+        data = JSON.parse(commande);
+      } catch (error) {
+        console.error("Erreur lors du parsing de la commande:", error);
+        return res.status(400).json({
+          status: "error",
+          message: "Format de commande invalide",
+        });
+      }
+    } else if (type === "service") {
+      // Pour les services, continuer avec la logique existante
       query = `
         SELECT d.*, u.nom as client_nom, u.email as client_email, u.telephone as client_telephone, s.nom as service_nom, s.prix
         FROM demandes d
@@ -385,25 +393,22 @@ export const generateFacture = async (
         WHERE d.id = ?
       `;
       params = [id];
+      const [rows] = await pool.query(query, params);
+      
+      if (!rows || (rows as any[]).length === 0) {
+        return res.status(404).json({
+          status: "error",
+          message: "Demande de service non trouvée",
+        });
+      }
+      data = (rows as any[])[0];
     } else {
-      res.status(400).json({
+      return res.status(400).json({
         status: "error",
         message: 'Type invalide. Doit être "commande" ou "service"',
       });
     }
 
-    console.log("Exécution de la requête:", query, params);
-    const [rows] = await pool.query(query, params);
-
-    if (!rows || (rows as any[]).length === 0) {
-      console.log("Aucun résultat trouvé pour:", { type, id });
-      res.status(404).json({
-        status: "error",
-        message: "Commande ou demande non trouvée",
-      });
-    }
-
-    const data = (rows as any[])[0];
     console.log("Données récupérées:", data);
 
     const factureNumber = await generateFactureNumber();
@@ -413,9 +418,9 @@ export const generateFacture = async (
     const templateData = {
       factureNumber,
       client: {
-        nom: data.client_nom,
-        email: data.client_email,
-        telephone: data.client_telephone
+        nom: type === "commande" ? req.user.nom : data.client_nom,
+        email: type === "commande" ? req.user.email : data.client_email,
+        telephone: type === "commande" ? req.user.telephone : data.client_telephone
       },
       items: [
         {
@@ -438,7 +443,7 @@ export const generateFacture = async (
       : `facture_proforma_${id}.pdf`;
 
     // Générer le HTML
-    const html = req.body.isFinal ? generateFinalFactureHTML(templateData) : generateFactureHTML(templateData);
+    const html = isFinal ? generateFinalFactureHTML(templateData) : generateFactureHTML(templateData);
 
     // Créer le dossier factures s'il n'existe pas
     const facturesDir = path.join(__dirname, "../../uploads/factures");
@@ -528,7 +533,6 @@ export const generateFacture = async (
       }
     }
 
-
     console.log("Document enregistré avec succès");
     res.json({
       status: "success",
@@ -555,76 +559,87 @@ export const getFacture = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { type, id, commande } = req.body;
 
-    let query = "";
-    let params: any[] = [];
-
+    // Si c'est une commande, utiliser directement les données envoyées
     if (type === "commande") {
-      query = `
-        SELECT c.*, u.nom as client_nom, u.email as client_email, u.telephone as client_telephone, p.nom as produit_nom
-        FROM commandes c
-        JOIN utilisateurs u ON c.utilisateur_id = u.id
-        JOIN produits p ON c.produit_id = p.id
-        WHERE c.id = ?
-      `;
-      params = [id];
-    } else if (type === "service") {
-      query = `
+      const commandeData = JSON.parse(commande);
+      const factureNumber = await generateFactureNumber();
+
+      const templateData = {
+        factureNumber,
+        client: {
+          nom: req.user.nom,
+          email: req.user.email,
+          telephone: req.user.telephone
+        },
+        items: [
+          {
+            nom: commandeData.produit_nom,
+            quantite: parseInt(commandeData.quantite),
+            prix_unitaire: parseFloat(commandeData.prix_unitaire),
+          },
+        ],
+        total: parseInt(commandeData.quantite) * parseFloat(commandeData.prix_unitaire),
+      };
+
+      res.json({
+        status: "success",
+        factureNumber,
+        meta: templateData,
+        commande: commandeData,
+      });
+      return;
+    }
+
+    // Pour les services, continuer avec la logique existante
+    if (type === "service") {
+      const query = `
         SELECT d.*, u.nom as client_nom, u.email as client_email, u.telephone as client_telephone, s.nom as service_nom, s.prix
         FROM demandes d
         JOIN utilisateurs u ON d.utilisateur_id = u.id
         JOIN services s ON d.service_id = s.id
         WHERE d.id = ?
       `;
-      params = [id];
-    } else {
-      return res.status(400).json({
-        status: "error",
-        message: 'Type invalide. Doit être "commande" ou "service"',
-      });
-    }
+      const [rows] = await pool.query(query, [id]);
+      
+      if (!rows || (rows as any[]).length === 0) {
+        return res.status(404).json({
+          status: "error",
+          message: "Demande de service non trouvée",
+        });
+      }
 
-    const [rows] = await pool.query(query, params);
-    if (!rows || (rows as any[]).length === 0) {
-      return res.status(404).json({
-        status: "error",
-        message: "Commande ou demande non trouvée",
-      });
-    }
+      const data = (rows as any[])[0];
+      const factureNumber = await generateFactureNumber();
 
-    const data = (rows as any[])[0];
-    const factureNumber = await generateFactureNumber();
-
-    const templateData = {
-      factureNumber,
-      client: {
-        nom: data.client_nom,
-        email: data.client_email,
-        telephone: data.client_telephone
-      },
-      items: [
-        {
-          nom: type === "commande" ? data.produit_nom : data.service_nom,
-          quantite: type === "commande" ? parseInt(data.quantite) : 1,
-          prix_unitaire:
-            type === "commande"
-              ? parseFloat(data.prix_unitaire)
-              : parseFloat(data.prix),
+      const templateData = {
+        factureNumber,
+        client: {
+          nom: data.client_nom,
+          email: data.client_email,
+          telephone: data.client_telephone
         },
-      ],
-      total:
-        type === "commande"
-          ? parseInt(data.quantite) * parseFloat(data.prix_unitaire)
-          : parseFloat(data.prix),
-    };
+        items: [
+          {
+            nom: data.service_nom,
+            quantite: 1,
+            prix_unitaire: parseFloat(data.prix),
+          },
+        ],
+        total: parseFloat(data.prix),
+      };
 
-    // const html = generateFactureHTML(templateData);
+      res.json({
+        status: "success",
+        factureNumber,
+        meta: templateData,
+        commande: data,
+      });
+      return;
+    }
 
-    // Retourner juste le HTML et les métadonnées
-    res.json({
-      status: "success",
-      factureNumber,
-      meta: templateData,
-      commande: JSON.parse(commande),
+    res.status(400).json({
+      status: "error",
+      message: 'Type invalide. Doit être "commande" ou "service"',
     });
   } catch (error) {
     console.error(

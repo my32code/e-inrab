@@ -212,43 +212,39 @@ export function MonCompte() {
 
   const fetchCommandes = async () => {
     try {
-      console.log('Début de la récupération des commandes...');
-      const sessionId = localStorage.getItem('sessionId');
-      
-      if (!sessionId) {
-        console.log('Pas de session ID trouvé, redirection vers la page de connexion');
-        navigate('/login');
-        return;
-      }
-
+      // Récupérer les commandes en BDD
       const response = await fetch('http://localhost:3000/api/commandes', {
         headers: {
-          'Authorization': `Bearer ${sessionId}`
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          console.log('Session expirée, redirection vers la page de connexion');
-          localStorage.removeItem('sessionId');
-          localStorage.removeItem('user');
-          navigate('/login');
-          return;
-        }
-        throw new Error(`Erreur HTTP: ${response.status}`);
+        throw new Error('Erreur lors de la récupération des commandes');
       }
 
       const data = await response.json();
-      console.log('Commandes récupérées:', data);
-      setCommandes(data.data);
-    } catch (error) {
-      console.error('Erreur détaillée:', error);
-      if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        toast.error('Impossible de se connecter au serveur. Veuillez vérifier que le serveur est en cours d\'exécution.');
-      } else {
-        toast.error('Une erreur est survenue lors du chargement de vos commandes');
+      const commandesBDD = data.data;
+
+      // Récupérer les commandes en attente
+      const attenteResponse = await fetch('http://localhost:3000/api/commandes/attente', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        }
+      });
+
+      if (!attenteResponse.ok) {
+        throw new Error('Erreur lors de la récupération des commandes en attente');
       }
+
+      const attenteData = await attenteResponse.json();
+      const commandesAttente = attenteData.data;
+
+      // Combiner les commandes
+      setCommandes([...commandesAttente, ...commandesBDD]);
+    } catch (error) {
       setError('Une erreur est survenue lors du chargement de vos commandes');
+      console.error('Erreur:', error);
     } finally {
       setLoading(false);
     }
@@ -414,19 +410,14 @@ export function MonCompte() {
   };
 
   const handlePayment = async (commandeId: string, amount: number) => {
-    try {
-      // On ouvre d'abord le modal de facture
-      const commande = commandes.find(c => c.id === commandeId);
-      if (commande) {
-        await handleGetFacture(commande);
-      }
-    } catch (error) {
-      console.error('Erreur lors du paiement:', error);
-      toast.error('Erreur lors du paiement');
+    // On ouvre d'abord le modal de facture
+    const commande = commandes.find(c => c.id === commandeId);
+    if (commande) {
+      await handleGetFacture(commande);
     }
   };
 
-  // Fonction pour ouvrir le modal de facture
+    // Fonction pour ouvrir le modal de facture
   const handleGetFacture = async (commande: Commande) => {
     try {
       const response = await fetch(
@@ -464,72 +455,111 @@ export function MonCompte() {
   };
 
   // Fonction pour ouvrir le widget de paiement
-  const openPaymentWidget = async (commande: Commande) => {
+  const openPaymentWidget = (commande: Commande) => {
     setBillCommande(commande);
     openKkiapayWidget({
       amount: commande.quantite * commande.prix_unitaire,
-      api_key: "79429420652011efbf02478c5adba4b8",
-      sandbox: true,
+      api_key: "79429420652011efbf02478c5adba4b8", // Remplacez par votre clé API
+      sandbox: true, // Mettez à false en production
       name: user.nom,
       email: user.email,
-      phone: "97000000",
+      phone: "97000000", // Numéro de test
     });
   };
-
   //Fonction pour generer facture finale
   const handleGenerateFacture = async (type: 'commande' | 'service', id: string, isFinal: boolean) => {
     try {
-      const response = await fetch("http://localhost:3000/api/factures/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" ,
-          Authorization: `Bearer ${localStorage.getItem("sessionId")}`},
-        body: JSON.stringify({ type, id, isFinal })
-      });
+        let commandeData;
+        if (type === 'commande') {
+            // Récupérer les détails de la commande depuis la BDD
+            const commandeResponse = await fetch(`http://localhost:3000/api/commandes/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+                }
+            });
+
+            if (!commandeResponse.ok) {
+                throw new Error('Erreur lors de la récupération de la commande');
+            }
+
+            const commandeResult = await commandeResponse.json();
+            commandeData = commandeResult.data;
+        }
+
+        const response = await fetch("http://localhost:3000/api/factures/generate", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("sessionId")}`
+            },
+            body: JSON.stringify({ 
+                type, 
+                id, 
+                isFinal,
+                commande: type === 'commande' ? JSON.stringify(commandeData) : undefined
+            })
+        });
   
-      if (!response.ok) throw new Error("Erreur de génération");
-      
-      const data = await response.json();
-      return data;
+        if (!response.ok) throw new Error("Erreur de génération");
+        
+        const data = await response.json();
+        return data;
     } catch (error) {
-      console.error("Erreur:", error);
-      throw error;
+        console.error("Erreur:", error);
+        throw error;
     }
   }
 
   // Gestionnaire de succès de paiement
   const successHandler = async (response: any) => {
     try {
-      console.log('Paiement réussi, données:', response);
-      console.log('billService:', billService);
-      console.log('billCommande:', billCommande);
+        console.log('Paiement réussi, données:', response);
+        console.log('billService:', billService);
+        console.log('billCommande:', billCommande);
     
-      if (billService) {
-        console.log('Génération facture service:', billService.id);
-        await handleGenerateFacture('service', billService.id, true);
-      } 
-      if (billCommande) {
-        // Confirmer la commande après paiement réussi
-        const confirmResponse = await fetch(`http://localhost:3000/api/commandes/${billCommande.id}/confirm`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
-          }
-        });
+        if (billService) {
+            console.log('Génération facture service:', billService.id);
+            await handleGenerateFacture('service', billService.id, true);
+        } 
+        if (billCommande) {
+            try {
+                // 1. Transférer la commande vers la BDD
+                const transferResponse = await fetch('http://localhost:3000/api/commandes/transferer', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${localStorage.getItem('sessionId')}`
+                    },
+                    body: JSON.stringify({ commandeId: billCommande.id })
+                });
 
-        if (!confirmResponse.ok) {
-          throw new Error('Erreur lors de la confirmation de la commande');
+                if (!transferResponse.ok) {
+                    throw new Error('Erreur lors du transfert de la commande');
+                }
+
+                const transferData = await transferResponse.json();
+                const newCommandeId = transferData.newCommandeId;
+
+                // 2. Attendre un peu pour s'assurer que la commande est bien en BDD
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // 3. Générer la facture finale avec le nouvel ID de la commande
+                await handleGenerateFacture('commande', newCommandeId, true);
+            } catch (error) {
+                console.error("Erreur lors du traitement de la commande:", error);
+                toast.error("Erreur lors du traitement de la commande");
+                return;
+            }
         }
-
-        await handleGenerateFacture('commande', billCommande.id, true);
-      }
-      
-      toast.success("Paiement et facture validés");
-      fetchCommandes(); // Rafraîchir la liste des commandes
+        
+        toast.success("Paiement et facture validés");
+        fetchDocuments(); // Rafraîchir les documents
+        fetchCommandes(); // Rafraîchir les commandes
     } catch (error) {
-      console.error("Erreur:", error);
-      toast.error("Paiement accepté mais erreur de facturation");
+        console.error("Erreur:", error);
+        toast.error("Paiement accepté mais erreur de facturation");
     }
-  }
+  };
 
   // Gestionnaire d'échec de paiement
   const failureHandler = (error: any) => {
@@ -590,6 +620,27 @@ export function MonCompte() {
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Erreur lors de la suppression de la notification');
+    }
+  };
+
+  const handleDeleteCommande = async (commandeId: string) => {
+    try {
+        const response = await fetch(`http://localhost:3000/api/commandes/${commandeId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression de la commande');
+        }
+
+        toast.success('Commande annulée avec succès');
+        fetchCommandes(); // Rafraîchir la liste des commandes
+    } catch (error) {
+        console.error('Erreur:', error);
+        toast.error('Erreur lors de l\'annulation de la commande');
     }
   };
 
@@ -885,7 +936,13 @@ export function MonCompte() {
                               </div>
                             </div>
                             {commande.status === 'pending' && (
-                              <div className="mt-4 flex justify-end">
+                              <div className="mt-4 flex justify-end space-x-4">
+                                <button
+                                  onClick={() => handleDeleteCommande(commande.id)}
+                                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                >
+                                  Annuler la commande
+                                </button>
                                 <button
                                   onClick={() => handlePayment(commande.id, commande.quantite * commande.prix_unitaire)}
                                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
@@ -1063,7 +1120,7 @@ export function MonCompte() {
                     <p className="mt-1 text-sm text-gray-500">
                       Vous n'avez pas encore de notifications.
                     </p>
-                  </div>
+                </div>
                 ) : (
                   <div className="space-y-4">
                     {notifications.map((notification) => (
@@ -1171,8 +1228,8 @@ export function MonCompte() {
                     />
                     <div>
                       <h1 className="text-3xl font-semibold">Facture Proforma</h1>
-                    </div>
-                  </div>
+          </div>
+        </div>
 
                   <div className="mb-8">
                     <p>

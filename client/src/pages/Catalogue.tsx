@@ -126,46 +126,25 @@ export function Catalogue() {
         ? produit.prix_numerique 
         : parseFloat(produit.prix.replace(/[^0-9.-]+/g, ''));
       
-      const maxRetries = 3;
-      let retryCount = 0;
-      let success = false;
+      const response = await fetch('http://localhost:3000/api/commandes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        },
+        body: JSON.stringify({
+          produit_id: produit.id,
+          quantite,
+          prix_unitaire: prixUnitaire
+        })
+      });
 
-      while (retryCount < maxRetries && !success) {
-        try {
-          console.log(`Tentative ${retryCount + 1} de création de la commande...`);
-          const response = await fetch('http://localhost:3000/api/commandes', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
-            },
-            body: JSON.stringify({
-              produit_id: produit.id,
-              quantite,
-              prix_unitaire: prixUnitaire
-            })
-          });
-
-          if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-          }
-
-          const data = await response.json();
-          console.log('Commande créée avec succès:', data);
-          toast.success('Commande effectuée avec succès');
-          success = true;
-        } catch (error) {
-          retryCount++;
-          console.log(`Tentative ${retryCount} échouée:`, error);
-          
-          if (retryCount === maxRetries) {
-            throw error;
-          }
-          
-          // Attendre avant de réessayer (temps d'attente croissant)
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-        }
+      if (!response.ok) {
+        throw new Error('Erreur lors de la commande');
       }
+
+      const data = await response.json();
+      toast.success('Commande effectuée avec succès');
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Erreur lors de la commande');

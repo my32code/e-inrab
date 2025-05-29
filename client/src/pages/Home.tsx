@@ -13,7 +13,9 @@ import {
   Upload,
   CheckCircle,
   Package,
-  Settings
+  Settings,
+  ArrowRight,
+  Phone
 } from 'lucide-react';
 
 const services = [
@@ -42,57 +44,49 @@ const services = [
 const slides = [
   {
     image: "https://images.unsplash.com/photo-1523741543316-beb7fc7023d8?auto=format&fit=crop&w=1200",
-    title: "Semences de Qualité Supérieure",
-    description: "Découvrez notre nouvelle gamme de semences certifiées pour une agriculture performante"
+    title: "Services Agricoles Professionnels",
+    description: "Accédez à nos services d'expertise et de conseil en agriculture"
   },
   {
     image: "https://images.unsplash.com/photo-1592982537447-6f2a6a0c8b1b?auto=format&fit=crop&w=1200",
-    title: "Formations Agricoles",
-    description: "Développez vos compétences avec nos programmes de formation spécialisés"
+    title: "Produits de Qualité",
+    description: "Découvrez notre gamme de produits agricoles certifiés"
   },
   {
     image: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200",
-    title: "Expertise Scientifique",
-    description: "Bénéficiez des conseils de nos experts pour optimiser votre production"
+    title: "Support Expert",
+    description: "Bénéficiez de l'expertise de nos spécialistes"
   }
 ];
 
-const processSteps = [
+const processCards = [
   {
-    title: "Création de demande/commande",
-    description: "Le client initie une demande de service ou une commande de produits",
-    icon: <FileText className="w-6 h-6 text-green-600" />,
-    color: "bg-green-100"
+    title: "Demande de Service",
+    description: "Soumettez votre demande de service en ligne",
+    steps: [
+      "Rendez-vous sur la page Services",
+      "Cliquez sur 'Faire une demande'",
+      "Remplissez le formulaire de demande",
+      "Joignez les documents requis",
+      "Soumettez votre demande"
+    ],
+    icon: <FileText className="w-8 h-8 text-green-600" />,
+    buttonText: "Faire une demande",
+    buttonLink: "/services"
   },
   {
-    title: "Génération du proforma",
-    description: "Le système génère automatiquement une facture proforma",
-    icon: <ShoppingCart className="w-6 h-6 text-blue-600" />,
-    color: "bg-blue-100"
-  },
-  {
-    title: "Paiement",
-    description: "Le client procède au paiement et obtient une confirmation",
-    icon: <CheckCircle className="w-6 h-6 text-purple-600" />,
-    color: "bg-purple-100"
-  },
-  {
-    title: "Upload de preuve",
-    description: "Le client upload la preuve de paiement dans le système",
-    icon: <Upload className="w-6 h-6 text-orange-600" />,
-    color: "bg-orange-100"
-  },
-  {
-    title: "Validation admin",
-    description: "L'administrateur vérifie la preuve et valide le paiement",
-    icon: <Settings className="w-6 h-6 text-red-600" />,
-    color: "bg-red-100"
-  },
-  {
-    title: "Traitement final",
-    description: "La commande est préparée ou le service est livré",
-    icon: <Package className="w-6 h-6 text-indigo-600" />,
-    color: "bg-indigo-100"
+    title: "Commande de Produits",
+    description: "Commandez nos produits en quelques clics",
+    steps: [
+      "Consultez notre catalogue de produits",
+      "Sélectionnez les produits souhaités",
+      "Ajoutez-les à votre panier",
+      "Validez votre commande",
+      "Effectuez le paiement"
+    ],
+    icon: <ShoppingCart className="w-8 h-8 text-blue-600" />,
+    buttonText: "Voir le catalogue",
+    buttonLink: "/catalogue"
   }
 ];
 
@@ -115,7 +109,7 @@ export function Home() {
   return (
     <>
       {/* Hero Carousel */}
-      <div className="relative h-[500px] overflow-hidden">
+      <div className="relative h-[400px] overflow-hidden">
         <div className="absolute inset-0">
           <img
             src={slides[currentSlide].image}
@@ -125,15 +119,18 @@ export function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40">
             <div className="h-full flex items-center justify-center">
               <div className="text-center text-white px-4 max-w-4xl">
-                <h1 className="text-4xl md:text-6xl font-bold mb-4 animate-fade-in">
+                <h1 className="text-3xl md:text-5xl font-bold mb-3 animate-fade-in">
                   {slides[currentSlide].title}
                 </h1>
-                <p className="text-xl md:text-2xl mb-8 animate-fade-in">
+                <p className="text-lg md:text-xl mb-6 animate-fade-in">
                   {slides[currentSlide].description}
                 </p>
-                <button className="bg-green-600 text-white px-8 py-3 rounded-md text-lg hover:bg-green-700 transition-colors transform hover:scale-105">
-                  En savoir plus
-                </button>
+                <a 
+                  href="/services"
+                  className="inline-block bg-green-600 text-white px-6 py-2 rounded-md text-base hover:bg-green-700 transition-colors transform hover:scale-105"
+                >
+                  Découvrir nos services
+                </a>
               </div>
             </div>
           </div>
@@ -142,140 +139,62 @@ export function Home() {
           onClick={prevSlide}
           className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-lg hover:bg-white transition-colors"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-5 h-5" />
         </button>
         <button
           onClick={nextSlide}
           className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-lg hover:bg-white transition-colors"
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Comment ça marche Section */}
+      {/* Process Cards Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12">Comment ça marche</h2>
-          
-          <div className="mb-12">
-            <h3 className="text-xl font-semibold mb-6 text-center">Processus de commande et demande de service</h3>
-            <div className="relative">
-              {/* Timeline bar */}
-              <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-green-500"></div>
-              
-              {/* Steps */}
-              <div className="space-y-12">
-                {processSteps.map((step, index) => (
-                  <div 
-                    key={index} 
-                    className={`relative flex ${index % 2 === 0 ? 'justify-start' : 'justify-end'}`}
-                  >
-                    <div className={`w-5/12 p-6 rounded-lg shadow-md ${step.color} transition-all duration-300 hover:shadow-lg`}>
-                      <div className="flex items-center mb-3">
-                        <div className="flex-shrink-0 mr-4">
-                          {step.icon}
-                        </div>
-                        <h4 className="text-lg font-semibold">{step.title}</h4>
-                      </div>
-                      <p className="text-gray-600">{step.description}</p>
-                    </div>
-                    {/* Timeline dot */}
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-green-600 border-4 border-white"></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Diagrammes de séquence */}
+          <h2 className="text-3xl font-bold text-center mb-12">Comment ça marche ?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <FileText className="w-5 h-5 mr-2 text-blue-600" />
-                Processus de commande
-              </h3>
-              <div className="bg-gray-100 p-4 rounded-lg">
-                <ol className="list-decimal pl-5 space-y-3">
-                  <li>Client crée une commande</li>
-                  <li>Système génère facture proforma</li>
-                  <li>Client procède au paiement</li>
-                  <li>Client upload preuve de paiement</li>
-                  <li>Admin vérifie la preuve</li>
-                  <li>Statut mis à jour et client notifié</li>
-                </ol>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <Settings className="w-5 h-5 mr-2 text-purple-600" />
-                Processus de demande de service
-              </h3>
-              <div className="bg-gray-100 p-4 rounded-lg">
-                <ol className="list-decimal pl-5 space-y-3">
-                  <li>Client soumet une demande</li>
-                  <li>Système notifie l'admin</li>
-                  <li>Système génère proforma</li>
-                  <li>Client procède au paiement</li>
-                  <li>Client upload preuve de paiement</li>
-                  <li>Admin valide et statut mis à jour</li>
-                </ol>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12">Nos Services</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {services.map((service, index) => (
+            {processCards.map((card, index) => (
               <div 
-                key={index} 
-                className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                key={index}
+                className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                <div className="flex flex-col items-center text-center">
-                  {service.icon}
-                  <h3 className="mt-4 text-xl font-semibold">{service.title}</h3>
-                  <p className="mt-2 text-gray-600">{service.description}</p>
+                <div className="flex items-center mb-6">
+                  {card.icon}
+                  <h3 className="text-2xl font-bold ml-4">{card.title}</h3>
                 </div>
+                <p className="text-gray-600 mb-8">{card.description}</p>
+                <div className="relative mb-8">
+                  <div className="flex overflow-x-auto pb-4 space-x-4">
+                    {card.steps.map((step, stepIndex) => (
+                      <div key={stepIndex} className="flex-shrink-0 w-64">
+                        <div className="bg-gray-50 p-4 rounded-lg h-full">
+                          <div className="flex items-center mb-3">
+                            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                              <span className="text-green-600 font-semibold">{stepIndex + 1}</span>
+                            </div>
+                            <h4 className="text-sm font-semibold text-gray-700">Étape {stepIndex + 1}</h4>
+                          </div>
+                          <p className="text-gray-600 text-sm">{step}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <a 
+                  href={card.buttonLink}
+                  className="inline-flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors transform hover:scale-105"
+                >
+                  <span>{card.buttonText}</span>
+                  <ArrowRight className="w-5 h-5" />
+                </a>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Quick Actions */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-              <h3 className="text-2xl font-bold mb-4">Prendre un rendez-vous</h3>
-              <p className="text-gray-600 mb-6">
-                Consultez nos experts pour des conseils personnalisés sur vos projets agricoles
-              </p>
-              <button className="flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors transform hover:scale-105">
-                <Calendar className="w-5 h-5" />
-                <span>Réserver maintenant</span>
-              </button>
-            </div>
-            <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-              <h3 className="text-2xl font-bold mb-4">FAQ Interactive</h3>
-              <p className="text-gray-600 mb-6">
-                Trouvez rapidement des réponses à vos questions sur nos services
-              </p>
-              <button className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors transform hover:scale-105">
-                <HelpCircle className="w-5 h-5" />
-                <span>Consulter la FAQ</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Advertisement Section */}
+      {/* Contact Section */}
       <section className="py-16 bg-green-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-[1.02] transition-transform">
@@ -283,19 +202,23 @@ export function Home() {
               <div className="md:w-1/2">
                 <img
                   src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=800"
-                  alt="Innovation agricole"
+                  alt="Contactez-nous"
                   className="h-full w-full object-cover"
                 />
               </div>
               <div className="p-8 md:w-1/2">
-                <h3 className="text-2xl font-bold mb-4">Innovations Agricoles</h3>
+                <h3 className="text-2xl font-bold mb-4">Besoin d'aide ?</h3>
                 <p className="text-gray-600 mb-6">
-                  Découvrez nos dernières innovations technologiques pour améliorer vos rendements
-                  et la qualité de vos cultures. Nos solutions sont adaptées aux besoins locaux.
+                  Notre équipe est à votre disposition pour répondre à toutes vos questions
+                  et vous accompagner dans vos démarches. N'hésitez pas à nous contacter.
                 </p>
-                <button className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors transform hover:scale-105">
-                  Découvrir nos innovations
-                </button>
+                <a 
+                  href="/contact"
+                  className="flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors transform hover:scale-105"
+                >
+                  <Phone className="w-5 h-5" />
+                  <span>Contactez-nous</span>
+                </a>
               </div>
             </div>
           </div>

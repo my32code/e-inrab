@@ -1,8 +1,15 @@
 import { Request, Response } from 'express';
 import { query } from '../services/db';
 import { sendEmailNotification } from '../controllers/notificationsController';
-import { savePendingOrder, getUserPendingOrders, removePendingOrder } from '../services/pendingOrders';
-import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
+import path from 'path';
+
+const COMMANDES_ATTENTE_PATH = path.resolve(__dirname, '../../data/commandes_attente.json');
+
+// Assurer que le fichier existe
+if (!fs.existsSync(COMMANDES_ATTENTE_PATH)) {
+    fs.writeFileSync(COMMANDES_ATTENTE_PATH, '[]');
+}
 
 interface User {
   id: number;
@@ -13,14 +20,45 @@ interface AuthenticatedRequest extends Request {
   user: User;
 }
 
+interface CommandeAttente {
+    id: string;
+    utilisateur_id: number;
+    produit_id: number;
+    quantite: number;
+    prix_unitaire: number;
+    statut: string;
+    created_at: string;
+}
+
 const mapStatus = (dbStatus: string) => {
-  const statusMap: { [key: string]: string } = {
-    'en_attente': 'pending',
-    'payee': 'paid',
-    'expediee': 'shipped',
-    'annulee': 'cancelled'
-  };
-  return statusMap[dbStatus] || dbStatus;
+    const statusMap: { [key: string]: string } = {
+        'en_attente': 'pending',
+        'payee': 'paid',
+        'expediee': 'shipped',
+        'annulee': 'cancelled'
+    };
+    return statusMap[dbStatus] || dbStatus;
+};
+
+// Fonction pour lire les commandes en attente
+const readCommandesAttente = (): CommandeAttente[] => {
+    try {
+        const data = fs.readFileSync(COMMANDES_ATTENTE_PATH, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Erreur lors de la lecture du fichier commandes_attente.json:', error);
+        return [];
+    }
+};
+
+// Fonction pour écrire les commandes en attente
+const writeCommandesAttente = (commandes: CommandeAttente[]) => {
+    try {
+        fs.writeFileSync(COMMANDES_ATTENTE_PATH, JSON.stringify(commandes, null, 2));
+    } catch (error) {
+        console.error('Erreur lors de l\'écriture dans commandes_attente.json:', error);
+        throw error;
+    }
 };
 
 export const createCommande = async (req: AuthenticatedRequest, res: Response) => {
@@ -42,60 +80,56 @@ export const createCommande = async (req: AuthenticatedRequest, res: Response) =
         }
 
         const utilisateur_id = req.user.id;
+        const commandeId = Date.now().toString(); // Générer un ID unique
 
-        // Récupérer le nom du produit
-        const [produit] = await query(
-            'SELECT nom FROM produits WHERE id = ?',
-            [produit_id]
-        ) as any[];
-
-        if (!produit) {
-            return res.status(404).json({
-                success: false,
-                message: 'Produit non trouvé'
-            });
-        }
-
-        // Créer une commande en attente
-        const pendingOrder = {
-            id: uuidv4(),
+        // Créer l'objet commande
+        const nouvelleCommande: CommandeAttente = {
+            id: commandeId,
             utilisateur_id,
             produit_id,
-            produit_nom: produit.nom,
             quantite,
             prix_unitaire,
-            createdAt: new Date().toISOString()
+            statut: 'en_attente',
+            created_at: new Date().toISOString()
         };
 
-        await savePendingOrder(pendingOrder);
+        // Lire les commandes existantes
+        const commandes = readCommandesAttente();
+        
+        // Ajouter la nouvelle commande
+        commandes.push(nouvelleCommande);
+        
+        // Écrire dans le fichier et attendre que ce soit fait
+        await new Promise((resolve, reject) => {
+            try {
+                fs.writeFileSync(COMMANDES_ATTENTE_PATH, JSON.stringify(commandes, null, 2));
+                resolve(true);
+            } catch (error) {
+                reject(error);
+            }
+        });
 
-        // Envoyer la réponse immédiatement
+        // 🔔 Envoi d'email aux admins
+        const admins = await query('SELECT email FROM utilisateurs WHERE role = "admin"');
+        const destinataires = (admins as any[]).map(admin => admin.email);
+
+        await sendEmailNotification(
+            destinataires,
+            'Nouvelle commande en attente',
+            `
+                <p>Un utilisateur a soumis une nouvelle commande.</p>
+                <p><strong>Produit ID :</strong> ${produit_id}</p>
+                <p><strong>Quantité :</strong> ${quantite}</p>
+                <p><strong>Prix unitaire :</strong> ${prix_unitaire}</p>
+                <p><strong>Utilisateur ID :</strong> ${utilisateur_id}</p>
+            `
+        );
+
         res.status(201).json({ 
             success: true, 
             message: 'Commande créée avec succès',
-            commande: pendingOrder
+            commande: nouvelleCommande
         });
-
-        // Envoyer l'email de manière asynchrone après la réponse
-        try {
-            const admins = await query('SELECT email FROM utilisateurs WHERE role = "admin"');
-            const destinataires = (admins as any[]).map(admin => admin.email);
-
-            await sendEmailNotification(
-                destinataires,
-                'Nouvelle commande en attente',
-                `
-                    <p>Un utilisateur a soumis une nouvelle commande.</p>
-                    <p><strong>Produit :</strong> ${produit.nom}</p>
-                    <p><strong>Quantité :</strong> ${quantite}</p>
-                    <p><strong>Prix unitaire :</strong> ${prix_unitaire}</p>
-                    <p><strong>Utilisateur ID :</strong> ${utilisateur_id}</p>
-                `
-            );
-        } catch (emailError) {
-            console.error('Erreur lors de l\'envoi de l\'email:', emailError);
-            // Ne pas propager l'erreur car la commande a déjà été créée
-        }
     } catch (error) {
         console.error('Erreur lors de la création de la commande:', error);
         res.status(500).json({ 
@@ -105,15 +139,78 @@ export const createCommande = async (req: AuthenticatedRequest, res: Response) =
     }
 };
 
+// Nouvelle fonction pour transférer une commande vers la BDD
+export const transfererCommandeVersBDD = async (commandeId: string) => {
+    try {
+        // Lire le fichier de manière synchrone pour s'assurer que les données sont à jour
+        const commandes = JSON.parse(fs.readFileSync(COMMANDES_ATTENTE_PATH, 'utf-8')) as CommandeAttente[];
+        const commande = commandes.find((c: CommandeAttente) => c.id === commandeId);
+        
+        if (!commande) {
+            console.error('Commande non trouvée dans le fichier:', commandeId);
+            console.log('Commandes disponibles:', commandes);
+            throw new Error('Commande non trouvée');
+        }
+
+        // Insérer dans la BDD
+        const result = await query(
+            'INSERT INTO commandes (utilisateur_id, produit_id, quantite, prix_unitaire, statut) VALUES (?, ?, ?, ?, ?)',
+            [commande.utilisateur_id, commande.produit_id, commande.quantite, commande.prix_unitaire, 'en_attente']
+        );
+
+        // Vérifier que le résultat contient bien l'ID inséré
+        if (!result || !('insertId' in result)) {
+            throw new Error('Erreur lors de l\'insertion de la commande');
+        }
+
+        // Retirer du fichier JSON
+        const nouvellesCommandes = commandes.filter((c: CommandeAttente) => c.id !== commandeId);
+        fs.writeFileSync(COMMANDES_ATTENTE_PATH, JSON.stringify(nouvellesCommandes, null, 2));
+
+        return result.insertId; // Retourner l'ID de la nouvelle commande
+    } catch (error) {
+        console.error('Erreur lors du transfert de la commande:', error);
+        throw error;
+    }
+};
+
+// Nouvelle fonction pour récupérer les commandes en attente
+export const getCommandesAttente = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const userId = req.user.id;
+        const commandes = readCommandesAttente();
+        
+        // Filtrer les commandes de l'utilisateur
+        const userCommandes = commandes.filter(c => c.utilisateur_id === userId);
+
+        // Récupérer les informations des produits
+        const commandesWithProducts = await Promise.all(userCommandes.map(async (commande) => {
+            const [produit] = await query('SELECT nom FROM produits WHERE id = ?', [commande.produit_id]) as any[];
+            return {
+                ...commande,
+                produit_nom: produit?.nom,
+                status: mapStatus(commande.statut)
+            };
+        }));
+
+        res.json({
+            status: 'success',
+            data: commandesWithProducts
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des commandes en attente:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Erreur lors de la récupération des commandes en attente'
+        });
+    }
+};
+
 export const getUserCommandes = async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user.id;
 
     try {
-        // Récupérer les commandes en attente
-        const pendingOrders = await getUserPendingOrders(userId);
-
-        // Récupérer les commandes en base de données
-        const dbCommandes = await query(`
+        const commandes = await query(`
             SELECT 
                 c.id,
                 c.produit_id,
@@ -128,21 +225,14 @@ export const getUserCommandes = async (req: AuthenticatedRequest, res: Response)
             ORDER BY c.created_at DESC
         `, [userId]);
 
-        // Combiner les commandes en attente et les commandes en base de données
-        const allCommandes = [
-            ...pendingOrders.map(order => ({
-                ...order,
-                status: 'pending'
-            })),
-            ...(dbCommandes as any[]).map(commande => ({
-                ...commande,
-                status: mapStatus(commande.statut)
-            }))
-        ];
+        const commandesWithStatus = (commandes as any[]).map(commande => ({
+            ...commande,
+            status: mapStatus(commande.statut)
+        }));
 
         res.json({
             status: 'success',
-            data: allCommandes
+            data: commandesWithStatus
         });
     } catch (error) {
         console.error('Erreur lors de la récupération des commandes:', error);
@@ -190,45 +280,32 @@ export const getCommande = async (req: AuthenticatedRequest, res: Response) => {
     }
 };
 
-export const confirmCommande = async (req: AuthenticatedRequest, res: Response) => {
+// Fonction pour supprimer une commande
+export const deleteCommande = async (commandeId: string) => {
     try {
-        const { orderId } = req.params;
-        const userId = req.user.id;
+        // D'abord, vérifier si la commande est dans le fichier JSON
+        const commandes = readCommandesAttente();
+        const commandeInJson = commandes.find(c => c.id === commandeId);
 
-        // Récupérer la commande en attente
-        const pendingOrders = await getUserPendingOrders(userId);
-        const pendingOrder = pendingOrders.find(order => order.id === orderId);
-
-        if (!pendingOrder) {
-            return res.status(404).json({
-                success: false,
-                message: 'Commande en attente non trouvée'
-            });
-        }
-
-        // Insérer la commande en base de données
-        const result = await query(
-            'INSERT INTO commandes (utilisateur_id, produit_id, quantite, prix_unitaire, statut) VALUES (?, ?, ?, ?, ?)',
-            [userId, pendingOrder.produit_id, pendingOrder.quantite, pendingOrder.prix_unitaire, 'payee']
-        );
-
-        // Supprimer la commande en attente
-        await removePendingOrder(orderId);
-
-        res.json({
-            success: true,
-            message: 'Commande confirmée avec succès',
-            commande: {
-                db_id: (result as any).insertId,
-                ...pendingOrder,
-                status: 'paid'
+        if (commandeInJson) {
+            // Si la commande est dans le JSON, la supprimer du fichier
+            const nouvellesCommandes = commandes.filter(c => c.id !== commandeId);
+            fs.writeFileSync(COMMANDES_ATTENTE_PATH, JSON.stringify(nouvellesCommandes, null, 2));
+            return true;
+        } else {
+            // Si la commande n'est pas dans le JSON, vérifier dans la BDD
+            const [commande] = await query('SELECT * FROM commandes WHERE id = ?', [commandeId]) as any[];
+            
+            if (!commande) {
+                throw new Error('Commande non trouvée');
             }
-        });
+
+            // Supprimer de la BDD
+            await query('DELETE FROM commandes WHERE id = ?', [commandeId]);
+            return true;
+        }
     } catch (error) {
-        console.error('Erreur lors de la confirmation de la commande:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erreur lors de la confirmation de la commande'
-        });
+        console.error('Erreur lors de la suppression de la commande:', error);
+        throw error;
     }
 }; 

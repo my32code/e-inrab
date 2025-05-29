@@ -4,7 +4,7 @@ import { findUserBySessionId } from '../models/User';
 import { getAllCommandes, updateCommandeStatus } from '../controllers/admin/commandesController';
 import { getAllServiceRequests, updateServiceRequestStatus } from '../controllers/admin/serviceRequestsController';
 import { getAllProduits, updateProduitStock } from '../controllers/admin/produitsController';
-import { getDocuments, uploadDocument, downloadDocument, upload } from '../controllers/admin/documentsController';
+import { getDocuments, uploadDocument, downloadDocument, upload, getAllDocuments, deleteDocument } from '../controllers/admin/documentsController';
 import { generateFacture } from '../controllers/admin/facturesController';
 
 interface User {
@@ -57,10 +57,8 @@ router.get('/produits', ((req: Request, res: Response) => getAllProduits(req as 
 router.put('/produits/:id/stock', ((req: Request, res: Response) => updateProduitStock(req as AuthenticatedRequest, res)) as RequestHandler);
 
 // Routes pour les documents
-router.get('/documents', ((req: Request, res: Response) => {
-  console.log('Query params:', req.query); // Pour le débogage
-  return getDocuments(req as AuthenticatedRequest, res);
-}) as RequestHandler);
+router.get('/documents', ((req: Request, res: Response) => getAllDocuments(req as AuthenticatedRequest, res)) as RequestHandler);
+router.delete('/documents/:id', ((req: Request, res: Response) => deleteDocument(req as AuthenticatedRequest, res)) as RequestHandler);
 router.post('/documents/upload', 
   authenticateRequest as RequestHandler,
   upload.single('file'), 
