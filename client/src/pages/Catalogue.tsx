@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, ChevronDown, Plus, Minus } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { isSinglePrice } from '../utils/priceUtils';
 
 interface Produit {
   id: number;
@@ -43,10 +44,13 @@ const produitImages = {
 
 const categories = [
   "Toutes les catégories",
-  "Céréales",
-  "Légumineuses",
-  "Tubercules",
-  "Maraîchères"
+  "Semences",
+  "Fruits",
+  "Plants",
+  "Produits dérivés",
+  "Aquaculture",
+  "Élevage",
+  "Fourrage"
 ];
 
 export function Catalogue() {
@@ -220,7 +224,9 @@ export function Catalogue() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {produits.map((produit) => {
+            {produits
+              .filter(produit => isSinglePrice(produit.prix))
+              .map((produit) => {
               const quantite = quantites[produit.id] || 1;
               const prixUnitaire = typeof produit.prix_numerique === 'number' && !isNaN(produit.prix_numerique) 
               ? produit.prix_numerique 
@@ -252,9 +258,6 @@ export function Catalogue() {
                   </div>
                   <p className="text-gray-600 mb-4">{produit.description}</p>
                   <div className="space-y-2">
-                    <p className="text-sm text-gray-500">
-                      <span className="font-medium">Pièces requises:</span> {produit.pieces_requises}
-                    </p>
                     <p className="text-sm text-gray-500">
                       <span className="font-medium">Délai de mise à disposition:</span> {produit.delai_mise_disposition}
                     </p>

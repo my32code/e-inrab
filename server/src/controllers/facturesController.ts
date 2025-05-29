@@ -601,37 +601,37 @@ export const getFacture = async (req: AuthenticatedRequest, res: Response) => {
       `;
       const [rows] = await pool.query(query, [id]);
       
-      if (!rows || (rows as any[]).length === 0) {
-        return res.status(404).json({
-          status: "error",
+    if (!rows || (rows as any[]).length === 0) {
+      return res.status(404).json({
+        status: "error",
           message: "Demande de service non trouvée",
-        });
-      }
+      });
+    }
 
-      const data = (rows as any[])[0];
-      const factureNumber = await generateFactureNumber();
+    const data = (rows as any[])[0];
+    const factureNumber = await generateFactureNumber();
 
-      const templateData = {
-        factureNumber,
-        client: {
-          nom: data.client_nom,
-          email: data.client_email,
+    const templateData = {
+      factureNumber,
+      client: {
+        nom: data.client_nom,
+        email: data.client_email,
           telephone: data.client_telephone
-        },
-        items: [
-          {
+      },
+      items: [
+        {
             nom: data.service_nom,
             quantite: 1,
             prix_unitaire: parseFloat(data.prix),
-          },
-        ],
+        },
+      ],
         total: parseFloat(data.prix),
-      };
+    };
 
-      res.json({
-        status: "success",
-        factureNumber,
-        meta: templateData,
+    res.json({
+      status: "success",
+      factureNumber,
+      meta: templateData,
         commande: data,
       });
       return;

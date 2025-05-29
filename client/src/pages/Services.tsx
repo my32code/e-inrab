@@ -66,11 +66,16 @@ export function Services() {
   };
 
   const filterServices = (service: Service) => {
+    // Ne pas afficher les services sans prix
+    if (!service.prix) {
+        return false;
+    }
+
     const matchesSearch = service.nom.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          service.description.toLowerCase().includes(searchQuery.toLowerCase());
     
     if (selectedCategory) {
-      return service.categorie === selectedCategory && matchesSearch;
+        return service.categorie === selectedCategory && matchesSearch;
     }
     
     return matchesSearch;
