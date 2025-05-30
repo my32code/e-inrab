@@ -77,7 +77,7 @@ export function Register() {
                 {...formregister('nom')}
                 type="text"
                 className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
-                placeholder="Nom complet"
+                placeholder="Nom et Prénoms"
               />
               {errors.nom && (
                 <p className="mt-1 text-sm text-red-600">{errors.nom.message}</p>
@@ -104,10 +104,10 @@ export function Register() {
               <input
                 {...formregister('telephone')}
                 type="tel"
-                placeholder="Numéro de téléphone (ex: +229 64 28 37 02)"
+                placeholder="Numéro de téléphone (ex: +229 01 64 28 37 02)"
                 className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
                 pattern="^\+?[0-9\s\-\(\)]{8,15}$"
-                title="Format: +XXX XX XX XX XX (ex: +229 64 28 37 02)"
+                title="Format: +XXX XX XX XX XX (ex: +229 01 64 28 37 02)"
               />
             </div>
 

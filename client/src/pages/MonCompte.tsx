@@ -665,20 +665,7 @@ export function MonCompte() {
                 <User className="h-5 w-5 inline-block mr-2" />
                 Profil
               </button>
-              <button
-                onClick={() => setActiveTab('notifications')}
-                className={`${
-                  activeTab === 'notifications'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm relative`}
-              >
-                <Bell className="h-5 w-5 inline-block mr-2" />
-                Notifications
-                {notifications.some(n => !n.lu) && (
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full"></span>
-                )}
-              </button>
+              
               {user?.role !== 'admin' && (
                 <>
               <button
@@ -714,6 +701,20 @@ export function MonCompte() {
                     <File className="h-5 w-5 inline-block mr-2" />
                     Mes Documents
               </button>
+              <button
+                onClick={() => setActiveTab('notifications')}
+                className={`${
+                  activeTab === 'notifications'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm relative`}
+              >
+                <Bell className="h-5 w-5 inline-block mr-2" />
+                Notifications
+                {notifications.some(n => !n.lu) && (
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full"></span>
+                )}
+              </button>
                 </>
               )}
             </nav>
@@ -721,48 +722,94 @@ export function MonCompte() {
 
           <div className="p-6">
             {activeTab === 'profile' && (
-              <div>
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Informations personnelles</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="nom" className="block text-sm font-medium text-gray-700">Nom</label>
-                    <input
-                      id="nom"
-                      type="text"
-                      value={formData.nom || user.nom}
-                      onChange={(e) => setFormData(prev => ({ ...prev, nom: e.target.value }))}
-                      readOnly={!isEditing}
-                      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-0 focus:border-gray-400" ${!isEditing ? 'bg-gray-50' : ''}`}
-                    />
+              <div className="space-y-8">
+                {/* Section Informations personnelles */}
+                <div>
+                  <h2 className="text-lg font-medium text-gray-900 mb-4">Informations personnelles</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="nom" className="block text-sm font-medium text-gray-700">Nom et Prénoms</label>
+                      <input
+                        id="nom"
+                        type="text"
+                        value={formData.nom || user.nom}
+                        onChange={(e) => setFormData(prev => ({ ...prev, nom: e.target.value }))}
+                        readOnly={!isEditing}
+                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-0 focus:border-gray-400 ${!isEditing ? 'bg-gray-50' : ''}`}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                      <input
+                        id="email"
+                        type="email"
+                        value={formData.email || user.email}
+                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        readOnly={!isEditing}
+                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-0 focus:border-gray-400 ${!isEditing ? 'bg-gray-50' : ''}`}
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (isEditing) {
+                          handleProfileUpdate();
+                        } else {
+                          setIsEditing(true);
+                          setFormData({
+                            ...formData,
+                            nom: user.nom,
+                            email: user.email
+                          });
+                        }
+                      }}
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                    >
+                      {isEditing ? 'Valider' : 'Mettre à jour'}
+                    </button>
                   </div>
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                    <input
-                      id="email"
-                      type="email"
-                      value={formData.email || user.email}
-                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                      readOnly={!isEditing}
-                      className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-0 focus:border-gray-400" ${!isEditing ? 'bg-gray-50' : ''}`}
-                    />
+                </div>
+
+                {/* Section Changement de mot de passe */}
+                <div className="pt-8 border-t border-gray-200">
+                  <h2 className="text-lg font-medium text-gray-900 mb-4">Changer le mot de passe</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">Mot de passe actuel</label>
+                      <input
+                        id="currentPassword"
+                        type="password"
+                        value={formData.currentPassword}
+                        onChange={(e) => setFormData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+                      <input
+                        id="newPassword"
+                        type="password"
+                        value={formData.newPassword}
+                        onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirmer le nouveau mot de passe</label>
+                      <input
+                        id="confirmPassword"
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                      />
+                    </div>
+                    <button
+                      onClick={handlePasswordChange}
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                    >
+                      Changer le mot de passe
+                    </button>
                   </div>
-                  <button
-                    onClick={() => {
-                      if (isEditing) {
-                        handleProfileUpdate();
-                      } else {
-                        setIsEditing(true);
-                        setFormData({
-                          ...formData,
-                          nom: user.nom,
-                          email: user.email
-                        });
-                      }
-                    }}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                  >
-                    {isEditing ? 'Valider' : 'Mettre à jour'}
-                  </button>
                 </div>
               </div>
             )}
