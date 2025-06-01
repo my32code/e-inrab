@@ -54,7 +54,7 @@ export const createServiceRequest = async (req: AuthenticatedRequest, res: Respo
         
         await query(
           'INSERT INTO documents_demandes (demande_id, nom_fichier, chemin_fichier) VALUES (?, ?, ?)',
-          [demandeId, file.originalname, fileName]
+          [demandeId, file.originalname, filePath]
         );
       }
     }
@@ -175,6 +175,80 @@ export const getServiceRequest = async (req: AuthenticatedRequest, res: Response
     res.status(500).json({
       status: 'error',
       message: 'Erreur lors de la récupération de la demande'
+    });
+  }
+};
+
+export const deleteServiceRequest = async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  const userId = req.user?.id;
+
+  try {
+    // Vérifier que la demande appartient à l'utilisateur et est en attente
+    const [request] = await query(
+      'SELECT * FROM demandes WHERE id = ? AND utilisateur_id = ? AND statut = "en attente"',
+      [id, userId]
+    ) as any[];
+
+    if (!request) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Demande non trouvée ou ne peut pas être supprimée'
+      });
+    }
+
+    // Récupérer les chemins des fichiers avant de les supprimer
+    const documentsDemandes = await query(
+      'SELECT chemin_fichier FROM documents_demandes WHERE demande_id = ?',
+      [id]
+    ) as any[];
+
+    // Récupérer les chemins des documents associés
+    const documents = await query(
+      'SELECT chemin_fichier FROM documents WHERE demande_id = ?',
+      [id]
+    ) as any[];
+
+    // Supprimer les fichiers physiques des documents_demandes
+    for (const doc of documentsDemandes) {
+      if (doc.chemin_fichier) {
+        try {
+          await fs.unlink(doc.chemin_fichier);
+        } catch (error) {
+          console.error('Erreur lors de la suppression du fichier documents_demandes:', error);
+        }
+      }
+    }
+
+    // Supprimer les fichiers physiques des documents
+    for (const doc of documents) {
+      if (doc.chemin_fichier) {
+        try {
+          await fs.unlink(doc.chemin_fichier);
+        } catch (error) {
+          console.error('Erreur lors de la suppression du fichier documents:', error);
+        }
+      }
+    }
+
+    // Supprimer les documents_demandes
+    await query('DELETE FROM documents_demandes WHERE demande_id = ?', [id]);
+
+    // Supprimer les documents associés
+    await query('DELETE FROM documents WHERE demande_id = ?', [id]);
+
+    // Supprimer la demande
+    await query('DELETE FROM demandes WHERE id = ?', [id]);
+
+    res.json({
+      status: 'success',
+      message: 'Demande et documents associés supprimés avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la demande:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erreur lors de la suppression de la demande'
     });
   }
 };

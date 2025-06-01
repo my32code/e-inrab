@@ -12,8 +12,10 @@ interface Document {
     created_at: string;
     produit_nom?: string;
     service_nom?: string;
-    utilisateur_nom?: string;
-    utilisateur_email?: string;
+    document_demande_id?: number;
+    document_demande_nom?: string;
+    document_demande_chemin?: string;
+    document_demande_date?: string;
 }
 
 export function DocumentsList() {
@@ -49,7 +51,9 @@ export function DocumentsList() {
 
     const handleDownload = async (doc: Document) => {
         try {
-            const response = await fetch(`http://localhost:3000/api/documents/download/${doc.id}`, {
+            const documentId = doc.document_demande_id || doc.id;
+            
+            const response = await fetch(`http://localhost:3000/api/documents/download/${documentId}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
                 }
@@ -63,7 +67,7 @@ export function DocumentsList() {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = doc.nom_fichier;
+            a.download = doc.document_demande_nom || doc.nom_fichier;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
@@ -80,7 +84,8 @@ export function DocumentsList() {
         }
 
         try {
-            const response = await fetch(`http://localhost:3000/api/admin/documents/${doc.id}`, {
+            const documentId = doc.document_demande_id || doc.id;
+            const response = await fetch(`http://localhost:3000/api/admin/documents/${documentId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
@@ -132,19 +137,18 @@ export function DocumentsList() {
         <div className="space-y-4">
             {documents.map((doc) => (
                 <div
-                    key={doc.id}
+                    key={doc.document_demande_id || doc.id}
                     className="bg-white shadow rounded-lg p-4 flex items-center justify-between"
                 >
                     <div className="flex items-center">
                         <File className="h-5 w-5 text-gray-400 mr-3" />
                         <div>
-                            <p className="text-sm font-medium text-gray-900">{doc.nom_fichier}</p>
-                            <p className="text-xs text-gray-500">
-                                {doc.type_document === 'commande' ? doc.produit_nom : doc.service_nom} - 
-                                {format(new Date(doc.created_at), 'dd MMMM yyyy', { locale: fr })}
+                            <p className="text-sm font-medium text-gray-900">
+                                {doc.document_demande_nom || doc.nom_fichier}
                             </p>
                             <p className="text-xs text-gray-500">
-                                Client: {doc.utilisateur_nom} ({doc.utilisateur_email})
+                                {doc.type_document === 'commande' ? doc.produit_nom : doc.service_nom} - 
+                                {format(new Date(doc.document_demande_date || doc.created_at), 'dd MMMM yyyy', { locale: fr })}
                             </p>
                         </div>
                     </div>

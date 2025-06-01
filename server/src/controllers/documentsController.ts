@@ -39,12 +39,12 @@ export const getDocuments = async (req: AuthenticatedRequest, res: Response) => 
                dd.nom_fichier as document_demande_nom,
                dd.chemin_fichier as document_demande_chemin,
                dd.date_upload as document_demande_date
-        FROM documents d 
-        LEFT JOIN demandes de ON d.demande_id = de.id 
+        FROM demandes de
+        LEFT JOIN documents d ON de.id = d.demande_id AND d.type_document = 'service'
         LEFT JOIN services s ON de.service_id = s.id 
         LEFT JOIN documents_demandes dd ON de.id = dd.demande_id
-        WHERE d.demande_id = ? AND d.type_document = 'service'
-        ORDER BY d.created_at DESC
+        WHERE de.id = ?
+        ORDER BY COALESCE(d.created_at, dd.date_upload) DESC
       `;
       params = [demandeId];
       console.log('Requête service:', { query, params });
@@ -178,10 +178,20 @@ export const uploadDocument = async (req: AuthenticatedRequest, res: Response) =
 export const downloadDocument = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const [rows] = await pool.query(
+    
+    // D'abord chercher dans la table documents
+    let [rows] = await pool.query(
       'SELECT * FROM documents WHERE id = ?',
       [id]
     );
+
+    // Si non trouvé, chercher dans documents_demandes
+    if (!rows || (rows as any[]).length === 0) {
+      [rows] = await pool.query(
+        'SELECT * FROM documents_demandes WHERE id = ?',
+        [id]
+      );
+    }
 
     if (!rows || (rows as any[]).length === 0) {
       return res.status(404).json({
@@ -191,7 +201,16 @@ export const downloadDocument = async (req: AuthenticatedRequest, res: Response)
     }
 
     const document = (rows as any[])[0];
-    const filePath = document.chemin_fichier;
+    // Si c'est un document de documents_demandes, utiliser les champs correspondants
+    const filePath = document.document_demande_chemin || document.chemin_fichier;
+    const fileName = document.document_demande_nom || document.nom_fichier;
+
+    if (!filePath) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Chemin du fichier non trouvé'
+      });
+    }
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
@@ -200,7 +219,7 @@ export const downloadDocument = async (req: AuthenticatedRequest, res: Response)
       });
     }
 
-    res.download(filePath, document.nom_fichier);
+    res.download(filePath, fileName);
   } catch (error) {
     console.error('Erreur lors du téléchargement du document:', error);
     res.status(500).json({
@@ -216,19 +235,83 @@ export const getUserDocuments = async (req: AuthenticatedRequest, res: Response)
     const userId = req.user.id;
 
     const query = `
-      SELECT d.*, 
-             p.nom as produit_nom,
-             s.nom as service_nom
-      FROM documents d
-      LEFT JOIN commandes c ON d.commande_id = c.id
-      LEFT JOIN demandes de ON d.demande_id = de.id
-      LEFT JOIN produits p ON c.produit_id = p.id
-      LEFT JOIN services s ON de.service_id = s.id
-      WHERE c.utilisateur_id = ? OR de.utilisateur_id = ?
-      ORDER BY d.created_at DESC
+      (
+        -- Documents de commandes
+        SELECT 
+          d.id,
+          d.commande_id,
+          d.demande_id,
+          d.service_id,
+          d.nom_fichier,
+          d.chemin_fichier,
+          d.type_document,
+          d.categorie,
+          d.created_at,
+          p.nom as produit_nom,
+          s.nom as service_nom,
+          NULL as document_demande_id,
+          NULL as document_demande_nom,
+          NULL as document_demande_chemin,
+          NULL as document_demande_date
+        FROM documents d
+        LEFT JOIN commandes c ON d.commande_id = c.id
+        LEFT JOIN demandes de ON d.demande_id = de.id
+        LEFT JOIN produits p ON c.produit_id = p.id
+        LEFT JOIN services s ON de.service_id = s.id
+        WHERE c.utilisateur_id = ?
+      )
+      UNION ALL
+      (
+        -- Documents de demandes
+        SELECT 
+          d.id,
+          d.commande_id,
+          d.demande_id,
+          d.service_id,
+          d.nom_fichier,
+          d.chemin_fichier,
+          d.type_document,
+          d.categorie,
+          d.created_at,
+          NULL as produit_nom,
+          s.nom as service_nom,
+          NULL as document_demande_id,
+          NULL as document_demande_nom,
+          NULL as document_demande_chemin,
+          NULL as document_demande_date
+        FROM documents d
+        LEFT JOIN demandes de ON d.demande_id = de.id
+        LEFT JOIN services s ON de.service_id = s.id
+        WHERE de.utilisateur_id = ?
+      )
+      UNION ALL
+      (
+        -- Documents de documents_demandes
+        SELECT 
+          NULL as id,
+          NULL as commande_id,
+          dd.demande_id,
+          de.service_id,
+          dd.nom_fichier,
+          dd.chemin_fichier,
+          'service' as type_document,
+          'piece_complementaire' as categorie,
+          dd.date_upload as created_at,
+          NULL as produit_nom,
+          s.nom as service_nom,
+          dd.id as document_demande_id,
+          dd.nom_fichier as document_demande_nom,
+          dd.chemin_fichier as document_demande_chemin,
+          dd.date_upload as document_demande_date
+        FROM documents_demandes dd
+        JOIN demandes de ON dd.demande_id = de.id
+        LEFT JOIN services s ON de.service_id = s.id
+        WHERE de.utilisateur_id = ?
+      )
+      ORDER BY created_at DESC
     `;
 
-    const [rows] = await pool.query(query, [userId, userId]);
+    const [rows] = await pool.query(query, [userId, userId, userId]);
     
     res.json({
       status: 'success',

@@ -46,6 +46,10 @@ interface Document {
   request?: {
     status: string;
   };
+  document_demande_id?: number;
+  document_demande_nom?: string;
+  document_demande_chemin?: string;
+  document_demande_date?: string;
 }
 
 interface Item {
@@ -382,9 +386,11 @@ export function MonCompte() {
     }
   };
 
-  const handleDownload = async (doc: Document) => {
+  const handleDownload = async (doc: any) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/documents/download/${doc.id}`, {
+      const documentId = doc.document_demande_id || doc.id;
+      
+      const response = await fetch(`http://localhost:3000/api/documents/download/${documentId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -398,7 +404,7 @@ export function MonCompte() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = doc.nom_fichier;
+      a.download = doc.document_demande_nom || doc.nom_fichier;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -644,6 +650,31 @@ export function MonCompte() {
     }
   };
 
+  const handleDeleteRequest = async (requestId: string) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir annuler cette demande ?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/service-requests/${requestId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la suppression de la demande');
+      }
+
+      toast.success('Demande annulée avec succès');
+      fetchRequests(); // Rafraîchir la liste des demandes
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Erreur lors de l\'annulation de la demande');
+    }
+  };
+
   if (!user) {
     return <div>Chargement...</div>;
   }
@@ -724,48 +755,48 @@ export function MonCompte() {
             {activeTab === 'profile' && (
               <div className="space-y-8">
                 {/* Section Informations personnelles */}
-                <div>
-                  <h2 className="text-lg font-medium text-gray-900 mb-4">Informations personnelles</h2>
-                  <div className="space-y-4">
-                    <div>
+              <div>
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Informations personnelles</h2>
+                <div className="space-y-4">
+                  <div>
                       <label htmlFor="nom" className="block text-sm font-medium text-gray-700">Nom et Prénoms</label>
-                      <input
-                        id="nom"
-                        type="text"
-                        value={formData.nom || user.nom}
-                        onChange={(e) => setFormData(prev => ({ ...prev, nom: e.target.value }))}
-                        readOnly={!isEditing}
+                    <input
+                      id="nom"
+                      type="text"
+                      value={formData.nom || user.nom}
+                      onChange={(e) => setFormData(prev => ({ ...prev, nom: e.target.value }))}
+                      readOnly={!isEditing}
                         className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-0 focus:border-gray-400 ${!isEditing ? 'bg-gray-50' : ''}`}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                      <input
-                        id="email"
-                        type="email"
-                        value={formData.email || user.email}
-                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        readOnly={!isEditing}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      id="email"
+                      type="email"
+                      value={formData.email || user.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      readOnly={!isEditing}
                         className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-0 focus:border-gray-400 ${!isEditing ? 'bg-gray-50' : ''}`}
-                      />
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (isEditing) {
-                          handleProfileUpdate();
-                        } else {
-                          setIsEditing(true);
-                          setFormData({
-                            ...formData,
-                            nom: user.nom,
-                            email: user.email
-                          });
-                        }
-                      }}
-                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                    >
-                      {isEditing ? 'Valider' : 'Mettre à jour'}
-                    </button>
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (isEditing) {
+                        handleProfileUpdate();
+                      } else {
+                        setIsEditing(true);
+                        setFormData({
+                          ...formData,
+                          nom: user.nom,
+                          email: user.email
+                        });
+                      }
+                    }}
+                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                  >
+                    {isEditing ? 'Valider' : 'Mettre à jour'}
+                  </button>
                   </div>
                 </div>
 
@@ -877,6 +908,17 @@ export function MonCompte() {
                               <p className="text-sm text-gray-500">Description</p>
                               <p className="mt-1 text-sm text-gray-900">{request.description}</p>
                             </div>
+
+                            {request.status === 'pending' && (
+                              <div className="mt-4 flex justify-end">
+                                <button
+                                  onClick={() => handleDeleteRequest(request.id)}
+                                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                >
+                                  Annuler la demande
+                                </button>
+                              </div>
+                            )}
 
                             {request.proformaAmount && (
                               <div className="mt-4 p-4 bg-orange-50 rounded-md">
@@ -1008,142 +1050,48 @@ export function MonCompte() {
             )}
 
             {activeTab === 'documents' && (
-              <div>
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Mes Documents</h2>
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Mes Documents</h3>
                 {loading ? (
-                  <div className="text-center py-12">
-                    <p className="text-xl text-gray-600">Chargement de vos documents...</p>
-                  </div>
-                ) : error ? (
-                  <div className="text-center py-12">
-                    <AlertTriangle className="mx-auto h-12 w-12 text-red-500" />
-                    <p className="mt-2 text-xl text-red-600">{error}</p>
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
                   </div>
                 ) : documents.length === 0 ? (
-                  <div className="text-center py-12">
-                    <File className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun document</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Vous n'avez pas encore de documents.
-                    </p>
-                  </div>
+                  <p className="text-center text-gray-500">Aucun document</p>
                 ) : (
                   <div className="space-y-4">
-                    {documents.map((doc) => {
-                      console.log('Rendu du document:', {
-                        id: doc.id,
-                        nom: doc.nom_fichier,
-                        type: doc.type_document,
-                        categorie: doc.categorie,
-                        service_id: doc.service_id,
-                        commande_id: doc.commande_id,
-                        demande_id: doc.demande_id
-                      });
-                      return (
-                        <div
-                          key={doc.id}
-                          className="bg-white shadow rounded-lg p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50"
-                          onClick={() => {
-                            console.log('Document sélectionné:', doc);
-                            setSelectedDocument(doc);
-                          }}
-                        >
-                          <div className="flex items-center">
-                            <File className="h-5 w-5 text-gray-400 mr-3" />
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">{doc.nom_fichier}</p>
-                              <p className="text-xs text-gray-500">
-                                {doc.type_document === 'commande' ? doc.produit_nom : doc.service_nom} - 
-                                {new Date(doc.created_at).toLocaleDateString('fr-FR')}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex space-x-4">
-                            {doc.categorie === 'facture' && doc.type_document === 'service' && doc.nom_fichier.includes('proforma') && doc.request?.status !== 'paid' && (
-                              <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  try {
-                                    const response = await fetch(`http://localhost:3000/api/service-requests/${doc.demande_id}`, {
-                                      headers: {
-                                        'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
-                                      }
-                                    });
-                                    
-                                    if (!response.ok) {
-                                      throw new Error('Erreur lors de la récupération des détails de la demande');
-                                    }
-
-                                    const requestData = await response.json();
-                                    
-                                    // Extraction du prix numérique du format "15 000 FCFA/echantillon" ou "15000fcfa/echantillon"
-                                    const prixString = requestData.data.servicePrice;
-                                    console.log('Prix brut:', prixString); // Pour le débogage
-
-                                    // Nouvelle expression régulière qui capture tous les chiffres avant "fcfa" ou "FCFA", en ignorant les espaces
-                                    const prixMatch = prixString.match(/(\d[\d\s]*)fcfa/i);
-                                    const prix = prixMatch ? parseInt(prixMatch[1].replace(/\s/g, '')) : 0;
-
-                                    console.log('Prix extrait:', prix); // Pour le débogage
-
-                                    if (prix === 0) {
-                                      throw new Error('Prix invalide');
-                                    }
-
-                                    // Stocker d'abord les informations de la demande
-                                    const serviceData = {
-                                      id: doc.demande_id?.toString() || '',
-                                      serviceId: doc.service_id?.toString() || '',
-                                      serviceName: doc.service_nom || '',
-                                      status: 'pending',
-                                      quantite: 1,
-                                      description: requestData.data.description || '',
-                                      createdAt: requestData.data.date_demande,
-                                      documents: []
-                                    };
-
-                                    setBillService(serviceData as ServiceRequest);
-
-                                    // Attendre que l'état soit mis à jour
-                                    await new Promise(resolve => setTimeout(resolve, 500));
-
-                                    // Vérifier que billService est bien mis à jour
-                                    console.log('billService avant paiement:', serviceData);
-
-                                    // Ouvrir le widget KkiaPay
-                                    openKkiapayWidget({
-                                      amount: prix,
-                                      api_key: "79429420652011efbf02478c5adba4b8",
-                                      sandbox: true,
-                                      name: user.nom,
-                                      email: user.email,
-                                      phone: "97000000",
-                                    });
-
-                                  } catch (error) {
-                                    console.error('Erreur:', error);
-                                    toast.error('Erreur lors du traitement du paiement');
-                                  }
-                                }}
-                                className="text-sm text-green-600 hover:text-green-700"
-                              >
-                                Payer
-                              </button>
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log('Téléchargement du document:', doc);
-                                handleDownload(doc);
-                              }}
-                              className="text-sm text-green-600 hover:text-green-700"
-                            >
-                              Télécharger
-                            </button>
+                    {documents.map((doc) => (
+                      <div 
+                        key={doc.document_demande_id || doc.id} 
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+                        onClick={() => setSelectedDocument(doc)}
+                      >
+                        <div className="flex items-center">
+                          <File className="w-5 h-5 text-gray-400 mr-3" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {doc.document_demande_nom || doc.nom_fichier}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {doc.type_document === 'commande' ? 'Commande' : 'Service'} - 
+                              {doc.produit_nom || doc.service_nom}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Ajouté le {new Date(doc.document_demande_date || doc.created_at).toLocaleDateString()}
+                            </p>
                           </div>
                         </div>
-                      );
-                    })}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(doc);
+                          }}
+                          className="text-sm text-green-600 hover:text-green-700"
+                        >
+                          Télécharger
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
 

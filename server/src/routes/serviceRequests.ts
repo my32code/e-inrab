@@ -4,7 +4,8 @@ import { findUserBySessionId } from '../models/User';
 import {
   createServiceRequest,
   getUserServiceRequests,
-  getServiceRequest
+  getServiceRequest,
+  deleteServiceRequest
 } from '../controllers/serviceRequestController';
 
 const router = Router();
@@ -45,5 +46,8 @@ router.get('/', getUserServiceRequests as RequestHandler);
 
 // Récupérer une demande spécifique
 router.get('/:id', getServiceRequest as RequestHandler);
+
+// Supprimer une demande
+router.delete('/:id', deleteServiceRequest as RequestHandler);
 
 export default router; 

@@ -111,7 +111,9 @@ export function DocumentsList({ type, referenceId, onClose }: DocumentsListProps
 
   const handleDownload = async (doc: Document) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/admin/documents/${doc.id}/download`, {
+      const documentId = doc.document_demande_id || doc.id;
+      
+      const response = await fetch(`http://localhost:3000/api/admin/documents/${documentId}/download`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -125,7 +127,7 @@ export function DocumentsList({ type, referenceId, onClose }: DocumentsListProps
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = doc.nom_fichier;
+      a.download = doc.document_demande_nom || doc.nom_fichier;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -226,7 +228,7 @@ export function DocumentsList({ type, referenceId, onClose }: DocumentsListProps
               )}
 
               {/* Documents de la table documents */}
-              {documents.map((doc) => (
+              {documents.filter(doc => doc.id).map((doc) => (
                 <div key={doc.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center">
                     <File className="w-5 h-5 text-gray-400 mr-3" />
