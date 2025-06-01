@@ -1,7 +1,7 @@
 import { Router, RequestHandler } from 'express';
 import { Request, Response, NextFunction } from 'express';
 import { findUserBySessionId } from '../models/User';
-import { getUserDocuments, downloadDocument, uploadDocument } from '../controllers/documentsController';
+import { getUserDocuments, downloadDocument, uploadDocument, getDocuments } from '../controllers/documentsController';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -67,6 +67,11 @@ const authenticateRequest: RequestHandler = async (req: Request, res: Response, 
 // Route pour récupérer les documents de l'utilisateur
 router.get('/user', authenticateRequest, (req: Request, res: Response) => {
   getUserDocuments(req as AuthenticatedRequest, res);
+});
+
+// Route pour récupérer les documents par commandeId ou demandeId
+router.get('/', authenticateRequest, (req: Request, res: Response) => {
+  getDocuments(req as AuthenticatedRequest, res);
 });
 
 // Route pour télécharger un document

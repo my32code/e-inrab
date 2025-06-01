@@ -27,17 +27,24 @@ export const getDocuments = async (req: AuthenticatedRequest, res: Response) => 
         FROM documents d 
         LEFT JOIN commandes c ON d.commande_id = c.id 
         LEFT JOIN produits p ON c.produit_id = p.id 
-        WHERE d.commande_id = ?
+        WHERE d.commande_id = ? AND d.type_document = 'commande'
+        ORDER BY d.created_at DESC
       `;
       params = [commandeId];
       console.log('Requête commande:', { query, params });
     } else if (demandeId) {
       query = `
-        SELECT d.*, s.nom as service_nom 
+        SELECT DISTINCT d.*, s.nom as service_nom,
+               dd.id as document_demande_id,
+               dd.nom_fichier as document_demande_nom,
+               dd.chemin_fichier as document_demande_chemin,
+               dd.date_upload as document_demande_date
         FROM documents d 
         LEFT JOIN demandes de ON d.demande_id = de.id 
         LEFT JOIN services s ON de.service_id = s.id 
-        WHERE d.demande_id = ?
+        LEFT JOIN documents_demandes dd ON de.id = dd.demande_id
+        WHERE d.demande_id = ? AND d.type_document = 'service'
+        ORDER BY d.created_at DESC
       `;
       params = [demandeId];
       console.log('Requête service:', { query, params });

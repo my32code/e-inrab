@@ -14,6 +14,10 @@ interface UserDocument {
   commande_id?: number;
   demande_id?: number;
   service_id?: number;
+  document_demande_id?: number;
+  document_demande_nom?: string;
+  document_demande_chemin?: string;
+  document_demande_date?: string;
 }
 
 interface DocumentDetailModalProps {
@@ -41,7 +45,7 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
         return;
       }
 
-      const response = await fetch(`http://localhost:3000/api/documents/user?${paramName}=${referenceId}`, {
+      const response = await fetch(`http://localhost:3000/api/documents?${paramName}=${referenceId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -235,6 +239,32 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
               <p className="text-center text-gray-500">Aucun document associé</p>
             ) : (
               <div className="space-y-4">
+                {/* Afficher les documents de documents_demandes (uniquement une fois) */}
+                {relatedDocuments.find(doc => doc.document_demande_id && doc.document_demande_nom && doc.document_demande_chemin && doc.document_demande_date) && (
+                  <div key={`demande-${relatedDocuments[0].document_demande_id}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center">
+                      <File className="w-5 h-5 text-gray-400 mr-3" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{relatedDocuments[0].document_demande_nom}</p>
+                        <p className="text-xs text-gray-500">
+                          Ajouté le {relatedDocuments[0].document_demande_date ? new Date(relatedDocuments[0].document_demande_date).toLocaleDateString() : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDownload({
+                        ...relatedDocuments[0],
+                        nom_fichier: relatedDocuments[0].document_demande_nom as string,
+                        chemin_fichier: relatedDocuments[0].document_demande_chemin as string
+                      })}
+                      className="text-sm text-green-600 hover:text-green-700"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Documents de la table documents */}
                 {relatedDocuments.map((doc) => (
                   <div
                     key={doc.id}

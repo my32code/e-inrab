@@ -13,6 +13,10 @@ interface Document {
   created_at: string;
   produit_nom?: string;
   service_nom?: string;
+  document_demande_id?: number;
+  document_demande_nom?: string;
+  document_demande_chemin?: string;
+  document_demande_date?: string;
 }
 
 interface DocumentsListProps {
@@ -34,7 +38,7 @@ export function DocumentsList({ type, referenceId, onClose }: DocumentsListProps
   const fetchDocuments = async () => {
     try {
       const paramName = type === 'commande' ? 'commandeId' : 'demandeId';
-      const response = await fetch(`http://localhost:3000/api/admin/documents?${paramName}=${referenceId}`, {
+      const response = await fetch(`http://localhost:3000/api/admin/documents/get?${paramName}=${referenceId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -196,11 +200,34 @@ export function DocumentsList({ type, referenceId, onClose }: DocumentsListProps
             <p className="text-center text-gray-500">Aucun document</p>
           ) : (
             <div className="space-y-4">
+              {/* Documents de documents_demandes (uniquement une fois) */}
+              {documents.find(doc => doc.document_demande_id && doc.document_demande_nom && doc.document_demande_chemin && doc.document_demande_date) && (
+                <div key={`demande-${documents[0].document_demande_id}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <File className="w-5 h-5 text-gray-400 mr-3" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{documents[0].document_demande_nom}</p>
+                      <p className="text-xs text-gray-500">
+                        Ajouté le {documents[0].document_demande_date ? new Date(documents[0].document_demande_date).toLocaleDateString() : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDownload({
+                      ...documents[0],
+                      nom_fichier: documents[0].document_demande_nom as string,
+                      chemin_fichier: documents[0].document_demande_chemin as string
+                    })}
+                    className="text-sm text-green-600 hover:text-green-700"
+                  >
+                    Télécharger
+                  </button>
+                </div>
+              )}
+
+              {/* Documents de la table documents */}
               {documents.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                >
+                <div key={doc.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center">
                     <File className="w-5 h-5 text-gray-400 mr-3" />
                     <div>

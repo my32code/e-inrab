@@ -58,6 +58,7 @@ router.put('/produits/:id/stock', ((req: Request, res: Response) => updateProdui
 
 // Routes pour les documents
 router.get('/documents', ((req: Request, res: Response) => getAllDocuments(req as AuthenticatedRequest, res)) as RequestHandler);
+router.get('/documents/get', ((req: Request, res: Response) => getDocuments(req as AuthenticatedRequest, res)) as RequestHandler);
 router.delete('/documents/:id', ((req: Request, res: Response) => deleteDocument(req as AuthenticatedRequest, res)) as RequestHandler);
 router.post('/documents/upload', 
   authenticateRequest as RequestHandler,
