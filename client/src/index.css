@@ -1,3 +1,408 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Animations de base */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Effets de glassmorphisme */
+.glass-effect {
+  background: rgba(34, 197, 94, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(34, 197, 94, 0.15);
+  transition: all 0.3s ease;
+}
+
+.glass-effect:hover {
+  background: rgba(34, 197, 94, 0.25);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(34, 197, 94, 0.25);
+  transform: translateY(-2px);
+}
+
+[data-theme="dark"] .glass-effect {
+  background: rgba(26, 26, 26, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Effets sur les conteneurs */
+.auth-container {
+  animation: scaleIn 0.5s ease-out;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Effets sur les boutons */
+.auth-container button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.auth-container button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.auth-container button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Effets sur les inputs */
+.auth-container input {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.auth-container input:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.15);
+}
+
+/* Effets sur les liens */
+.auth-container .link {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.auth-container .link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--primary-green);
+  transition: width 0.3s ease;
+}
+
+.auth-container .link:hover::after {
+  width: 100%;
+}
+
+/* Effet de particules en arrière-plan */
+.particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Effet de gradient animé */
+.gradient-bg {
+  background: linear-gradient(
+    45deg,
+    var(--primary-green) 0%,
+    var(--primary-blue) 50%,
+    var(--primary-green) 100%
+  );
+  background-size: 200% 200%;
+  animation: gradientMove 15s ease infinite;
+}
+
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Effet de texte brillant */
+.shine-text {
+  background: linear-gradient(
+    90deg,
+    var(--text-light) 0%,
+    var(--primary-green) 50%,
+    var(--text-light) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 3s linear infinite;
+}
+
+[data-theme="dark"] .shine-text {
+  background: linear-gradient(
+    90deg,
+    var(--text-dark) 0%,
+    var(--primary-green) 50%,
+    var(--text-dark) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes shine {
+  to { background-position: 200% center; }
+}
+
+/* Effet de carte 3D */
+.card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+
+.card-3d:hover {
+  transform: rotateY(10deg) rotateX(5deg);
+}
+
+/* Effet de pulsation */
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+:root {
+  /* Light theme variables */
+  --primary-green: #4ade80;
+  --primary-green-dark: #22c55e;
+  --primary-blue: #1a5f7a;
+  --background-light: rgba(255, 255, 255, 0.95);
+  --text-light: #1a1a1a;
+  --container-bg-light: rgba(255, 255, 255, 0.85);
+  --overlay-light: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] {
+  /* Dark theme variables */
+  --primary-green: #4ade80;
+  --primary-green-dark: #22c55e;
+  --primary-blue: #1a5f7a;
+  --background-dark: rgba(26, 26, 26, 0.95);
+  --text-dark: #ffffff;
+  --container-bg-dark: rgba(26, 26, 26, 0.85);
+  --overlay-dark: rgba(0, 0, 0, 0.4);
+}
+
+/* Base styles */
+body {
+  background-color: var(--background-light);
+  color: var(--text-light);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="dark"] body {
+  background-color: var(--background-dark);
+  color: var(--text-dark);
+}
+
+.main-background {
+  background-image: url('/images/backgrounds/background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative; /* Needed for the overlay */
+}
+
+.main-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7); /* White overlay with 70% opacity */
+  z-index: -1; /* Place behind content */
+}
+
+.account-background {
+  background-image: url('/images/backgrounds/background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  position: relative;
+  min-height: 100vh;
+}
+
+.account-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.85),
+    rgba(255, 255, 255, 0.95)
+  );
+  z-index: 0;
+}
+
+.account-background > div {
+  position: relative;
+  z-index: 1;
+}
+
+.account-background .bg-white {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(5px);
+}
+
+.account-background .shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Styles pour les pages de connexion et d'inscription */
+.auth-background {
+  background-image: url('/images/backgrounds/background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+}
+
+.auth-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-light);
+  z-index: 0;
+}
+
+[data-theme="dark"] .auth-background::before {
+  background: var(--overlay-dark);
+}
+
+.auth-container {
+  background: var(--container-bg-light);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 450px;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .auth-container {
+  background: var(--container-bg-dark);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.auth-container h2 {
+  color: var(--primary-blue);
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+[data-theme="dark"] .auth-container h2 {
+  color: var(--primary-green);
+}
+
+.auth-container input {
+  background: var(--container-bg-light);
+  border: 1px solid #e2e8f0;
+  color: var(--text-light);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .auth-container input {
+  background: var(--container-bg-dark);
+  border-color: #4a5568;
+  color: var(--text-dark);
+}
+
+.auth-container input:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
+}
+
+.auth-container button {
+  background: linear-gradient(90deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.auth-container button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.2);
+}
+
+.auth-container .link {
+  color: var(--primary-green);
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.auth-container .link:hover {
+  color: var(--primary-green-dark);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem;
+  border-radius: 50%;
+  background: var(--container-bg-light);
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .theme-toggle {
+  background: var(--container-bg-dark);
+  border-color: #4a5568;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1);
+}

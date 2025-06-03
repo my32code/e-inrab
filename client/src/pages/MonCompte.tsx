@@ -569,8 +569,8 @@ export function MonCompte() {
 
   // Gestionnaire d'échec de paiement
   const failureHandler = (error: any) => {
-    console.error("Échec du paiement :", error);
-    toast.error("Échec du paiement");
+    console.error('KKiaPay payment failed:', error);
+    toast.error(`Paiement échoué: ${error.message}`);
   };
 
   // Ajoutez les listeners KkiaPay
@@ -680,7 +680,7 @@ export function MonCompte() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="container mx-auto px-4 py-8 account-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow rounded-lg">
           <div className="border-b border-gray-200">
@@ -920,28 +920,7 @@ export function MonCompte() {
                               </div>
                             )}
 
-                            {request.proformaAmount && (
-                              <div className="mt-4 p-4 bg-orange-50 rounded-md">
-                                <div className="flex">
-                                  <div className="flex-shrink-0">
-                                    <DollarSign className="h-5 w-5 text-orange-400" />
-                                  </div>
-                                  <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-orange-800">
-                                      Paiement requis
-                                    </h3>
-                                    <div className="mt-2 text-sm text-orange-700">
-                                      <p>Montant à payer : {request.proformaAmount} FCFA</p>
-                                    </div>
-                                    <div className="mt-4">
-                                      <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
-                                        Procéder au paiement
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
+                            
                           </div>
                         </div>
                       );
@@ -1081,15 +1060,70 @@ export function MonCompte() {
                             </p>
                           </div>
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownload(doc);
-                          }}
-                          className="text-sm text-green-600 hover:text-green-700"
-                        >
-                          Télécharger
-                        </button>
+                        <div className="flex space-x-4">
+                          {/* Bouton Payer - conditionnel */}
+                          {doc.categorie === 'facture' && 
+                          doc.type_document === 'service' && 
+                          (doc.document_demande_nom?.includes('proforma') || doc.nom_fichier?.includes('proforma')) && 
+                          doc.request?.status !== 'paid' && (
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  const response = await fetch(`http://localhost:3000/api/service-requests/${doc.demande_id}`, {
+                                    headers: {
+                                      'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+                                    }
+                                  });
+                                  
+                                  if (!response.ok) throw new Error('Erreur lors de la récupération des détails');
+                                  
+                                  const serviceData = await response.json();
+                                  const prixString = serviceData.data.servicePrice;
+                                  const prixMatch = prixString.match(/(\d[\d\s]*)fcfa/i);
+                                  const prix = prixMatch ? parseInt(prixMatch[1].replace(/\s/g, '')) : 0;
+
+                                  setBillService({
+                                    id: doc.demande_id?.toString() || '',
+                                    serviceId: doc.service_id?.toString() || '',
+                                    serviceName: doc.service_nom || '',
+                                    status: 'pending',
+                                    quantite: 1,
+                                    description: serviceData.data.description || '',
+                                    createdAt: serviceData.data.date_demande,
+                                    documents: []
+                                  });
+
+                                  openKkiapayWidget({
+                                    amount: prix,
+                                    api_key: "79429420652011efbf02478c5adba4b8",
+                                    sandbox: true,
+                                    name: user.nom,
+                                    email: user.email,
+                                    phone: "97000000",
+                                  });
+                                } catch (error) {
+                                  console.error('Erreur:', error);
+                                  toast.error('Erreur lors du traitement du paiement');
+                                }
+                              }}
+                              className="text-sm text-green-600 hover:text-green-700"
+                            >
+                              Payer
+                            </button>
+                          )}
+                          
+                          {/* Bouton Télécharger - existant */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownload(doc);
+                            }}
+                            className="text-sm text-green-600 hover:text-green-700"
+                          >
+                            Télécharger
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -114,20 +114,20 @@ export function Home() {
           <img
             src={slides[currentSlide].image}
             alt={slides[currentSlide].title}
-            className="w-full h-full object-cover transition-opacity duration-500"
+            className="w-full h-full object-cover transition-transform duration-1000 scale-100 group-hover:scale-105 animate-zoom"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/40">
+          <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-green-900/30 to-black/40">
             <div className="h-full flex items-center justify-center">
-              <div className="text-center text-white px-4 max-w-4xl">
-                <h1 className="text-3xl md:text-5xl font-bold mb-3 animate-fade-in">
+              <div className="text-center text-white px-4 max-w-4xl animate-fadeIn">
+                <h1 className="text-3xl md:text-5xl font-bold mb-3 shine-text animate-slideUp">
                   {slides[currentSlide].title}
                 </h1>
-                <p className="text-lg md:text-xl mb-6 animate-fade-in">
+                <p className="text-lg md:text-xl mb-6 animate-fadeIn">
                   {slides[currentSlide].description}
                 </p>
                 <a 
                   href="/services"
-                  className="inline-block bg-green-600 text-white px-6 py-2 rounded-md text-base hover:bg-green-700 transition-colors transform hover:scale-105"
+                  className="inline-block bg-gradient-to-r from-green-500 via-green-400 to-green-600 text-white px-6 py-2 rounded-md text-base shadow-lg hover:scale-105 transition-transform animate-fadeIn glass-effect"
                 >
                   Découvrir nos services
                 </a>
@@ -137,13 +137,13 @@ export function Home() {
         </div>
         <button
           onClick={prevSlide}
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-lg hover:bg-white transition-colors"
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-lg hover:bg-white transition-colors glass-effect"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-lg hover:bg-white transition-colors"
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-lg hover:bg-white transition-colors glass-effect"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
@@ -157,7 +157,7 @@ export function Home() {
             {processCards.map((card, index) => (
                   <div 
                     key={index} 
-                className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-white glass-effect p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                 <div className="flex items-center mb-6">
                   {card.icon}
@@ -183,7 +183,7 @@ export function Home() {
                 </div>
                 <a 
                   href={card.buttonLink}
-                  className="inline-flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors transform hover:scale-105"
+                  className="inline-flex items-center space-x-2 bg-green-600 glass-effect text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors transform hover:scale-105"
                 >
                   <span>{card.buttonText}</span>
                   <ArrowRight className="w-5 h-5" />
@@ -197,7 +197,7 @@ export function Home() {
       {/* Contact Section */}
       <section className="py-16 bg-green-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-[1.02] transition-transform">
+          <div className="bg-white glass-effect rounded-xl shadow-lg overflow-hidden transform hover:scale-[1.02] transition-transform">
             <div className="md:flex">
               <div className="md:w-1/2">
                 <img
@@ -214,7 +214,7 @@ export function Home() {
                 </p>
                 <a 
                   href="/contact"
-                  className="flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors transform hover:scale-105"
+                  className="flex items-center space-x-2 bg-green-600 glass-effect text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors transform hover:scale-105"
                 >
                   <Phone className="w-5 h-5" />
                   <span>Contactez-nous</span>

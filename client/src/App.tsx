@@ -19,53 +19,48 @@ import { ServiceRequest } from './pages/ServiceRequest';
 function App() {
   return (
     <AuthProvider>
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 main-background">
       <Navbar />
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/" element={<Home />} />
-        {/* Routes protégées */}
-        <Route path="/services" element={
-          <ProtectedRoute>
-            <Services />
-          </ProtectedRoute>
-        } />
-        
+      <div className="pt-16">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/services" element={
+            <ProtectedRoute>
+              <Services />
+            </ProtectedRoute>
+          } />
           <Route path="/services/demande/:serviceId" element={
             <ProtectedRoute>
               <ServiceRequest />
             </ProtectedRoute>
           } />
-
           <Route path="/produits/demande/:productId" element={
             <ProtectedRoute>
               <ServiceRequest />
             </ProtectedRoute>
           } />
-          
           <Route path="/contact" element={
             <Contact />
           } />
-        
-        <Route path="/catalogue" element={
-          <ProtectedRoute>
-            <Catalogue />
-          </ProtectedRoute>
-        } />
-
+          <Route path="/catalogue" element={
+            <ProtectedRoute>
+              <Catalogue />
+            </ProtectedRoute>
+          } />
           <Route path="/mon-compte" element={
             <ProtectedRoute>
               <MonCompte />
             </ProtectedRoute>
           } />
-
-        <Route path="/admin" element={
-          <ProtectedRoute>
-            <Admin />
-          </ProtectedRoute>
-        } />
-      </Routes>
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <Admin />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </div>
       <Footer />
       <ToastContainer position="bottom-right" />
     </div>

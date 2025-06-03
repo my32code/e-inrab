@@ -61,22 +61,16 @@ export function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Créer un compte
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          <div className="rounded-md shadow-sm -space-y-px space-y-4">
-            {/* Champ Nom */}
+    <div className="auth-background">
+      <div className="auth-container">
+        <h2>Créer un compte</h2>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label htmlFor="nom" className="sr-only">Nom complet</label>
               <input
                 {...formregister('nom')}
                 type="text"
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+              className="auth-container input"
                 placeholder="Nom et Prénoms"
               />
               {errors.nom && (
@@ -84,13 +78,12 @@ export function Register() {
               )}
             </div>
 
-            {/* Champ Email */}
             <div>
               <label htmlFor="email" className="sr-only">Email</label>
               <input
                 {...formregister('email')}
                 type="email"
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+              className="auth-container input"
                 placeholder="Adresse email"
               />
               {errors.email && (
@@ -98,26 +91,28 @@ export function Register() {
               )}
             </div>
 
-            {/* Champ Téléphone */}
             <div>
               <label htmlFor="telephone" className="sr-only">Numéro de téléphone</label>
               <input
                 {...formregister('telephone')}
                 type="tel"
                 placeholder="Numéro de téléphone (ex: +229 01 64 28 37 02)"
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+              className="auth-container input"
                 pattern="^\+?[0-9\s\-\(\)]{8,15}$"
                 title="Format: +XXX XX XX XX XX (ex: +229 01 64 28 37 02)"
               />
+              {errors.telephone && (
+                <p className="mt-1 text-sm text-red-600">{errors.telephone.message}</p>
+              )}
             </div>
 
-            {/* Champ Mot de passe */}
+        
             <div>
               <label htmlFor="mot_de_passe" className="sr-only">Mot de passe</label>
               <input
                 {...formregister('mot_de_passe')}
                 type="password"
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+              className="auth-container input"
                 placeholder="Mot de passe"
               />
               {errors.mot_de_passe && (
@@ -125,35 +120,31 @@ export function Register() {
               )}
             </div>
 
-            {/* Champ Confirmation mot de passe */}
             <div>
               <label htmlFor="confirmPassword" className="sr-only">Confirmer le mot de passe</label>
               <input
                 {...formregister('confirmPassword')}
                 type="password"
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+              className="auth-container input"
                 placeholder="Confirmer le mot de passe"
               />
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
               )}
-            </div>
           </div>
 
-          <div>
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isSubmitting}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            className="auth-container button"
             >
               {isSubmitting ? 'Inscription...' : "S'inscrire"}
             </motion.button>
-          </div>
 
           <div className="text-center">
-            <Link to="/login" className="text-green-600 hover:text-green-500">
+            <Link to="/login" className="link">
               Déjà un compte ? Se connecter
             </Link>
           </div>
