@@ -155,10 +155,10 @@ export function Home() {
           <h2 className="text-3xl font-bold text-center mb-12">Comment ça marche ?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {processCards.map((card, index) => (
-              <div 
-                key={index}
+                  <div 
+                    key={index} 
                 className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-              >
+                  >
                 <div className="flex items-center mb-6">
                   {card.icon}
                   <h3 className="text-2xl font-bold ml-4">{card.title}</h3>
@@ -169,7 +169,7 @@ export function Home() {
                     {card.steps.map((step, stepIndex) => (
                       <div key={stepIndex} className="flex-shrink-0 w-64">
                         <div className="bg-gray-50 p-4 rounded-lg h-full">
-                          <div className="flex items-center mb-3">
+                      <div className="flex items-center mb-3">
                             <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
                               <span className="text-green-600 font-semibold">{stepIndex + 1}</span>
                             </div>

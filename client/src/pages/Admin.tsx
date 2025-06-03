@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Users, ShoppingCart, FileText, Upload, Package, Wrench } from 'lucide-react';
+import { Box, Users, ShoppingCart, FileText, Upload, Package, Wrench, BarChart2 } from 'lucide-react';
 import { isAuthenticated, getCurrentUser } from '../services/auth';
 import { toast } from 'react-toastify';
 import { CommandesList } from '../components/admin/CommandesList';
 import { ServiceRequestsList } from '../components/ServiceRequestsList';
 import { StocksList } from '../components/StocksList';
 import { DocumentsList } from '../components/admin/DocumentsList';
+import { StatsDashboard } from '../components/admin/StatsDashboard';
 
 interface User {
   id: number;
@@ -92,7 +93,8 @@ export function Admin() {
     { id: 'commandes', label: 'Commandes', icon: ShoppingCart },
     { id: 'services', label: 'Services', icon: Wrench },
     { id: 'stocks', label: 'Stocks', icon: Package },
-    { id: 'documents', label: 'Documents', icon: Upload }
+    { id: 'documents', label: 'Documents', icon: Upload },
+    { id: 'stats', label: 'Statistiques', icon: BarChart2 }
   ];
 
   return (
@@ -147,6 +149,13 @@ export function Admin() {
               <div>
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Gestion des Documents</h2>
                 <DocumentsList />
+              </div>
+            )}
+
+            {activeTab === 'stats' && (
+              <div>
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Tableau de bord statistiques</h2>
+                <StatsDashboard />
               </div>
             )}
           </div>
