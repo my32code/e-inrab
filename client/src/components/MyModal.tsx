@@ -29,7 +29,7 @@ export default function MyModal({ isOpen, setIsOpen, children }: MyModalProps) {
         <>
           {/* Overlay */}
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="fixed inset-0 bg-black bg-opacity-50 z-60"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -38,22 +38,24 @@ export default function MyModal({ isOpen, setIsOpen, children }: MyModalProps) {
 
           {/* Modal content */}
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            className="fixed inset-0 z-50 flex overflow-y-auto px-4 py-8"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
           >
-            <div className="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 rounded-lg shadow-xl">
-              <div className="flex justify-end items-end mb-4">
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="text-red-500 hover:text-red-700 font-bold text-lg self-start"
-                >
-                  <XCircle />
-                </button>
-              </div>
+            <div className="flex min-h-full items-center justify-center">
+              <div className="bg-white w-full max-w-3xl max-h-[90vh] p-6 rounded-lg shadow-xl">
+                <div className="flex justify-end items-end mb-4">
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="text-red-500 hover:text-red-700 font-bold text-lg self-start"
+                  >
+                    <XCircle />
+                  </button>
+                </div>
 
-              <div className="mb-4">{children}</div>
+                <div className="mb-4">{children}</div>
+              </div>
             </div>
           </motion.div>
         </>

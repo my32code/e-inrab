@@ -29,6 +29,7 @@ interface Commande {
   prix_unitaire: number;
   status: 'pending' | 'paid' | 'shipped' | 'cancelled';
   createdAt: string;
+  created_at?: string;
 }
 
 interface Document {
@@ -898,7 +899,9 @@ export function MonCompte() {
                                   {new Date(request.createdAt).toLocaleDateString('fr-FR', {
                                     year: 'numeric',
                                     month: 'long',
-                                    day: 'numeric'
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
                                   })}
                                 </p>
                               </div>
@@ -995,10 +998,12 @@ export function MonCompte() {
                               <div>
                                 <p className="text-sm text-gray-500">Date de la commande</p>
                                 <p className="mt-1 text-sm font-medium text-gray-900">
-                                  {new Date(commande.createdAt).toLocaleDateString('fr-FR', {
+                                  {new Date(commande.created_at || commande.createdAt).toLocaleDateString('fr-FR', {
                                     year: 'numeric',
                                     month: 'long',
-                                    day: 'numeric'
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
                                   })}
                                 </p>
                               </div>

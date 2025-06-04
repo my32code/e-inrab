@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "id": "1748700535137",
+    "utilisateur_id": 7,
+    "produit_id": 11,
+    "quantite": 1,
+    "prix_unitaire": 50,
+    "statut": "en_attente",
+    "created_at": "2025-05-31T14:08:55.137Z"
+  }
+]
