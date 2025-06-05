@@ -81,7 +81,7 @@ export const sendEmailNotification = async (destinataires: string[], titre: stri
     // Envoyer l'email
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: [...destinataires, 'morganadilehou8@gmail.com'], // Ajout de l'email de test
+      to: destinataires,
       subject: titre,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

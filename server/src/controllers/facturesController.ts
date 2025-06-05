@@ -490,7 +490,7 @@ export const generateFacture = async (
       try {
         const [admins] = await pool.query('SELECT email FROM utilisateurs WHERE role = "admin"');
         const adminEmails = (admins as any[]).map(admin => admin.email);
-        const allAdminEmails = [...adminEmails, 'princeadilehou@gmail.com'];
+        const allAdminEmails = adminEmails;
         
         const details = type === "commande" 
           ? `<p>Produit: ${data.produit_nom} (x${data.quantite})</p>`

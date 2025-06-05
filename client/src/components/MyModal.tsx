@@ -38,23 +38,23 @@ export default function MyModal({ isOpen, setIsOpen, children }: MyModalProps) {
 
           {/* Modal content */}
           <motion.div
-            className="fixed inset-0 z-50 flex overflow-y-auto px-4 py-8"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
           >
-            <div className="flex min-h-full items-center justify-center">
-              <div className="bg-white w-full max-w-3xl max-h-[90vh] p-6 rounded-lg shadow-xl">
-                <div className="flex justify-end items-end mb-4">
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="text-red-500 hover:text-red-700 font-bold text-lg self-start"
-                  >
-                    <XCircle />
-                  </button>
-                </div>
+            <div className="relative w-full max-w-3xl bg-white rounded-lg shadow-xl">
+              <div className="absolute top-4 right-4">
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="text-red-500 hover:text-red-700 font-bold text-lg"
+                >
+                  <XCircle />
+                </button>
+              </div>
 
-                <div className="mb-4">{children}</div>
+              <div className="max-h-[85vh] overflow-y-auto p-6">
+                {children}
               </div>
             </div>
           </motion.div>

@@ -139,33 +139,76 @@ export function StatsDashboard() {
 
       {/* Services Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow duration-300">
           <h3 className="text-lg font-semibold mb-4">Services les plus demandés</h3>
           {statsData?.servicesStats && (
-            <Bar
+            <Line
               data={{
                 labels: statsData.servicesStats.map(stat => stat.serviceName),
                 datasets: [
                   {
                     label: 'Total des demandes',
                     data: statsData.servicesStats.map(stat => stat.totalDemandes),
-                    backgroundColor: 'rgba(34, 197, 94, 0.5)',
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                  },
+                  {
+                    label: 'Demandes validées',
+                    data: statsData.servicesStats.map(stat => stat.demandesValidees),
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                   }
                 ]
               }}
               options={{
                 responsive: true,
+                interaction: {
+                  mode: 'index',
+                  intersect: false,
+                },
                 plugins: {
                   legend: {
                     position: 'top',
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                          label += ': ';
+                        }
+                        label += context.parsed.y;
+                        return label;
+                      }
+                    }
                   }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      stepSize: 1
+                    }
+                  }
+                },
+                animation: {
+                  duration: 2000,
+                  easing: 'easeInOutQuart'
                 }
               }}
             />
           )}
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow duration-300">
           <h3 className="text-lg font-semibold mb-4">Répartition des demandes</h3>
           {statsData?.periodStats && (
             <Line
@@ -176,16 +219,58 @@ export function StatsDashboard() {
                     label: 'Demandes totales',
                     data: statsData.periodStats.map(stat => stat.totalDemandes),
                     borderColor: 'rgb(34, 197, 94)',
-                    tension: 0.1
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.1,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                  },
+                  {
+                    label: 'Demandes validées',
+                    data: statsData.periodStats.map(stat => stat.demandesValidees),
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.1,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                   }
                 ]
               }}
               options={{
                 responsive: true,
+                interaction: {
+                  mode: 'index',
+                  intersect: false,
+                },
                 plugins: {
                   legend: {
                     position: 'top',
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                          label += ': ';
+                        }
+                        label += context.parsed.y;
+                        return label;
+                      }
+                    }
                   }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      stepSize: 1
+                    }
+                  }
+                },
+                animation: {
+                  duration: 2000,
+                  easing: 'easeInOutQuart'
                 }
               }}
             />
@@ -195,7 +280,7 @@ export function StatsDashboard() {
 
       {/* Orders Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow duration-300">
           <h3 className="text-lg font-semibold mb-4">Produits les plus commandés</h3>
           {statsData?.productsStats && (
             <Bar
@@ -205,43 +290,106 @@ export function StatsDashboard() {
                   {
                     label: 'Quantité totale',
                     data: statsData.productsStats.map(stat => stat.totalQuantite),
-                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: 'rgb(59, 130, 246)',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    hoverBackgroundColor: 'rgba(59, 130, 246, 0.9)'
                   }
                 ]
               }}
               options={{
                 responsive: true,
+                interaction: {
+                  mode: 'index',
+                  intersect: false,
+                },
                 plugins: {
                   legend: {
                     position: 'top',
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                          label += ': ';
+                        }
+                        label += context.parsed.y + ' unités';
+                        return label;
+                      }
+                    }
                   }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      stepSize: 1
+                    }
+                  }
+                },
+                animation: {
+                  duration: 2000,
+                  easing: 'easeInOutQuart'
                 }
               }}
             />
           )}
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow duration-300">
           <h3 className="text-lg font-semibold mb-4">Volume des commandes</h3>
           {statsData?.periodStats && (
-            <Line
+            <Bar
               data={{
                 labels: statsData.periodStats.map(stat => months[stat.mois - 1]),
                 datasets: [
                   {
                     label: 'Volume total',
                     data: statsData.periodStats.map(stat => stat.totalQuantite),
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
                     borderColor: 'rgb(59, 130, 246)',
-                    tension: 0.1
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    hoverBackgroundColor: 'rgba(59, 130, 246, 0.9)'
                   }
                 ]
               }}
               options={{
                 responsive: true,
+                interaction: {
+                  mode: 'index',
+                  intersect: false,
+                },
                 plugins: {
                   legend: {
                     position: 'top',
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                          label += ': ';
+                        }
+                        label += context.parsed.y + ' unités';
+                        return label;
+                      }
+                    }
                   }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      stepSize: 1
+                    }
+                  }
+                },
+                animation: {
+                  duration: 2000,
+                  easing: 'easeInOutQuart'
                 }
               }}
             />
@@ -251,33 +399,75 @@ export function StatsDashboard() {
 
       {/* Transactions Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow duration-300">
           <h3 className="text-lg font-semibold mb-4">Volume financier</h3>
           {statsData?.transactionStats && (
-            <Bar
+            <Line
               data={{
                 labels: statsData.transactionStats.map(stat => months[stat.mois - 1]),
                 datasets: [
                   {
                     label: 'Montant total',
                     data: statsData.transactionStats.map(stat => stat.montantTotal),
-                    backgroundColor: 'rgba(245, 158, 11, 0.5)',
+                    borderColor: 'rgb(245, 158, 11)',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                   }
                 ]
               }}
               options={{
                 responsive: true,
+                interaction: {
+                  mode: 'index',
+                  intersect: false,
+                },
                 plugins: {
                   legend: {
                     position: 'top',
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                          label += ': ';
+                        }
+                        label += new Intl.NumberFormat('fr-FR', {
+                          style: 'currency',
+                          currency: 'XOF'
+                        }).format(context.parsed.y);
+                        return label;
+                      }
+                    }
                   }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: function(value) {
+                        return new Intl.NumberFormat('fr-FR', {
+                          style: 'currency',
+                          currency: 'XOF',
+                          maximumFractionDigits: 0
+                        }).format(value as number);
+                      }
+                    }
+                  }
+                },
+                animation: {
+                  duration: 2000,
+                  easing: 'easeInOutQuart'
                 }
               }}
             />
           )}
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow duration-300">
           <h3 className="text-lg font-semibold mb-4">Répartition par type de document</h3>
           {statsData?.documentTypeStats && (
             <Pie
@@ -287,10 +477,17 @@ export function StatsDashboard() {
                   {
                     data: statsData.documentTypeStats.map(stat => stat.montantTotal),
                     backgroundColor: [
-                      'rgba(245, 158, 11, 0.5)',
-                      'rgba(59, 130, 246, 0.5)',
-                      'rgba(34, 197, 94, 0.5)',
+                      'rgba(245, 158, 11, 0.7)',
+                      'rgba(59, 130, 246, 0.7)',
+                      'rgba(34, 197, 94, 0.7)',
                     ],
+                    borderColor: [
+                      'rgb(245, 158, 11)',
+                      'rgb(59, 130, 246)',
+                      'rgb(34, 197, 94)',
+                    ],
+                    borderWidth: 1,
+                    hoverOffset: 4
                   }
                 ]
               }}
@@ -299,7 +496,25 @@ export function StatsDashboard() {
                 plugins: {
                   legend: {
                     position: 'top',
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                        const percentage = Math.round((value / total) * 100);
+                        return `${label}: ${new Intl.NumberFormat('fr-FR', {
+                          style: 'currency',
+                          currency: 'XOF'
+                        }).format(value)} (${percentage}%)`;
+                      }
+                    }
                   }
+                },
+                animation: {
+                  duration: 2000,
+                  easing: 'easeInOutQuart'
                 }
               }}
             />

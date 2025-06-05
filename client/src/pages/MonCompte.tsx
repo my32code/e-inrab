@@ -528,7 +528,7 @@ export function MonCompte() {
             console.log('Génération facture service:', billService.id);
             await handleGenerateFacture('service', billService.id, true);
         } 
-        if (billCommande) {
+        else if (billCommande) {
             try {
                 // 1. Transférer la commande vers la BDD
                 const transferResponse = await fetch('http://localhost:3000/api/commandes/transferer', {
@@ -561,7 +561,8 @@ export function MonCompte() {
         
         toast.success("Paiement et facture validés");
         fetchDocuments(); // Rafraîchir les documents
-        fetchCommandes(); // Rafraîchir les commandes
+        fetchCommandes();
+        setIsOpen(false); // Fermer le modal après le paiement réussi
     } catch (error) {
         console.error("Erreur:", error);
         toast.error("Paiement accepté mais erreur de facturation");
@@ -1070,7 +1071,7 @@ export function MonCompte() {
                           {doc.categorie === 'facture' && 
                           doc.type_document === 'service' && 
                           (doc.document_demande_nom?.includes('proforma') || doc.nom_fichier?.includes('proforma')) && 
-                          doc.request?.status !== 'paid' && (
+                          doc.request?.status !== 'paid' && doc.request?.status !== 'preparing' && doc.request?.status !== 'completed' && doc.request?.status !== 'cancelled' && (
                             <button
                               onClick={async (e) => {
                                 e.stopPropagation();
