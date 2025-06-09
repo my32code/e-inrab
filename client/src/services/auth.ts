@@ -18,22 +18,30 @@ export const login = async (credentials: {
   email: string;
   mot_de_passe: string;
 }) => {
+  console.log('Tentative de connexion avec email:', credentials.email);
+  
   const response = await fetch('http://localhost:3000/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials),
   });
 
+  console.log('Réponse du serveur:', response.status);
+
   if (!response.ok) {
-    throw new Error(await response.text());
+    const errorText = await response.text();
+    console.error('Erreur de connexion:', errorText);
+    throw new Error(errorText);
   }
   
   const data = await response.json();
-  console.log('Login response data:', data);
+  console.log('Données de connexion reçues:', {
+    sessionId: data.sessionId ? 'Présent' : 'Manquant',
+    user: data.user ? 'Présent' : 'Manquant'
+  });
   
-  // Stocker la session et les infos utilisateur
   localStorage.setItem('sessionId', data.sessionId);
-  localStorage.setItem('user', JSON.stringify(data.user));
+    localStorage.setItem('user', JSON.stringify(data.user));
   
   return data;
 };
@@ -61,9 +69,15 @@ export const isAuthenticated = async (): Promise<boolean> => {
   try {
     const sessionId = localStorage.getItem('sessionId');
     const user = getCurrentUser();
-    console.log('Checking authentication:', { sessionId, user });
+    console.log('Vérification d\'authentification:', {
+      sessionId: sessionId ? 'Présent' : 'Manquant',
+      user: user ? 'Présent' : 'Manquant'
+    });
     
-    if (!sessionId || !user) return false;
+    if (!sessionId || !user) {
+      console.log('Session ou utilisateur manquant');
+      return false;
+    }
 
     const response = await fetch('http://localhost:3000/api/auth/verify', {
       headers: {
@@ -71,11 +85,10 @@ export const isAuthenticated = async (): Promise<boolean> => {
       }
     });
     
-    const isAuth = response.ok;
-    console.log('Authentication status:', isAuth);
-    return isAuth;
+    console.log('Réponse de vérification:', response.status);
+    return response.ok;
   } catch (error) {
-    console.error('Authentication check error:', error);
+    console.error('Erreur de vérification d\'authentification:', error);
     return false;
   }
 };

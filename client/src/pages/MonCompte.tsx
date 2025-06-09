@@ -387,10 +387,19 @@ export function MonCompte() {
     }
   };
 
-  const handleDownload = async (doc: any) => {
+  const handleDownload = async (documentData: Document) => {
     try {
-      const documentId = doc.document_demande_id || doc.id;
-      
+      // Si c'est un document de demande, utiliser document_demande_id
+      const documentId = documentData.document_demande_id || documentData.id;
+      const fileName = documentData.document_demande_nom || documentData.nom_fichier || 'document';
+
+      console.log('Téléchargement du document:', {
+        id: documentId,
+        nom: fileName,
+        type: documentData.type_document,
+        source: documentData.document_demande_id ? 'documents_demandes' : 'documents'
+      });
+
       const response = await fetch(`http://localhost:3000/api/documents/download/${documentId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
@@ -403,16 +412,16 @@ export function MonCompte() {
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a') as HTMLAnchorElement;
       a.href = url;
-      a.download = doc.document_demande_nom || doc.nom_fichier;
-      document.body.appendChild(a);
+      a.download = fileName;
+      window.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
     } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
       toast.error('Erreur lors du téléchargement du document');
-      console.error('Erreur:', error);
     }
   };
 
@@ -563,6 +572,9 @@ export function MonCompte() {
         fetchDocuments(); // Rafraîchir les documents
         fetchCommandes();
         setIsOpen(false); // Fermer le modal après le paiement réussi
+        setBillData(null); // Réinitialiser les données de facture
+        setBillCommande(null); // Réinitialiser la commande
+        setBillService(null); // Réinitialiser le service
     } catch (error) {
         console.error("Erreur:", error);
         toast.error("Paiement accepté mais erreur de facturation");
@@ -921,17 +933,17 @@ export function MonCompte() {
                                 >
                                   Annuler la demande
                                 </button>
-                              </div>
+                                  </div>
                             )}
 
                             
-                          </div>
-                        </div>
+                                    </div>
+                                    </div>
                       );
                     })}
-                  </div>
+                                  </div>
                 )}
-              </div>
+                                </div>
             )}
 
             {activeTab === 'commandes' && (
@@ -1252,7 +1264,7 @@ export function MonCompte() {
             )}
 
             {/* Modal de facture */}
-            <div className=" flex items-center justify-center bg-gray-100">
+            <div className="flex items-center justify-center">
               {isOpen && billData && (
                 <MyModal isOpen={isOpen} setIsOpen={setIsOpen}>
                   <div className="text-center mb-8">

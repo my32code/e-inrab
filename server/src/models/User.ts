@@ -28,10 +28,24 @@ export const createUser = async (user: User): Promise<void> => {
 };
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {
+  try {
+    console.log('Recherche utilisateur dans la base de données pour:', email);
+    
   const [rows] = await pool.execute<RowDataPacket[]>(
     'SELECT * FROM utilisateurs WHERE email = ?', 
     [email]
-  );//
+    );
+    
+    console.log('Résultat de la recherche:', {
+      nombreResultats: rows.length,
+      utilisateur: rows.length > 0 ? {
+        id: rows[0].id,
+        email: rows[0].email,
+        role: rows[0].role,
+        // Ne pas logger le mot de passe hashé en production
+        mot_de_passe_present: !!rows[0].mot_de_passe
+      } : null
+    });
   
   return rows.length > 0 ? {
     id: rows[0].id,
@@ -42,6 +56,10 @@ export const findUserByEmail = async (email: string): Promise<User | null> => {
     role: rows[0].role,
     date_inscription: rows[0].date_inscription
   } : null;
+  } catch (error) {
+    console.error('Erreur lors de la recherche de l\'utilisateur:', error);
+    throw error;
+  }
 };
 
 export const updateUserSession = async (userId: number, sessionId: string): Promise<void> => {

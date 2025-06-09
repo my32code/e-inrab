@@ -51,9 +51,17 @@ export function DocumentsList() {
 
     const handleDownload = async (doc: Document) => {
         try {
-            const documentId = doc.document_demande_id || doc.id;
-            
-            const response = await fetch(`http://localhost:3000/api/documents/download/${documentId}`, {
+            const documentId = doc.id;
+            const fileName = doc.nom_fichier || 'document';
+
+            console.log('Téléchargement du document:', {
+                id: documentId,
+                nom: fileName,
+                type: doc.type_document,
+                source: 'documents'
+            });
+
+            const response = await fetch(`http://localhost:3000/api/admin/documents/${documentId}/download`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
                 }
@@ -65,13 +73,13 @@ export function DocumentsList() {
 
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
+            const a = window.document.createElement('a') as HTMLAnchorElement;
             a.href = url;
-            a.download = doc.document_demande_nom || doc.nom_fichier;
-            document.body.appendChild(a);
+            a.download = fileName;
+            window.document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+            window.document.body.removeChild(a);
         } catch (error) {
             toast.error('Erreur lors du téléchargement du document');
             console.error('Erreur:', error);

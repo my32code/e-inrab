@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
 import { sendEmailNotification } from './notificationsController';
+import mime from 'mime-types';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -186,48 +187,80 @@ export const uploadDocument = async (req: AuthenticatedRequest, res: Response) =
 export const downloadDocument = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
+    console.log('Tentative de téléchargement du document ID:', id);
     
-    // D'abord chercher dans la table documents
+    // 1. D'abord vérifier si c'est un document_demande avec LEFT JOIN
     let [rows] = await pool.query(
-      'SELECT * FROM documents WHERE id = ?',
+      'SELECT dd.*, de.id as demande_id FROM documents_demandes dd LEFT JOIN demandes de ON dd.demande_id = de.id WHERE dd.id = ?',
       [id]
     );
 
-    // Si non trouvé, chercher dans documents_demandes
+    let document;
+    let isDocumentDemande = false;
+
+    // 2. Si non trouvé, chercher dans documents
     if (!rows || (rows as any[]).length === 0) {
+      console.log('Document non trouvé dans documents_demandes, recherche dans documents');
       [rows] = await pool.query(
-        'SELECT * FROM documents_demandes WHERE id = ?',
+        'SELECT d.*, de.id as demande_id FROM documents d LEFT JOIN demandes de ON d.demande_id = de.id WHERE d.id = ?',
         [id]
       );
+    } else {
+      isDocumentDemande = true;
     }
 
     if (!rows || (rows as any[]).length === 0) {
+      console.log('Document non trouvé dans aucune table');
       return res.status(404).json({
         status: 'error',
         message: 'Document non trouvé'
       });
     }
 
-    const document = (rows as any[])[0];
-    // Si c'est un document de documents_demandes, utiliser les champs correspondants
-    const filePath = document.document_demande_chemin || document.chemin_fichier;
-    const fileName = document.document_demande_nom || document.nom_fichier;
+    document = (rows as any[])[0];
+    console.log('Document trouvé:', {
+      id: document.id,
+      nom_fichier: document.nom_fichier,
+      chemin_fichier: document.chemin_fichier,
+      demande_id: document.demande_id,
+      source: isDocumentDemande ? 'documents_demandes' : 'documents'
+    });
+
+    const filePath = document.chemin_fichier;
+    const fileName = document.nom_fichier;
 
     if (!filePath) {
+      console.log('Chemin du fichier non trouvé dans le document');
       return res.status(404).json({
         status: 'error',
         message: 'Chemin du fichier non trouvé'
       });
     }
 
-    if (!fs.existsSync(filePath)) {
+    // Gestion unifiée du chemin de fichier
+    const absolutePath = path.isAbsolute(filePath)
+      ? filePath
+      : path.join(__dirname, '../../../', filePath);
+    
+    console.log('Chemin du fichier:', filePath);
+    console.log('Chemin absolu du fichier:', absolutePath);
+
+    if (!fs.existsSync(absolutePath)) {
+      console.error('Fichier non trouvé au chemin:', absolutePath);
       return res.status(404).json({
         status: 'error',
         message: 'Fichier non trouvé'
       });
     }
 
-    res.download(filePath, fileName);
+    const mimeType = mime.lookup(absolutePath) || 'application/octet-stream';
+    const stats = fs.statSync(absolutePath);
+
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', stats.size);
+
+    res.sendFile(absolutePath);
   } catch (error) {
     console.error('Erreur lors du téléchargement du document:', error);
     res.status(500).json({
@@ -236,6 +269,7 @@ export const downloadDocument = async (req: AuthenticatedRequest, res: Response)
     });
   }
 };
+
 
 // Récupérer tous les documents de l'utilisateur connecté
 export const getUserDocuments = async (req: AuthenticatedRequest, res: Response) => {

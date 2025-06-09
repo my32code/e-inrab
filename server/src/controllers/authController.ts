@@ -18,7 +18,12 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Format de numéro de téléphone invalide' });
     }
 
+    // Log pour le débogage du hachage
+    console.log('Hachage du mot de passe:');
+    console.log('Mot de passe original:', mot_de_passe);
+
     const hashedPassword = await bcrypt.hash(mot_de_passe, 12);
+    console.log('Mot de passe hashé:', hashedPassword);
     
     await createUser({ 
       nom,
@@ -31,6 +36,7 @@ export const register = async (req: Request, res: Response) => {
     
     res.status(201).json({ message: 'Inscription réussie' });
   } catch (error: any) {
+    console.error('Erreur détaillée d\'inscription:', error);
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ error: 'Cet email est déjà utilisé' });
     }
@@ -42,22 +48,40 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, mot_de_passe } = req.body;
     
-    if (!email || !mot_de_passe) {
-      return res.status(400).json({ error: 'Email et mot de passe requis' });
-    }
+    // Ajout de logs pour le débogage
+    console.log('Tentative de connexion pour:', email);
 
     const user = await findUserByEmail(email);
+    console.log('Utilisateur trouvé:', user ? 'Oui' : 'Non');
     
-    if (!user || !(await bcrypt.compare(mot_de_passe, user.mot_de_passe))) {
+    if (!user) {
+      console.log('Échec de l\'authentification: utilisateur non trouvé');
+      return res.status(401).json({ error: 'Identifiants incorrects' });
+    }
+
+    // Ajout de logs pour le débogage du mot de passe
+    console.log('Comparaison des mots de passe:');
+    console.log('Mot de passe fourni:', mot_de_passe);
+    console.log('Hash stocké:', user.mot_de_passe);
+    
+    const passwordMatch = await bcrypt.compare(mot_de_passe, user.mot_de_passe);
+    console.log('Résultat de la comparaison:', passwordMatch);
+
+    if (!passwordMatch) {
+      console.log('Échec de l\'authentification: mot de passe incorrect');
       return res.status(401).json({ error: 'Identifiants incorrects' });
     }
 
     if (!user.id) {
+      console.log('Erreur critique: ID utilisateur manquant');
       return res.status(500).json({ error: 'Erreur : ID utilisateur manquant' });
     }
 
     const sessionId = uuidv4();
+    console.log('Nouveau sessionId généré:', sessionId);
+    
     await updateUserSession(user.id, sessionId);
+    console.log('Session mise à jour dans la base de données');
 
     res.json({ 
       sessionId,
@@ -71,7 +95,7 @@ export const login = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    console.error('Erreur de connexion:', error);
+    console.error('Erreur détaillée de connexion:', error);
     res.status(500).json({ error: 'Erreur de connexion' });
   }
 };
@@ -81,16 +105,33 @@ export const verify = async (req: Request, res: Response) => {
     const sessionId = req.headers.authorization?.split(' ')[1];
     
     if (!sessionId) {
+      console.log('Vérification de session: Aucun sessionId fourni');
       return res.status(401).json({ error: 'Non authentifié' });
     }
 
+    console.log('Vérification de session pour sessionId:', sessionId);
     const user = await findUserBySessionId(sessionId);
 
+    if (!user) {
+      console.log('Vérification de session: Utilisateur non trouvé pour ce sessionId');
+      return res.status(401).json({ error: 'Session invalide' });
+    }
+
+    console.log('Vérification de session réussie pour:', user.email);
     (req as any).user = user;
     
-    res.status(200).json({ message: 'Authentifié' });
+    res.status(200).json({ 
+      message: 'Authentifié',
+      user: {
+        id: user.id,
+        nom: user.nom,
+        email: user.email,
+        role: user.role
+      }
+    });
 
   } catch (error) {
+    console.error('Erreur lors de la vérification de session:', error);
     res.status(401).json({ error: 'Non authentifié' });
   }
 };

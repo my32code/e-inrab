@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, File, Upload, Download } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
+
+declare const document: Document;
 
 interface UserDocument {
   id: number;
@@ -44,30 +46,45 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
         console.error('ID de référence manquant:', document);
         return;
       }
-
+  
       const response = await fetch(`http://localhost:3000/api/documents?${paramName}=${referenceId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
       });
-
+  
       if (!response.ok) {
         throw new Error('Erreur lors de la récupération des documents associés');
       }
-
+  
       const data = await response.json();
-      // Filtrer les documents pour n'avoir que ceux du même type
-      const filteredDocuments = data.data.filter((doc: UserDocument) => 
-        doc.type_document === document.type_document
-      );
-      setRelatedDocuments(filteredDocuments);
+  
+      // Assure-toi que le format de réponse est toujours `data.data` ou modifie en fonction du format actuel.
+      const documents = data.data;
+      console.log('Documents récupérés:', documents);
+  
+      // Traiter chaque document pour inclure les nouvelles propriétés ou fusionner les valeurs
+      const formattedDocuments = documents.map((doc: UserDocument) => ({
+        id: doc.id || doc.document_demande_id,
+        nom_fichier: doc.nom_fichier || doc.document_demande_nom,
+        chemin_fichier: doc.chemin_fichier || doc.document_demande_chemin,
+        type_document: doc.type_document || 'service',
+        created_at: doc.created_at || doc.document_demande_date,
+        service_nom: doc.service_nom,
+      }));
+
+      console.log('Documents formatés:', formattedDocuments);
+  
+      // Ne plus filtrer par type_document si tu veux voir tous les documents associés
+      setRelatedDocuments(formattedDocuments);
+      
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Erreur lors du chargement des documents associés');
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -134,9 +151,20 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
     }
   };
 
-  const handleDownload = async (doc: UserDocument) => {
+  const handleDownload = async (documentData: UserDocument) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/documents/download/${doc.id}`, {
+      // Utiliser l'ID principal du document, pas document_demande_id
+      const documentId = documentData.id;
+      const fileName = documentData.nom_fichier || 'document';
+
+      console.log('Téléchargement du document:', {
+        id: documentId,
+        nom: fileName,
+        type: documentData.type_document,
+        source: 'documents'
+      });
+
+      const response = await fetch(`http://localhost:3000/api/documents/download/${documentId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -148,21 +176,21 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = window.document.createElement('a');
+      const a = window.document.createElement('a') as HTMLAnchorElement;
       a.href = url;
-      a.download = doc.nom_fichier;
+      a.download = fileName;
       window.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       window.document.body.removeChild(a);
     } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
       toast.error('Erreur lors du téléchargement du document');
-      console.error('Erreur:', error);
     }
-  };
+  };  
 
   return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-start justify-center z-50 pt-8">
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium text-gray-900">
@@ -254,6 +282,7 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
                     <button
                       onClick={() => handleDownload({
                         ...relatedDocuments[0],
+                        id: relatedDocuments[0].document_demande_id as number,
                         nom_fichier: relatedDocuments[0].document_demande_nom as string,
                         chemin_fichier: relatedDocuments[0].document_demande_chemin as string
                       })}
