@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { User, Settings, History, Bell, Clock, CheckCircle, AlertTriangle, FileText, DollarSign, ShoppingCart, Package, File, Loader2, Truck, XCircle } from 'lucide-react';
 import { isAuthenticated, getCurrentUser } from '../services/auth';
@@ -8,6 +8,16 @@ import { useKKiaPay } from "kkiapay-react";
 import MyModal from "../components/MyModal";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+
+// Déclaration de l'interface FedaPay pour TypeScript
+declare global {
+  interface Window {
+    FedaPay: {
+      init: (selector: string, options: any) => void;
+    };
+  }
+}
+
 
 interface ServiceRequest {
   id: string;
@@ -142,7 +152,94 @@ export function MonCompte() {
   const [billService, setBillService] = useState<ServiceRequest | null>(null);
   const [billData, setBillData] = useState<BillData | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-    
+  const fedaPayButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Charger le script FedaPay
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.fedapay.com/checkout.js?v=1.1.7';
+    script.async = true;
+    script.onload = () => {
+      console.log('FedaPay script loaded');
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  // Initialiser FedaPay quand le bouton est disponible
+  useEffect(() => {
+    if (fedaPayButtonRef.current && window.FedaPay) {
+      window.FedaPay.init('#fedaPayButton', {
+        public_key: 'pk_sandbox_W-2TBFSrUebAoN4-yovoWzH-', // Remplacez par votre clé publique
+        transaction: {
+          amount: 1000, // Montant par défaut, sera mis à jour
+          description: 'Paiement pour commande',
+          currency: 'XOF'
+        },
+        customer: {
+          email: user?.email || 'client@inrab.org',
+          lastname: user?.nom?.split(' ')[0] || 'Client',
+          firstname: user?.nom?.split(' ')[1] || 'INRAB',
+          phone_number: user?.telephone || '22964000001' // Numéro de test Moov
+        },
+        callback: (response: any) => {
+          if (!response) {
+            throw new Error('Aucune réponse du serveur FedaPay');
+          }
+
+          if (response.status === 'approved') {
+            successHandler(response);
+          } else {
+            console.error('Erreur FedaPay:', response);
+          failureHandler(new Error(response.message || `Erreur FedaPay: ${JSON.stringify(response)}`));
+          }
+        } 
+      });
+    }
+  }, [fedaPayButtonRef.current, user]);
+
+  // Fonction pour préparer le paiement FedaPay
+  const prepareFedaPay = (commande: Commande) => {
+    console.log('Données envoyées à FedaPay:', {
+      amount: commande.quantite * commande.prix_unitaire,
+      description: `Paiement pour ${commande.produit_nom}`,
+      customer: {
+        email: user?.email,
+        phone: user?.telephone || '22964000001'
+      }});
+    if (!window.FedaPay) {
+      toast.error("Le service FedaPay n'est pas encore prêt");
+      return;
+    }
+
+    const phone = user?.telephone ? 
+    user.telephone.replace(/\D/g, '') : // Supprime tous les caractères non numériques
+    '22964000001'; // Numéro de test par défaut
+
+    // Mettre à jour les données de transaction
+    if (fedaPayButtonRef.current) {
+      window.FedaPay.init('#fedaPayButton', {
+        public_key: 'pk_sandbox_W-2TBFSrUebAoN4-yovoWzH-',
+        transaction: {
+          amount: commande.quantite * commande.prix_unitaire,
+          description: `Paiement pour ${commande.produit_nom}`,
+          currency: 'XOF'
+        },
+        customer: {
+          email: user?.email || 'client@inrab.org',
+          lastname: user?.nom?.split(' ')[0] || 'Client',
+          firstname: user?.nom?.split(' ')[1] || 'INRAB',
+          phone_number: phone // Numéro de test Moov
+        }
+      });
+    }
+
+    // Simuler le clic sur le bouton
+    fedaPayButtonRef.current?.click();
+  };
 
   useEffect(() => {
     checkAuth();
@@ -1347,7 +1444,23 @@ export function MonCompte() {
                       onClick={() => openPaymentWidget(billCommande!)}
                       className="inline-block px-6 py-2 bg-green-500 text-white rounded-lg mt-5"
                     >
-                      Payer maintenant
+                      Payer avec  Kkiapay
+                    </button>
+                    <span>  </span>
+                    {/* Bouton FedaPay caché pour l'initialisation */}
+                    <button
+                      id="fedaPayButton"
+                      ref={fedaPayButtonRef}
+                      style={{ display: 'none' }}
+                    >
+                      Payer avec FedaPay
+                    </button>
+                    
+                    <button
+                      onClick={() => prepareFedaPay(billCommande!)}
+                      className="inline-block px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                      Payer avec FedaPay
                     </button>
                   </div>
 

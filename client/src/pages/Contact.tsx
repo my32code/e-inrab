@@ -250,7 +250,7 @@ export function Contact() {
             <h2 className="text-2xl font-bold mb-6">Notre localisation</h2>
             <div className="aspect-w-16 aspect-h-9">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3965.0456957545455!2d2.4151943!3d6.3702893!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1024a88a94c521f5%3A0x6f4f4f4f4f4f4f4f!2sINRAB!5e0!3m2!1sfr!2sbj!4v1620000000000!5m2!1sfr!2sbj"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3964.8663458002625!2d2.331823973974083!3d6.4112118244601435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1024a82f9415fe9f%3A0x445c5ea1810aa551!2sINRAB!5e0!3m2!1sfr!2sbj!4v1749502379290!5m2!1sfr!2sbj"
                 width="100%"
                 height="450"
                 style={{ border: 0 }}

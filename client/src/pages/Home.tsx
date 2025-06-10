@@ -48,12 +48,12 @@ const slides = [
     description: "Accédez à nos services d'expertise et de conseil en agriculture"
   },
   {
-    image: "https://images.unsplash.com/photo-1592982537447-6f2a6a0c8b1b?auto=format&fit=crop&w=1200",
+    image: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200",
     title: "Produits de Qualité",
     description: "Découvrez notre gamme de produits agricoles certifiés"
   },
   {
-    image: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1200",
+    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1415&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     title: "Support Expert",
     description: "Bénéficiez de l'expertise de nos spécialistes"
   }

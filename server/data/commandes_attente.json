@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "id": "1749540770200",
+    "utilisateur_id": 1,
+    "produit_id": 1,
+    "quantite": 6,
+    "prix_unitaire": 250,
+    "statut": "en_attente",
+    "created_at": "2025-06-10T07:32:50.200Z"
+  },
+  {
+    "id": "1749541363358",
+    "utilisateur_id": 1,
+    "produit_id": 2,
+    "quantite": 3,
+    "prix_unitaire": 705,
+    "statut": "en_attente",
+    "created_at": "2025-06-10T07:42:43.358Z"
+  }
+]

@@ -163,13 +163,6 @@ const generateFactureHTML = (data: any) => {
         <p>Total TTC: ${formatPrice(data.total)}</p>
       </div>
 
-      <div class="valid-until">
-        <p>Valable jusqu'au: ${format(validUntil, "dd MMMM yyyy", {
-          locale: fr,
-        })}</p>
-        <a href="#" class="pay-button">Payer maintenant</a>
-      </div>
-
       <div class="footer">
         <p>INRAB - Institut National de Recherche Agronomique du Bénin</p>
         <p>Email: contact@inrab.org | Tél: +229 64 28 37 02</p>
@@ -270,6 +263,7 @@ const generateFinalFactureHTML = (data: any) => {
         <h3>Client</h3>
         <p><strong>Nom:</strong> ${data.client.nom}</p>
         <p><strong>Email:</strong> ${data.client.email}</p>
+        <p><strong>Téléphone:</strong> ${data.client.telephone}</p>
       </div>
 
       <table>
@@ -333,7 +327,7 @@ export const generateFacture = async (
     // Récupérer les informations selon le type (commande ou demande de service)
     if (type === "commande") {
       query = `
-        SELECT c.*, u.nom as client_nom, u.email as client_email, p.nom as produit_nom
+        SELECT c.*, u.nom as client_nom, u.email as client_email, u.telephone as client_telephone, p.nom as produit_nom
         FROM commandes c
         JOIN utilisateurs u ON c.utilisateur_id = u.id
         JOIN produits p ON c.produit_id = p.id
@@ -342,7 +336,7 @@ export const generateFacture = async (
       params = [id];
     } else if (type === "service") {
       query = `
-        SELECT d.*, u.nom as client_nom, u.email as client_email, s.nom as service_nom, s.prix
+        SELECT d.*, u.nom as client_nom, u.email as client_email, u.telephone as client_telephone, s.nom as service_nom, s.prix
         FROM demandes d
         JOIN utilisateurs u ON d.utilisateur_id = u.id
         JOIN services s ON d.service_id = s.id
@@ -486,7 +480,7 @@ export const getFacture = async (req: AuthenticatedRequest, res: Response) => {
 
     if (type === "commande") {
       query = `
-        SELECT c.*, u.nom as client_nom, u.email as client_email, p.nom as produit_nom
+        SELECT c.*, u.nom as client_nom, u.email as client_email, u.telephone as client_telephone, p.nom as produit_nom
         FROM commandes c
         JOIN utilisateurs u ON c.utilisateur_id = u.id
         JOIN produits p ON c.produit_id = p.id
@@ -495,7 +489,7 @@ export const getFacture = async (req: AuthenticatedRequest, res: Response) => {
       params = [id];
     } else if (type === "service") {
       query = `
-        SELECT d.*, u.nom as client_nom, u.email as client_email, s.nom as service_nom, s.prix
+        SELECT d.*, u.nom as client_nom, u.email as client_email, u.telephone as client_telephone, s.nom as service_nom, s.prix
         FROM demandes d
         JOIN utilisateurs u ON d.utilisateur_id = u.id
         JOIN services s ON d.service_id = s.id
