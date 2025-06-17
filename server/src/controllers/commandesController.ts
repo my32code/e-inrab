@@ -79,6 +79,24 @@ export const createCommande = async (req: AuthenticatedRequest, res: Response) =
             });
         }
 
+        // Vérifier le stock disponible
+        const [produit] = await query('SELECT stock FROM produits WHERE id = ?', [produit_id]) as any[];
+        
+        if (!produit) {
+            return res.status(404).json({
+                success: false,
+                message: 'Produit non trouvé'
+            });
+        }
+
+        if (produit.stock < quantite) {
+            return res.status(400).json({
+                success: false,
+                message: 'Stock momentanément indisponible. Vous serez notifié de l\'arrivée d\'un nouveau stock.',
+                stock_disponible: produit.stock
+            });
+        }
+
         const utilisateur_id = req.user.id;
         const commandeId = Date.now().toString(); // Générer un ID unique
 
@@ -140,14 +158,42 @@ export const createCommande = async (req: AuthenticatedRequest, res: Response) =
 };
 
 // Nouvelle fonction pour transférer une commande vers la BDD
-export const transfererCommandeVersBDD = async (commandeId: string) => {
+export const transfererCommandeVersBDD = async (commandeData: any) => {
     try {
-        // Lire le fichier de manière synchrone pour s'assurer que les données sont à jour
+        // Si on a déjà les données de la commande, les utiliser directement
+        if (commandeData && commandeData.id) {
+            console.log('Utilisation des données fournies:', commandeData);
+            
+            // Insérer dans la BDD
+            const result = await query(
+                'INSERT INTO commandes (utilisateur_id, produit_id, quantite, prix_unitaire, statut) VALUES (?, ?, ?, ?, ?)',
+                [commandeData.utilisateur_id, commandeData.produit_id, commandeData.quantite, commandeData.prix_unitaire, 'en_attente']
+            );
+
+            // Vérifier que le résultat contient bien l'ID inséré
+            if (!result || !('insertId' in result)) {
+                throw new Error('Erreur lors de l\'insertion de la commande');
+            }
+
+            // Retirer du fichier JSON si la commande y existe
+            try {
+                const commandes = JSON.parse(fs.readFileSync(COMMANDES_ATTENTE_PATH, 'utf-8')) as CommandeAttente[];
+                const nouvellesCommandes = commandes.filter((c: CommandeAttente) => c.id !== commandeData.id);
+                fs.writeFileSync(COMMANDES_ATTENTE_PATH, JSON.stringify(nouvellesCommandes, null, 2));
+            } catch (fileError) {
+                console.error('Erreur lors de la mise à jour du fichier JSON:', fileError);
+                // On continue même si la mise à jour du fichier échoue
+            }
+
+            return result.insertId;
+        }
+
+        // Si on n'a pas les données, chercher dans le fichier JSON
         const commandes = JSON.parse(fs.readFileSync(COMMANDES_ATTENTE_PATH, 'utf-8')) as CommandeAttente[];
-        const commande = commandes.find((c: CommandeAttente) => c.id === commandeId);
+        const commande = commandes.find((c: CommandeAttente) => c.id === commandeData);
         
         if (!commande) {
-            console.error('Commande non trouvée dans le fichier:', commandeId);
+            console.error('Commande non trouvée dans le fichier:', commandeData);
             console.log('Commandes disponibles:', commandes);
             throw new Error('Commande non trouvée');
         }
@@ -164,10 +210,10 @@ export const transfererCommandeVersBDD = async (commandeId: string) => {
         }
 
         // Retirer du fichier JSON
-        const nouvellesCommandes = commandes.filter((c: CommandeAttente) => c.id !== commandeId);
+        const nouvellesCommandes = commandes.filter((c: CommandeAttente) => c.id !== commandeData);
         fs.writeFileSync(COMMANDES_ATTENTE_PATH, JSON.stringify(nouvellesCommandes, null, 2));
 
-        return result.insertId; // Retourner l'ID de la nouvelle commande
+        return result.insertId;
     } catch (error) {
         console.error('Erreur lors du transfert de la commande:', error);
         throw error;

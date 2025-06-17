@@ -12,6 +12,7 @@ import factureRoutes from './routes/factureRoutes';
 import notificationsRouter from './routes/notifications';
 import path from 'path';
 import statsRoutes from './routes/stats';
+import paymentRoutes from './routes/paymentRoutes';
 const app = express();
 
 // Middleware
@@ -47,6 +48,8 @@ app.use('/api/documents', documentsRoutes);
 app.use('/api/factures', factureRoutes);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/stats', statsRoutes);
+app.use('/api/payment', paymentRoutes);
+
 // Healthcheck
 app.get('/healthcheck', async (req, res) => {
     const dbConnected = await testConnection();
@@ -55,8 +58,6 @@ app.get('/healthcheck', async (req, res) => {
         database: dbConnected ? 'connected' : 'disconnected'
     });
 });
-
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {

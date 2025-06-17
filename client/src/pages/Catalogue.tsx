@@ -143,15 +143,43 @@ export function Catalogue() {
         })
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Erreur lors de la commande');
+        if (response.status === 400 && data.message.includes('Stock momentanément indisponible')) {
+          toast.warning(data.message, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        } else {
+          throw new Error(data.message || 'Erreur lors de la création de la commande');
+        }
+        return;
       }
 
-      const data = await response.json();
-      toast.success('Commande effectuée avec succès');
+      toast.success('Commande créée avec succès !', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      // Réinitialiser la quantité après une commande réussie
+      setQuantites(prev => {
+        const newQuantites = { ...prev };
+        delete newQuantites[produit.id];
+        return newQuantites;
+      });
+
     } catch (error) {
       console.error('Erreur:', error);
-      toast.error('Erreur lors de la commande');
+      toast.error(error instanceof Error ? error.message : 'Une erreur est survenue');
     } finally {
       setIsCommandeLoading(null);
     }

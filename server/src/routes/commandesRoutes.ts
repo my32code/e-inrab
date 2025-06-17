@@ -2,6 +2,11 @@ import { Router, RequestHandler } from 'express';
 import { createCommande, getUserCommandes, getCommande, transfererCommandeVersBDD, getCommandesAttente, deleteCommande } from '../controllers/commandesController';
 import { Request, Response } from 'express';
 import { findUserBySessionId } from '../models/User';
+import fs from 'fs';
+import { query } from '../services/db';
+import path from 'path';
+
+const COMMANDES_ATTENTE_PATH = path.resolve(__dirname, '../../data/commandes_attente.json');
 
 interface User {
   id: number;
@@ -81,6 +86,79 @@ router.delete('/:id', ((req: Request, res: Response) => {
                 message: 'Erreur lors de la suppression de la commande' 
             });
         });
+}) as RequestHandler);
+
+router.get('/pending/:commandeId', (async (req: Request, res: Response) => {
+    const { commandeId } = req.params;
+    const localStorageData = req.query.localStorageData 
+        ? JSON.parse(decodeURIComponent(req.query.localStorageData as string)) 
+        : null;
+    
+    console.log('Recherche commande:', commandeId);
+    console.log('Données localStorage:', localStorageData);
+
+    try {
+        // 1. Vérifier dans le fichier JSON
+        try {
+            const commandesFromFile = JSON.parse(fs.readFileSync(COMMANDES_ATTENTE_PATH, 'utf-8'));
+            const commandeFromFile = commandesFromFile.find((c: any) => {
+                return String(c.id) === String(commandeId);
+            });
+
+            if (commandeFromFile) {
+                console.log('Commande trouvée dans le fichier');
+                return res.json({ 
+                    success: true,
+                    source: 'file', 
+                    data: commandeFromFile 
+                });
+            }
+        } catch (fileError) {
+            console.error('Erreur lecture fichier:', fileError);
+        }
+
+        // 2. Vérifier les données du localStorage si fournies
+        if (localStorageData && String(localStorageData.id) === String(commandeId)) {
+            console.log('Commande trouvée dans localStorage');
+            return res.json({
+                success: true,
+                source: 'localStorage',
+                data: localStorageData
+            });
+        }
+
+        // 3. Vérifier dans la BDD
+        try {
+            const [commandeFromDB] = await query(
+                'SELECT * FROM commandes WHERE id = ?',
+                [commandeId]
+            ) as any[];
+
+            if (commandeFromDB) {
+                console.log('Commande trouvée dans la BDD');
+                return res.json({ 
+                    success: true,
+                    source: 'database', 
+                    data: commandeFromDB 
+                });
+            }
+        } catch (dbError) {
+            console.error('Erreur BDD:', dbError);
+        }
+
+        // 4. Si non trouvé
+        console.log('Commande non trouvée');
+        return res.status(404).json({ 
+            success: false,
+            message: 'Commande introuvable' 
+        });
+    } catch (error) {
+        console.error('Erreur globale:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Erreur serveur' 
+        });
+    }
 }) as RequestHandler);
 
 export default router; 

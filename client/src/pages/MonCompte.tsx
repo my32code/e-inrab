@@ -153,7 +153,6 @@ export function MonCompte() {
   const [billData, setBillData] = useState<BillData | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const fedaPayButtonRef = useRef<HTMLButtonElement>(null);
-
   // Charger le script FedaPay
   useEffect(() => {
     const script = document.createElement('script');
@@ -171,79 +170,101 @@ export function MonCompte() {
 
   // Initialiser FedaPay quand le bouton est disponible
   useEffect(() => {
-    if (fedaPayButtonRef.current && window.FedaPay) {
-      window.FedaPay.init('#fedaPayButton', {
-        public_key: 'pk_sandbox_W-2TBFSrUebAoN4-yovoWzH-', // Remplacez par votre clé publique
-        transaction: {
-          amount: 1000, // Montant par défaut, sera mis à jour
-          description: 'Paiement pour commande',
-          currency: 'XOF'
-        },
-        customer: {
-          email: user?.email || 'client@inrab.org',
-          lastname: user?.nom?.split(' ')[0] || 'Client',
-          firstname: user?.nom?.split(' ')[1] || 'INRAB',
-          phone_number: user?.telephone || '22964000001' // Numéro de test Moov
-        },
-        callback: (response: any) => {
-          if (!response) {
-            throw new Error('Aucune réponse du serveur FedaPay');
-          }
+    const script = document.createElement('script');
+    script.src = 'https://cdn.fedapay.com/checkout.js?v=1.1.7';
+    script.async = true;
+    document.body.appendChild(script);
+  
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
-          if (response.status === 'approved') {
-            successHandler(response);
-          } else {
-            console.error('Erreur FedaPay:', response);
-          failureHandler(new Error(response.message || `Erreur FedaPay: ${JSON.stringify(response)}`));
+  // Fonction pour nettoyer les commandes pendantes expirées
+  const cleanupPendingCommandes = () => {
+    const now = Date.now();
+    const EXPIRATION_TIME = 30 * 60 * 1000; // 30 minutes
+
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('pending_commande_')) {
+        try {
+          const commandeData = JSON.parse(localStorage.getItem(key) || '');
+          if (now - commandeData.timestamp > EXPIRATION_TIME) {
+            localStorage.removeItem(key);
+          }
+        } catch (error) {
+          console.error('Erreur lors du nettoyage de la commande:', error);
           }
         } 
       });
-    }
-  }, [fedaPayButtonRef.current, user]);
+  };
 
-  // Fonction pour préparer le paiement FedaPay
+  // Appeler le nettoyage au chargement du composant
+  useEffect(() => {
+    cleanupPendingCommandes();
+  }, []);
+
   const prepareFedaPay = (commande: Commande) => {
-    console.log('Données envoyées à FedaPay:', {
-      amount: commande.quantite * commande.prix_unitaire,
-      description: `Paiement pour ${commande.produit_nom}`,
-      customer: {
-        email: user?.email,
-        phone: user?.telephone || '22964000001'
-      }});
-    if (!window.FedaPay) {
-      toast.error("Le service FedaPay n'est pas encore prêt");
-      return;
-    }
+    // Sauvegarder la commande dans localStorage
+    const commandeData = {
+      ...commande,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(`pending_commande_${commande.id}`, JSON.stringify(commandeData));
 
-    const phone = user?.telephone ? 
-    user.telephone.replace(/\D/g, '') : // Supprime tous les caractères non numériques
-    '22964000001'; // Numéro de test par défaut
-
-    // Mettre à jour les données de transaction
-    if (fedaPayButtonRef.current) {
+    console.log('Initiation paiement FedaPay pour commande:', commande.id);
+    
       window.FedaPay.init('#fedaPayButton', {
         public_key: 'pk_sandbox_W-2TBFSrUebAoN4-yovoWzH-',
         transaction: {
           amount: commande.quantite * commande.prix_unitaire,
-          description: `Paiement pour ${commande.produit_nom}`,
-          currency: 'XOF'
+        description: `Commande_${commande.id}`,
+        currency: { iso: 'XOF' },
+        webhook_url: 'https://honest-ghoul-roughly.ngrok-free.app/api/payment/webhook',
+        custom_metadata: {
+          commande_id: commande.id,
+          localStorageData: commandeData // Inclure les données du localStorage
+        }
         },
         customer: {
           email: user?.email || 'client@inrab.org',
           lastname: user?.nom?.split(' ')[0] || 'Client',
           firstname: user?.nom?.split(' ')[1] || 'INRAB',
-          phone_number: phone // Numéro de test Moov
+        phone_number: {
+          number: '64000001', 
+          country: 'bj'
+        }
         }
       });
-    }
 
-    // Simuler le clic sur le bouton
+    // Juste un log pour confirmer l'initiation
+    console.log('Paiement initié - le webhook FedaPay gérera la suite');
+    toast.info("Paiement en cours de traitement...");
+    
+    // Fermer le modal et nettoyer
+    setIsOpen(false);
+    setBillData(null);
+    setBillCommande(null);
+    
     fedaPayButtonRef.current?.click();
   };
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const paymentStatus = params.get('payment');
+    
+    if (paymentStatus === 'success') {
+      toast.success('Paiement effectué avec succès');
+      fetchCommandes(); // Rafraîchir la liste des commandes
+      fetchDocuments(); // Rafraîchir la liste des documents
+    } else if (paymentStatus === 'error') {
+      toast.error('Erreur lors du paiement');
+    }
+  }, [location.search]);
 
   useEffect(() => {
     if (user) {
