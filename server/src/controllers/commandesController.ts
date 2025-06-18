@@ -92,7 +92,7 @@ export const createCommande = async (req: AuthenticatedRequest, res: Response) =
         if (produit.stock < quantite) {
             return res.status(400).json({
                 success: false,
-                message: 'Stock momentanément indisponible. Vous serez notifié de l\'arrivée d\'un nouveau stock.',
+                message: `Stock insuffisant. Quantité disponible : ${produit.stock}`,
                 stock_disponible: produit.stock
             });
         }

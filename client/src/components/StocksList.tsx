@@ -197,7 +197,28 @@ export function StocksList() {
                         {produit.categorie}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {produit.stock}
+                        <style>
+                          {`
+                            input[type=number]::-webkit-inner-spin-button,
+                            input[type=number]::-webkit-outer-spin-button {
+                              -webkit-appearance: none;
+                              margin: 0;
+                            }
+                          `}
+                        </style>
+                        <input
+                          type="number"
+                          min="0"
+                          value={produit.stock}
+                          onChange={(e) => {
+                            const newValue = parseInt(e.target.value) || 0;
+                            updateStock(produit.id, newValue);
+                          }}
+                          className="w-20 px-2 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                          style={{ appearance: 'textfield', MozAppearance: 'textfield', WebkitAppearance: 'none' }}
+                        />
+                          
+                        
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${stockStatus.bgColor} ${stockStatus.color}`}>
