@@ -165,6 +165,46 @@ export function StatsDashboard() {
                     fill: true,
                     pointRadius: 4,
                     pointHoverRadius: 6
+                  },
+                  {
+                    label: 'Demandes en attente',
+                    data: statsData.servicesStats.map(stat => stat.demandesEnAttente),
+                    borderColor: 'rgb(245, 158, 11)',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                  },
+                  {
+                    label: 'Demandes en cours',
+                    data: statsData.servicesStats.map(stat => stat.demandesEnCours),
+                    borderColor: 'rgb(139, 92, 246)',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                  },
+                  {
+                    label: 'Demandes livrées',
+                    data: statsData.servicesStats.map(stat => stat.demandesLivrees),
+                    borderColor: 'rgb(16, 185, 129)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                  },
+                  {
+                    label: 'Demandes rejetées',
+                    data: statsData.servicesStats.map(stat => stat.demandesRejetees),
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                   }
                 ]
               }}
@@ -230,6 +270,46 @@ export function StatsDashboard() {
                     data: statsData.periodStats.map(stat => stat.demandesValidees),
                     borderColor: 'rgb(59, 130, 246)',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.1,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                  },
+                  {
+                    label: 'Demandes en attente',
+                    data: statsData.periodStats.map(stat => stat.demandesEnAttente),
+                    borderColor: 'rgb(245, 158, 11)',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    tension: 0.1,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                  },
+                  {
+                    label: 'Demandes en cours',
+                    data: statsData.periodStats.map(stat => stat.demandesEnCours),
+                    borderColor: 'rgb(139, 92, 246)',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    tension: 0.1,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                  },
+                  {
+                    label: 'Demandes livrées',
+                    data: statsData.periodStats.map(stat => stat.demandesLivrees),
+                    borderColor: 'rgb(16, 185, 129)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.1,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                  },
+                  {
+                    label: 'Demandes rejetées',
+                    data: statsData.periodStats.map(stat => stat.demandesRejetees),
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
                     tension: 0.1,
                     fill: true,
                     pointRadius: 4,

@@ -12,13 +12,31 @@ interface AuthenticatedRequest extends Request {
   user: User;
 }
 
+// Fonction pour extraire le CRA du nom de l'admin
+const getCRAFromAdminName = (adminName: string): string | null => {
+  if (adminName === 'ADMIN') return null; // Super admin voit tout
+  const match = adminName.match(/Admin\s+(.+)/);
+  return match ? match[1] : null;
+};
+
 export const getAllProduits = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const [rows] = await pool.query(
-      `SELECT id, nom, description, categorie, stock, prix_numerique, pieces_requise, delai_mise_disposition 
-       FROM produits 
-       ORDER BY nom ASC`
-    );
+    const cra = getCRAFromAdminName(req.user.nom);
+    let query = `
+      SELECT id, nom, description, categorie, stock, prix_numerique, pieces_requise, delai_mise_disposition, cra
+      FROM produits
+    `;
+    const params: any[] = [];
+
+    // Si c'est un admin spécifique (pas le super admin), filtrer par CRA
+    if (cra) {
+      query += ' WHERE cra = ?';
+      params.push(cra);
+    }
+
+    query += ' ORDER BY nom ASC';
+
+    const [rows] = await pool.query(query, params);
 
     res.json({
       status: 'success',
@@ -45,6 +63,18 @@ export const updateProduitStock = async (req: AuthenticatedRequest, res: Respons
   }
 
   try {
+    // Vérifier si l'admin a le droit de modifier ce produit
+    const adminCRA = getCRAFromAdminName(req.user.nom);
+    if (adminCRA) {
+      const [produit] = await pool.query('SELECT cra FROM produits WHERE id = ?', [id]) as any[];
+      if (!produit || produit.cra !== adminCRA) {
+        return res.status(403).json({
+          status: 'error',
+          message: 'Vous n\'avez pas les droits pour modifier ce produit'
+        });
+      }
+    }
+
     const [result] = await pool.query(
       'UPDATE produits SET stock = ? WHERE id = ?',
       [stock, id]

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { query } from '../../services/db';
+import { query, pool } from '../../services/db';
 import { sendEmailNotification } from './notificationsController';
 
 interface User {
@@ -39,33 +39,39 @@ const mapStatusToDb = (frontendStatus: string) => {
   return mappedStatus;
 };
 
+// Fonction pour extraire le CRA du nom de l'admin
+const getCRAFromAdminName = (adminName: string): string | null => {
+  if (adminName === 'ADMIN') return null; // Super admin voit tout
+  const match = adminName.match(/Admin\s+(.+)/);
+  return match ? match[1] : null;
+};
+
 export const getAllCommandes = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const commandes = await query(`
-            SELECT 
-                c.id,
-                c.produit_id,
-                p.nom as produit_nom,
-                c.quantite,
-                c.prix_unitaire,
-                c.statut,
-                c.created_at as createdAt,
-                u.nom as utilisateur_nom,
-                u.email as utilisateur_email
-            FROM commandes c
-            JOIN produits p ON c.produit_id = p.id
-            JOIN utilisateurs u ON c.utilisateur_id = u.id
-            ORDER BY c.created_at DESC
-        `);
+    const cra = getCRAFromAdminName(req.user.nom);
+    let query = `
+      SELECT c.*, p.nom as produit_nom, p.cra as produit_cra,
+             u.nom as client_nom, u.email as client_email,
+             DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i:%s') as created_at
+      FROM commandes c
+      JOIN produits p ON c.produit_id = p.id
+      JOIN utilisateurs u ON c.utilisateur_id = u.id
+    `;
+    const params: any[] = [];
 
-        const commandesWithStatus = (commandes as any[]).map(commande => ({
-            ...commande,
-            status: mapStatus(commande.statut)
-        }));
+    // Si c'est un admin spécifique (pas le super admin), filtrer par CRA
+    if (cra) {
+      query += ' WHERE p.cra = ?';
+      params.push(cra);
+    }
+
+    query += ' ORDER BY c.created_at DESC';
+
+    const [rows] = await pool.query(query, params);
 
         res.json({
             status: 'success',
-            data: commandesWithStatus
+      data: rows
         });
     } catch (error) {
         console.error('Erreur lors de la récupération des commandes:', error);
@@ -80,70 +86,44 @@ export const updateCommandeStatus = async (req: AuthenticatedRequest, res: Respo
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!status) {
+  if (!['en_attente', 'en_cours', 'terminee', 'annulee'].includes(status)) {
         return res.status(400).json({
             status: 'error',
-            message: 'Le statut est requis'
+      message: 'Statut invalide'
         });
     }
 
     try {
-        const dbStatus = mapStatusToDb(status);
+    // Vérifier si l'admin a le droit de modifier cette commande
+    const adminCRA = getCRAFromAdminName(req.user.nom);
+    if (adminCRA) {
+      const [commande] = await pool.query(
+        'SELECT p.cra FROM commandes c JOIN produits p ON c.produit_id = p.id WHERE c.id = ?',
+        [id]
+      ) as any[];
+      if (!commande || commande.cra !== adminCRA) {
+        return res.status(403).json({
+          status: 'error',
+          message: 'Vous n\'avez pas les droits pour modifier cette commande'
+        });
+      }
+    }
 
-        // Récupérer les informations de la commande avant la mise à jour
-        const [commande]: any = await query(
-            `SELECT c.*, u.email, u.telephone, p.stock 
-             FROM commandes c 
-             JOIN utilisateurs u ON c.utilisateur_id = u.id 
-             JOIN produits p ON c.produit_id = p.id
-             WHERE c.id = ?`,
-            [id]
+    const [result] = await pool.query(
+      'UPDATE commandes SET status = ? WHERE id = ?',
+      [status, id]
         );
 
-        if (!commande) {
+    if ((result as any).affectedRows === 0) {
             return res.status(404).json({
                 status: 'error',
                 message: 'Commande non trouvée'
             });
         }
 
-        // Si le statut passe à "expediee", mettre à jour le stock
-        if (status === 'shipped') {
-            const nouveauStock = commande.stock - commande.quantite;
-            
-            if (nouveauStock < 0) {
-                return res.status(400).json({
-                    status: 'error',
-                    message: 'Stock insuffisant pour expédier la commande'
-                });
-            }
-
-            // Mettre à jour le stock du produit
-            await query(
-                'UPDATE produits SET stock = ? WHERE id = ?',
-                [nouveauStock, commande.produit_id]
-            );
-        }
-
-        // Mise à jour du statut dans la base de données
-        await query(
-            'UPDATE commandes SET statut = ? WHERE id = ?',
-            [dbStatus, id]
-        );
-
-        // Envoyer l'email de notification
-        if (commande.email) {
-            await sendEmailNotification(
-                [commande.email],
-                'Mise à jour du statut de votre commande',
-                `Le statut de votre commande à été mis à jour.
-                Pour toute question, vous pouvez nous contacter au +229 64 28 37 02.`
-            );
-        }
-
         res.json({
             status: 'success',
-            message: 'Statut mis à jour avec succès'
+      message: 'Statut de la commande mis à jour avec succès'
         });
     } catch (error) {
         console.error('Erreur lors de la mise à jour du statut:', error);

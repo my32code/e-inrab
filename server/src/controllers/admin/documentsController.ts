@@ -304,10 +304,18 @@ export const getUserDocuments = async (req: AuthenticatedRequest, res: Response)
   }
 };
 
+// Fonction pour extraire le CRA du nom de l'admin
+const getCRAFromAdminName = (adminName: string): string | null => {
+  if (adminName === 'ADMIN') return null; // Super admin voit tout
+  const match = adminName.match(/Admin\s+(.+)/);
+  return match ? match[1] : null;
+};
+
 // Récupérer tous les documents
 export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const query = `
+        const cra = getCRAFromAdminName(req.user.nom);
+        let query = `
             SELECT * FROM (
                 (
                     -- Documents de commandes (tous utilisateurs)
@@ -322,7 +330,9 @@ export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) 
                         d.categorie,
                         d.created_at,
                         p.nom as produit_nom,
+                        p.cra as produit_cra,
                         s.nom as service_nom,
+                        s.cra as service_cra,
                         NULL as document_demande_id,
                         NULL as document_demande_nom,
                         NULL as document_demande_chemin,
@@ -350,7 +360,9 @@ export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) 
                         d.categorie,
                         d.created_at,
                         NULL as produit_nom,
+                        NULL as produit_cra,
                         s.nom as service_nom,
+                        s.cra as service_cra,
                         NULL as document_demande_id,
                         NULL as document_demande_nom,
                         NULL as document_demande_chemin,
@@ -377,7 +389,9 @@ export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) 
                         'piece_complementaire' as categorie,
                         dd.date_upload as created_at,
                         NULL as produit_nom,
+                        NULL as produit_cra,
                         s.nom as service_nom,
+                        s.cra as service_cra,
                         dd.id as document_demande_id,
                         dd.nom_fichier as document_demande_nom,
                         dd.chemin_fichier as document_demande_chemin,
@@ -394,6 +408,18 @@ export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) 
                     )  -- Exclure les fichiers déjà présents dans la table documents
                 )
             ) AS combined_data
+            WHERE 1=1
+        `;
+
+        const params: any[] = [];
+
+        // Si c'est un admin spécifique (pas le super admin), filtrer par CRA
+        if (cra) {
+            query += ` AND (produit_cra = ? OR service_cra = ?)`;
+            params.push(cra, cra);
+        }
+
+        query += `
             GROUP BY 
                 CASE 
                     WHEN id IS NOT NULL THEN CONCAT('doc_', id)
@@ -402,7 +428,7 @@ export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) 
             ORDER BY created_at DESC
         `;
 
-        const [rows] = await pool.query(query);
+        const [rows] = await pool.query(query, params);
         
         res.json({
             status: 'success',

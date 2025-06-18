@@ -10,9 +10,9 @@ interface Commande {
   quantite: number;
   prix_unitaire: number;
   status: 'pending' | 'paid' | 'shipped' | 'cancelled';
-  createdAt: string;
-  utilisateur_nom: string;
-  utilisateur_email: string;
+  created_at: string;
+  client_nom: string;
+  client_email: string;
 }
 
 const statusInfo = {
@@ -208,8 +208,8 @@ export function CommandesList() {
                     <tr key={commande.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedCommande(commande)}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
-                          <p className="text-sm text-gray-900">{commande.utilisateur_nom}</p> 
-                          <p className="text-sm text-gray-900">{commande.utilisateur_email}</p>
+                          <p className="text-sm text-gray-900">{commande.client_nom}</p> 
+                          <p className="text-sm text-gray-900">{commande.client_email}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -219,10 +219,12 @@ export function CommandesList() {
                         <div className="text-sm text-gray-900">{commande.quantite}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(commande.createdAt).toLocaleDateString('fr-FR', {
+                        {new Date(commande.created_at).toLocaleDateString('fr-FR', {
                           year: 'numeric',
                           month: 'long',
-                          day: 'numeric'
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
                         })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
