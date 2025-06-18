@@ -127,29 +127,6 @@ export const createCommande = async (req: AuthenticatedRequest, res: Response) =
             }
         });
 
-        // 🔔 Envoi d'email aux admins concernés par le CRA
-        const [produitInfo] = await query('SELECT cra FROM produits WHERE id = ?', [produit_id]) as any[];
-        const cra = produitInfo.cra;
-
-        // Récupérer les admins concernés par ce CRA
-        const admins = await query(
-          'SELECT email FROM utilisateurs WHERE role = "admin" AND (nom = "ADMIN" OR nom LIKE ?)',
-          [`Admin ${cra}%`]
-        );
-        const destinataires = (admins as any[]).map(admin => admin.email);
-
-        await sendEmailNotification(
-            destinataires,
-            'Nouvelle commande en attente',
-            `
-                <p>Un utilisateur a soumis une nouvelle commande.</p>
-                <p><strong>Produit ID :</strong> ${produit_id}</p>
-                <p><strong>Quantité :</strong> ${quantite}</p>
-                <p><strong>Prix unitaire :</strong> ${prix_unitaire}</p>
-                <p><strong>Utilisateur ID :</strong> ${utilisateur_id}</p>
-                <p><strong>CRA :</strong> ${cra}</p>
-            `
-        );
 
         res.status(201).json({ 
             success: true, 
@@ -193,35 +170,83 @@ export const transfererCommandeVersBDD = async (commandeData: any) => {
                 // On continue même si la mise à jour du fichier échoue
             }
 
+            // 🔔 Envoi d'email aux admins concernés par le CRA
+            const [produitInfo] = await query('SELECT cra FROM produits WHERE id = ?', [commandeData.produit_id]) as any[];
+            const cra = produitInfo.cra;
+
+            // Récupérer les admins concernés par ce CRA
+            const admins = await query(
+              'SELECT email FROM utilisateurs WHERE role = "admin" AND (nom = "ADMIN" OR nom LIKE ?)',
+              [`Admin ${cra}%`]
+            );
+            const destinataires = (admins as any[]).map(admin => admin.email);
+
+            await sendEmailNotification(
+                destinataires,
+                'Nouvelle commande en attente',
+                `
+                    <p>Un utilisateur a soumis une nouvelle commande.</p>
+                    <p><strong>Produit ID :</strong> ${commandeData.produit_id}</p>
+                    <p><strong>Quantité :</strong> ${commandeData.quantite}</p>
+                    <p><strong>Prix unitaire :</strong> ${commandeData.prix_unitaire}</p>
+                    <p><strong>Utilisateur ID :</strong> ${commandeData.utilisateur_id}</p>
+                    <p><strong>CRA :</strong> ${cra}</p>
+                `
+            );
+
+            return result.insertId;
+        } else {
+            // Si on n'a pas les données, chercher dans le fichier JSON
+            const commandes = JSON.parse(fs.readFileSync(COMMANDES_ATTENTE_PATH, 'utf-8')) as CommandeAttente[];
+            const commande = commandes.find((c: CommandeAttente) => c.id === commandeData);
+            
+            if (!commande) {
+                console.error('Commande non trouvée dans le fichier:', commandeData);
+                console.log('Commandes disponibles:', commandes);
+                throw new Error('Commande non trouvée');
+            }
+
+            // Insérer dans la BDD
+            const result = await query(
+                'INSERT INTO commandes (utilisateur_id, produit_id, quantite, prix_unitaire, statut) VALUES (?, ?, ?, ?, ?)',
+                [commande.utilisateur_id, commande.produit_id, commande.quantite, commande.prix_unitaire, 'en_attente']
+            );
+
+            // Vérifier que le résultat contient bien l'ID inséré
+            if (!result || !('insertId' in result)) {
+                throw new Error('Erreur lors de l\'insertion de la commande');
+            }
+
+            // Retirer du fichier JSON
+            const nouvellesCommandes = commandes.filter((c: CommandeAttente) => c.id !== commandeData);
+            fs.writeFileSync(COMMANDES_ATTENTE_PATH, JSON.stringify(nouvellesCommandes, null, 2));
+
+            // 🔔 Envoi d'email aux admins concernés par le CRA
+            const [produitInfo] = await query('SELECT cra FROM produits WHERE id = ?', [commande.produit_id]) as any[];
+            const cra = produitInfo.cra;
+
+            // Récupérer les admins concernés par ce CRA
+            const admins = await query(
+              'SELECT email FROM utilisateurs WHERE role = "admin" AND (nom = "ADMIN" OR nom LIKE ?)',
+              [`Admin ${cra}%`]
+            );
+            const destinataires = (admins as any[]).map(admin => admin.email);
+
+            await sendEmailNotification(
+                destinataires,
+                'Nouvelle commande en attente',
+                `
+                    <p>Un utilisateur a soumis une nouvelle commande.</p>
+                    <p><strong>Produit ID :</strong> ${commande.produit_id}</p>
+                    <p><strong>Quantité :</strong> ${commande.quantite}</p>
+                    <p><strong>Prix unitaire :</strong> ${commande.prix_unitaire}</p>
+                    <p><strong>Utilisateur ID :</strong> ${commande.utilisateur_id}</p>
+                    <p><strong>CRA :</strong> ${cra}</p>
+                `
+            );
+
             return result.insertId;
         }
-
-        // Si on n'a pas les données, chercher dans le fichier JSON
-        const commandes = JSON.parse(fs.readFileSync(COMMANDES_ATTENTE_PATH, 'utf-8')) as CommandeAttente[];
-        const commande = commandes.find((c: CommandeAttente) => c.id === commandeData);
-        
-        if (!commande) {
-            console.error('Commande non trouvée dans le fichier:', commandeData);
-            console.log('Commandes disponibles:', commandes);
-            throw new Error('Commande non trouvée');
-        }
-
-        // Insérer dans la BDD
-        const result = await query(
-            'INSERT INTO commandes (utilisateur_id, produit_id, quantite, prix_unitaire, statut) VALUES (?, ?, ?, ?, ?)',
-            [commande.utilisateur_id, commande.produit_id, commande.quantite, commande.prix_unitaire, 'en_attente']
-        );
-
-        // Vérifier que le résultat contient bien l'ID inséré
-        if (!result || !('insertId' in result)) {
-            throw new Error('Erreur lors de l\'insertion de la commande');
-        }
-
-        // Retirer du fichier JSON
-        const nouvellesCommandes = commandes.filter((c: CommandeAttente) => c.id !== commandeData);
-        fs.writeFileSync(COMMANDES_ATTENTE_PATH, JSON.stringify(nouvellesCommandes, null, 2));
-
-        return result.insertId;
     } catch (error) {
         console.error('Erreur lors du transfert de la commande:', error);
         throw error;
