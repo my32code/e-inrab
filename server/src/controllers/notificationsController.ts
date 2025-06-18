@@ -124,4 +124,46 @@ export const deleteNotification = async (req: AuthenticatedRequest, res: Respons
       message: 'Erreur lors de la suppression de la notification'
     });
   }
+};
+
+// Envoyer un email de contact
+export const sendContactEmail = async (req: Request, res: Response) => {
+  try {
+    const { firstName, lastName, email, subject, message } = req.body;
+
+    // Envoyer l'email à l'admin
+    await sendEmailNotification(
+      ['adilehouprince@gmail.com'],
+      `Nouveau message de contact - ${subject}`,
+      `
+        <p><strong>De :</strong> ${firstName} ${lastName} (${email})</p>
+        <p><strong>Sujet :</strong> ${subject}</p>
+        <p><strong>Message :</strong></p>
+        <p>${message}</p>
+      `
+    );
+
+    // Envoyer une confirmation à l'expéditeur
+    await sendEmailNotification(
+      [email],
+      'Confirmation de votre message - INRAB',
+      `
+        <p>Cher(e) ${firstName} ${lastName},</p>
+        <p>Nous avons bien reçu votre message et nous vous en remercions.</p>
+        <p>Notre équipe vous répondra dans les plus brefs délais.</p>
+        <p>Cordialement,<br>L'équipe INRAB</p>
+      `
+    );
+
+    res.json({
+      status: 'success',
+      message: 'Message envoyé avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi de l\'email de contact:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Erreur lors de l\'envoi du message'
+    });
+  }
 }; 

@@ -53,9 +53,9 @@ export const getAllCommandes = async (req: AuthenticatedRequest, res: Response) 
       SELECT c.*, p.nom as produit_nom, p.cra as produit_cra,
              u.nom as client_nom, u.email as client_email,
              DATE_FORMAT(c.created_at, '%Y-%m-%d %H:%i:%s') as created_at
-      FROM commandes c
-      JOIN produits p ON c.produit_id = p.id
-      JOIN utilisateurs u ON c.utilisateur_id = u.id
+            FROM commandes c
+            JOIN produits p ON c.produit_id = p.id
+            JOIN utilisateurs u ON c.utilisateur_id = u.id
     `;
     const params: any[] = [];
 

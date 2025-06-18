@@ -43,12 +43,22 @@ export function Contact() {
 
   const onSubmit = async (data: ContactFormData) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Form data:', data);
+      const response = await fetch('http://localhost:3000/api/notifications/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'envoi du message');
+      }
+
       toast.success('Message envoyé avec succès !');
       reset();
     } catch (error) {
+      console.error('Erreur:', error);
       toast.error('Une erreur est survenue. Veuillez réessayer.');
     }
   };

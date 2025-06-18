@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction, RequestHandler } from 'express';
-import { getNotifications, markAsRead, deleteNotification } from '../controllers/notificationsController';
+import { getNotifications, markAsRead, deleteNotification, sendContactEmail } from '../controllers/notificationsController';
 import { findUserBySessionId } from '../models/User';
 
 interface User {
@@ -38,7 +38,12 @@ const authenticateRequest = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-// Appliquer l'authentification à toutes les routes
+// Route publique pour le contact (sans authentification)
+router.post('/contact', (req: Request, res: Response) =>
+  sendContactEmail(req, res)
+);
+
+// Appliquer l'authentification à toutes les routes suivantes
 router.use(authenticateRequest as RequestHandler);
 
 // Routes protégées

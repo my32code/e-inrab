@@ -711,8 +711,8 @@ export function MonCompte() {
     addKkiapayListener("failed", failureHandler);
 
     return () => {
-      removeKkiapayListener("success", successHandler);
-      removeKkiapayListener("failed", failureHandler);
+      removeKkiapayListener("success");
+      removeKkiapayListener("failed");
     };
   }, [addKkiapayListener, removeKkiapayListener, billCommande, billService]);
 
