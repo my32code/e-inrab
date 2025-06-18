@@ -488,9 +488,22 @@ export const generateFacture = async (
 
     if (isFinal) {
       try {
-        const [admins] = await pool.query('SELECT email FROM utilisateurs WHERE role = "admin"');
+        // Récupérer le CRA approprié selon le type
+        let cra;
+        if (type === "commande") {
+          const [produit] = await pool.query('SELECT cra FROM produits WHERE id = ?', [data.produit_id]) as any[];
+          cra = produit.cra;
+        } else {
+          const [service] = await pool.query('SELECT cra FROM services WHERE id = ?', [data.service_id]) as any[];
+          cra = service.cra;
+        }
+
+        // Récupérer les admins concernés par ce CRA
+        const [admins] = await pool.query(
+          'SELECT email FROM utilisateurs WHERE role = "admin" AND (nom = "ADMIN" OR nom LIKE ?)',
+          [`Admin ${cra}%`]
+        );
         const adminEmails = (admins as any[]).map(admin => admin.email);
-        const allAdminEmails = adminEmails;
         
         const details = type === "commande" 
           ? `<p>Produit: ${data.produit_nom} (x${data.quantite})</p>`
@@ -498,7 +511,7 @@ export const generateFacture = async (
 
         // Email aux admins
         await sendEmailNotification(
-          allAdminEmails,
+          adminEmails,
           `[INRAB] Paiement reçu - Facture ${factureNumber}`,
           generatePaymentEmailTemplate({
             clientName: templateData.client.nom,
@@ -506,7 +519,7 @@ export const generateFacture = async (
             clientPhone: templateData.client.telephone,
             amount: templateData.total,
             invoiceNumber: factureNumber,
-            details,
+            details: details + `<p><strong>CRA :</strong> ${cra}</p>`,
             isAdmin: true
           })
         );

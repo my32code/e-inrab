@@ -127,8 +127,15 @@ export const createCommande = async (req: AuthenticatedRequest, res: Response) =
             }
         });
 
-        // 🔔 Envoi d'email aux admins
-        const admins = await query('SELECT email FROM utilisateurs WHERE role = "admin"');
+        // 🔔 Envoi d'email aux admins concernés par le CRA
+        const [produitInfo] = await query('SELECT cra FROM produits WHERE id = ?', [produit_id]) as any[];
+        const cra = produitInfo.cra;
+
+        // Récupérer les admins concernés par ce CRA
+        const admins = await query(
+          'SELECT email FROM utilisateurs WHERE role = "admin" AND (nom = "ADMIN" OR nom LIKE ?)',
+          [`Admin ${cra}%`]
+        );
         const destinataires = (admins as any[]).map(admin => admin.email);
 
         await sendEmailNotification(
@@ -140,6 +147,7 @@ export const createCommande = async (req: AuthenticatedRequest, res: Response) =
                 <p><strong>Quantité :</strong> ${quantite}</p>
                 <p><strong>Prix unitaire :</strong> ${prix_unitaire}</p>
                 <p><strong>Utilisateur ID :</strong> ${utilisateur_id}</p>
+                <p><strong>CRA :</strong> ${cra}</p>
             `
         );
 

@@ -59,19 +59,27 @@ export const createServiceRequest = async (req: AuthenticatedRequest, res: Respo
       }
     }
 
-    const admins = await query('SELECT email FROM utilisateurs WHERE role = "admin"');
+    // Récupérer le CRA du service
+    const [service] = await query('SELECT cra FROM services WHERE id = ?', [serviceId]) as any[];
+    const cra = service.cra;
+
+    // Récupérer les admins concernés par ce CRA
+    const admins = await query(
+      'SELECT email FROM utilisateurs WHERE role = "admin" AND (nom = "ADMIN" OR nom LIKE ?)',
+      [`Admin ${cra}%`]
+    );
     const destinataires = (admins as any[]).map(admin => admin.email);
 
     await sendEmailNotification(
-      destinataires, // tableau d'emails
+      destinataires,
       'Nouvelle demande de service',
       `
         <p>Un utilisateur a soumis une nouvelle demande de service.</p>
         <p><strong>Service ID :</strong> ${serviceId}</p>
         <p><strong>Description :</strong> ${description}</p>
+        <p><strong>CRA :</strong> ${cra}</p>
       `
     );
-
 
     res.status(201).json({
       status: 'success',
