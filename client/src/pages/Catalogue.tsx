@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { Search, Filter, ChevronDown, Plus, Minus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { isSinglePrice } from '../utils/priceUtils';
@@ -61,7 +63,8 @@ export function Catalogue() {
   const [error, setError] = useState<string | null>(null);
   const [isCommandeLoading, setIsCommandeLoading] = useState<number | null>(null);
   const [quantites, setQuantites] = useState<{ [key: number]: number }>({});
-
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
   useEffect(() => {
     fetchProduits();
   }, [selectedCategory, searchTerm]);
@@ -122,6 +125,12 @@ export function Catalogue() {
   };
 
   const handleCommande = async (produit: Produit) => {
+    if (!isLoggedIn) {
+      // Redirection vers la page de login si non connecté
+      navigate('/login', { state: { from: `/catalogue/commande/${produit.id}` } });
+      return;
+    }
+    
     try {
       setIsCommandeLoading(produit.id);
       

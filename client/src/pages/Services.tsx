@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Leaf, 
   Microscope, 
@@ -23,6 +24,7 @@ export function Services() {
   const [searchQuery, setSearchQuery] = useState('');
   const [categories, setCategories] = useState<string[]>([]);
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     const loadServices = async () => {
@@ -82,6 +84,13 @@ export function Services() {
   };
 
   const handleServiceRequest = (serviceId: number) => {
+    if (!isLoggedIn) {
+      // Redirection vers la page de login si non connecté
+      navigate('/login', { state: { from: `/services/demande/${serviceId}` } });
+      return;
+    }
+  
+    // Sinon, continuer vers la page de demande
     navigate(`/services/demande/${serviceId.toString()}`);
   };
 

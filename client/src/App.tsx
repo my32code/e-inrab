@@ -27,9 +27,9 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/services" element={
-            <ProtectedRoute>
-              <Services />
-            </ProtectedRoute>
+            
+            <Services />
+            
           } />
           <Route path="/services/demande/:serviceId" element={
             <ProtectedRoute>
@@ -45,9 +45,9 @@ function App() {
             <Contact />
           } />
           <Route path="/catalogue" element={
-            <ProtectedRoute>
-              <Catalogue />
-            </ProtectedRoute>
+            
+            <Catalogue />
+            
           } />
           <Route path="/mon-compte" element={
             <ProtectedRoute>
