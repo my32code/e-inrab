@@ -13,15 +13,18 @@ import notificationsRouter from './routes/notifications';
 import path from 'path';
 import statsRoutes from './routes/stats';
 import paymentRoutes from './routes/paymentRoutes';
+
 const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'http://client-production-afb0.up.railway.app', // URL du client Vite
+  origin: process.env.CLIENT_URL || 'http://localhost:5173', // URL dynamique selon l'env
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+app.use(express.json());
 
 // Middleware pour logger les requêtes
 app.use((req, res, next) => {
@@ -30,8 +33,6 @@ app.use((req, res, next) => {
   console.log('Cookies:', req.cookies);
   next();
 });
-
-app.use(express.json());
 
 // Servir les fichiers statiques
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -52,15 +53,30 @@ app.use('/api/payment', paymentRoutes);
 
 // Healthcheck
 app.get('/healthcheck', async (req, res) => {
-    const dbConnected = await testConnection();
-    res.json({
-        status: 'up',
-        database: dbConnected ? 'connected' : 'disconnected'
-    });
+    try {
+        const dbConnected = await testConnection();
+        res.json({
+            status: 'up',
+            database: dbConnected ? 'connected' : 'disconnected'
+        });
+    } catch (err) {
+        console.error('Healthcheck DB error:', err);
+        res.status(500).json({ status: 'error', message: 'Database error' });
+    }
 });
 
+// PORT dynamique pour Railway
 const PORT: number = Number(process.env.PORT) || 8080;
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Serveur démarré sur le port ${PORT}`);
+// Lancement serveur
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Serveur démarré sur le port ${PORT}`);
+});
+
+// Gestion des promesses non catchées
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
 });
