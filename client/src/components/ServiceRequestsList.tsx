@@ -60,7 +60,7 @@ export function ServiceRequestsList() {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/admin/service-requests', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/service-requests`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -130,7 +130,7 @@ export function ServiceRequestsList() {
 
   const handleGenerateFacture = async (requestId: number) => {
     try {
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/admin/factures/generate', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/factures/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
