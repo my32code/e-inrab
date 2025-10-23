@@ -101,7 +101,7 @@ const handleWebhook = async (req: Request, res: Response, next: NextFunction): P
     } else {
       // Si pas de données localStorage, faire la recherche hybride
       const commandeResponse = await fetch(
-        `http://localhost:3000/api/commandes/pending/${commandeId}`
+        `${import.meta.env.VITE_API_URL}/api/commandes/pending/${commandeId}`
       );
       
       const responseData = await commandeResponse.json();
@@ -198,13 +198,13 @@ router.get('/callback', async (req: express.Request, res: express.Response): Pro
     console.log('Statut du callback:', status);
 
     if (status === 'approved') {
-      res.redirect('http://localhost:5173/mon-compte?payment=success');
+      res.redirect('https://client-production-afb0.up.railway.app//mon-compte?payment=success');
     } else {
-      res.redirect('http://localhost:5173/mon-compte?payment=error');
+      res.redirect('https://client-production-afb0.up.railway.app//mon-compte?payment=error');
     }
   } catch (error) {
     console.error('Erreur lors du traitement du callback:', error);
-    res.redirect('http://localhost:5173/mon-compte?payment=error');
+    res.redirect('https://client-production-afb0.up.railway.app//mon-compte?payment=error');
   }
 });
 
