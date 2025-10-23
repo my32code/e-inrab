@@ -129,7 +129,7 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
       formData.append('categorie', 'complementaire');
 
       // Upload du document
-      const uploadResponse = await fetch('${import.meta.env.VITE_API_URL}/api/documents/upload', {
+      const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/documents/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
