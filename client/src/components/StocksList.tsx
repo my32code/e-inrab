@@ -27,7 +27,7 @@ export function StocksList() {
 
   const fetchProduits = async () => {
     try {
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/admin/produits', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/produits`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
