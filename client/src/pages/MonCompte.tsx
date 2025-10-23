@@ -220,7 +220,7 @@ export function MonCompte() {
           amount: commande.quantite * commande.prix_unitaire,
         description: `Commande_${commande.id}`,
         currency: { iso: 'XOF' },
-        webhook_url: '${import.meta.env.VITE_API_URL}/api/payment/webhook',
+        webhook_url: `${import.meta.env.VITE_API_URL}/api/payment/webhook`,
         custom_metadata: {
           commande_id: commande.id,
           localStorageData: commandeData // Inclure les données du localStorage
@@ -313,7 +313,7 @@ export function MonCompte() {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/service-requests', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/service-requests`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -336,7 +336,7 @@ export function MonCompte() {
   const fetchCommandes = async () => {
     try {
       // Récupérer les commandes en BDD
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/commandes', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/commandes`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -350,7 +350,7 @@ export function MonCompte() {
       const commandesBDD = data.data;
 
       // Récupérer les commandes en attente
-      const attenteResponse = await fetch('${import.meta.env.VITE_API_URL}/api/commandes/attente', {
+      const attenteResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/commandes/attente`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -376,7 +376,7 @@ export function MonCompte() {
   const fetchDocuments = async () => {
     try {
       console.log('Début de la récupération des documents...');
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/documents/user', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/documents/user`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -419,7 +419,7 @@ export function MonCompte() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/notifications', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -439,7 +439,7 @@ export function MonCompte() {
 
   const handleProfileUpdate = async () => {
     try {
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/auth/update-profile', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/update-profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -473,7 +473,7 @@ export function MonCompte() {
     }
 
     try {
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/auth/change-password', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -555,7 +555,7 @@ export function MonCompte() {
   const handleGetFacture = async (commande: Commande) => {
     try {
       const response = await fetch(
-        "${import.meta.env.VITE_API_URL}/api/factures/get",
+        `${import.meta.env.VITE_API_URL}/api/factures/get`,
         {
           method: "POST",
           headers: {
@@ -620,7 +620,7 @@ export function MonCompte() {
             commandeData = commandeResult.data;
         }
 
-        const response = await fetch("${import.meta.env.VITE_API_URL}/api/factures/generate", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/factures/generate`, {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json",
@@ -658,7 +658,7 @@ export function MonCompte() {
         else if (billCommande) {
             try {
                 // 1. Transférer la commande vers la BDD
-                const transferResponse = await fetch('${import.meta.env.VITE_API_URL}/api/commandes/transferer', {
+                const transferResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/commandes/transferer`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
