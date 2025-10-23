@@ -86,7 +86,7 @@ export function DocumentsList({ type, referenceId, onClose }: DocumentsListProps
         fileName: selectedFile.name
       });
 
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/admin/documents/upload', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/documents/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
