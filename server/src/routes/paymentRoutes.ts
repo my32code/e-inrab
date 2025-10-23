@@ -101,7 +101,7 @@ const handleWebhook = async (req: Request, res: Response, next: NextFunction): P
     } else {
       // Si pas de données localStorage, faire la recherche hybride
       const commandeResponse = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/commandes/pending/${commandeId}`
+        `${process.env.REACT_APP_API_URL}/api/commandes/pending/${commandeId}`
       );
       
       const responseData = await commandeResponse.json();
