@@ -38,7 +38,7 @@ export function CommandesList() {
 
   const fetchCommandes = async () => {
     try {
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/admin/commandes', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/commandes`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -95,7 +95,7 @@ export function CommandesList() {
     formData.append('commandeId', selectedCommande.id.toString());
 
     try {
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/admin/documents/upload', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/documents/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
