@@ -312,6 +312,7 @@ const getCRAFromAdminName = (adminName: string): string | null => {
 };
 
 // Récupérer tous les documents
+// Récupérer tous les documents
 export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const cra = getCRAFromAdminName(req.user.nom);
@@ -419,12 +420,8 @@ export const getAllDocuments = async (req: AuthenticatedRequest, res: Response) 
             params.push(cra, cra);
         }
 
+        // SUPPRIMER LE GROUP BY et utiliser DISTINCT à la place
         query += `
-            GROUP BY 
-                CASE 
-                    WHEN id IS NOT NULL THEN CONCAT('doc_', id)
-                    ELSE CONCAT('doc_dem_', document_demande_id)
-                END  -- Regroupement par identifiant unique
             ORDER BY created_at DESC
         `;
 
