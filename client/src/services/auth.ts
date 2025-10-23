@@ -5,7 +5,7 @@ export const register = async (userData: {
     mot_de_passe: string;
     role: string;
   }) => {
-    const response = await fetch('${import.meta.env.VITE_API_URL}/api/auth/register', {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData)
@@ -20,7 +20,7 @@ export const login = async (credentials: {
 }) => {
   console.log('Tentative de connexion avec email:', credentials.email);
   
-  const response = await fetch('${import.meta.env.VITE_API_URL}/api/auth/login', {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials),
@@ -50,7 +50,7 @@ export const logout = async () => {
   try {
     const sessionId = localStorage.getItem('sessionId');
     if (sessionId) {
-    await fetch('${import.meta.env.VITE_API_URL}/api/auth/logout', {
+    await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
       method: 'POST',
         headers: {
           'Authorization': `Bearer ${sessionId}`
@@ -79,7 +79,7 @@ export const isAuthenticated = async (): Promise<boolean> => {
       return false;
     }
 
-    const response = await fetch('${import.meta.env.VITE_API_URL}/api/auth/verify', {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify`, {
       headers: {
         'Authorization': `Bearer ${sessionId}`
       }
@@ -102,7 +102,7 @@ export const getCurrentUser = () => {
 
 export const updateProfile = async (nom: string, email: string): Promise<any> => {
   try {
-    const response = await fetch('${import.meta.env.VITE_API_URL}/api/auth/update-profile', {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/update-profile`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -127,7 +127,7 @@ export const updateProfile = async (nom: string, email: string): Promise<any> =>
 
 export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
   try {
-    const response = await fetch('${import.meta.env.VITE_API_URL}/api/auth/change-password', {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/change-password`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
