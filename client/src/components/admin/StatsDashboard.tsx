@@ -55,9 +55,9 @@ export function StatsDashboard() {
       };
 
       const [servicesRes, ordersRes, transactionsRes] = await Promise.all([
-        fetch(`http://localhost:3000/api/stats/services?annee=${selectedYear}${selectedMonth ? `&mois=${selectedMonth}` : ''}`, { headers }),
-        fetch(`http://localhost:3000/api/stats/orders?annee=${selectedYear}${selectedMonth ? `&mois=${selectedMonth}` : ''}`, { headers }),
-        fetch(`http://localhost:3000/api/stats/transactions?annee=${selectedYear}${selectedMonth ? `&mois=${selectedMonth}` : ''}`, { headers })
+        fetch(`${import.meta.env.VITE_API_URL}/api/stats/services?annee=${selectedYear}${selectedMonth ? `&mois=${selectedMonth}` : ''}`, { headers }),
+        fetch(`${import.meta.env.VITE_API_URL}/api/stats/orders?annee=${selectedYear}${selectedMonth ? `&mois=${selectedMonth}` : ''}`, { headers }),
+        fetch(`${import.meta.env.VITE_API_URL}/api/stats/transactions?annee=${selectedYear}${selectedMonth ? `&mois=${selectedMonth}` : ''}`, { headers })
       ]);
 
       if (!servicesRes.ok || !ordersRes.ok || !transactionsRes.ok) {
