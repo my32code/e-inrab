@@ -1,19 +1,21 @@
 // client/src/services/auth.ts
+const API_BASE_URL = 'https://serveur-production-59e9.up.railway.app';
+
 export const register = async (userData: {
     nom: string;
     email: string;
     mot_de_passe: string;
     role: string;
-  }) => {
-    
-    const response = await fetch('${import.meta.env.VITE_API_URL}/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
+}) => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
     });
     if (!response.ok) throw new Error(await response.text());
     return response.json();
-  };
+};
+
 
 export const login = async (credentials: {
   email: string;
