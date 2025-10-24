@@ -5,15 +5,7 @@ export const register = async (userData: {
     mot_de_passe: string;
     role: string;
   }) => {
-    // Debug des variables d'environnement
-    console.log('=== DEBUG ENV VARIABLES ===');
-    console.log('import.meta.env:', import.meta.env);
-    console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
-    console.log('MODE:', import.meta.env.MODE);
-    console.log('PROD:', import.meta.env.PROD);
-    console.log('DEV:', import.meta.env.DEV);
-    const apiUrl = `${import.meta.env.VITE_API_URL}/api/auth/register`;
-    console.log('URL de la requête:', apiUrl);
+    
     const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
