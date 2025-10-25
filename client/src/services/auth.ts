@@ -1,7 +1,6 @@
-// AJOUTEZ CE DEBUG AU DÉBUT DU FICHIER
-console.log('=== AUTH SERVICE DEBUG ===');
-console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
-console.log('Toutes les variables env:', import.meta.env);
+// client/src/services/auth.ts
+
+const API_BASE_URL = import.meta.env.VITE_BACKEND_HOST;
 
 export const register = async (userData: {
     nom: string;
@@ -9,7 +8,9 @@ export const register = async (userData: {
     mot_de_passe: string;
     role: string;
 }) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+    console.log('URL utilisée:', `${API_BASE_URL}/api/auth/register`);
+    
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
@@ -17,6 +18,7 @@ export const register = async (userData: {
     if (!response.ok) throw new Error(await response.text());
     return response.json();
 };
+
 
 
 export const login = async (credentials: {
