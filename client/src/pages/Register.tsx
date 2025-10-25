@@ -37,7 +37,7 @@ export function Register() {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/auth/register`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
