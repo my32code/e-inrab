@@ -12,7 +12,7 @@ export interface Service {
 
 // ✅ Base URL dynamique selon l'environnement
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  import.meta.env.VITE_BACKEND_HOST || 'http://localhost:3001';
 
 // ✅ Fonction générique de récupération des services
 export const fetchServices = async (): Promise<Service[]> => {
