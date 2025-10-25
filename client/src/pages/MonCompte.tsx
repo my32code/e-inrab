@@ -220,7 +220,7 @@ export function MonCompte() {
           amount: commande.quantite * commande.prix_unitaire,
         description: `Commande_${commande.id}`,
         currency: { iso: 'XOF' },
-        webhook_url: `${import.meta.env.VITE_API_URL}/api/payment/webhook`,
+        webhook_url: `import.meta.env.VITE_BACKEND_HOST/api/payment/webhook`,
         custom_metadata: {
           commande_id: commande.id,
           localStorageData: commandeData // Inclure les données du localStorage
@@ -313,7 +313,7 @@ export function MonCompte() {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/service-requests`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/service-requests`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -336,7 +336,7 @@ export function MonCompte() {
   const fetchCommandes = async () => {
     try {
       // Récupérer les commandes en BDD
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/commandes`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/commandes`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -350,7 +350,7 @@ export function MonCompte() {
       const commandesBDD = data.data;
 
       // Récupérer les commandes en attente
-      const attenteResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/commandes/attente`, {
+      const attenteResponse = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/commandes/attente`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -376,7 +376,7 @@ export function MonCompte() {
   const fetchDocuments = async () => {
     try {
       console.log('Début de la récupération des documents...');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/documents/user`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/documents/user`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -394,7 +394,7 @@ export function MonCompte() {
       const documentsWithStatus = await Promise.all(data.data.map(async (doc: Document) => {
         if (doc.type_document === 'service' && doc.demande_id) {
           try {
-            const serviceResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/service-requests/${doc.demande_id}`, {
+            const serviceResponse = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/service-requests/${doc.demande_id}`, {
               headers: {
                 'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
               }
@@ -419,7 +419,7 @@ export function MonCompte() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/notifications`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -439,7 +439,7 @@ export function MonCompte() {
 
   const handleProfileUpdate = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/update-profile`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/auth/update-profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -473,7 +473,7 @@ export function MonCompte() {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/change-password`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/auth/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -518,7 +518,7 @@ export function MonCompte() {
         source: documentData.document_demande_id ? 'documents_demandes' : 'documents'
       });
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/documents/download/${documentId}`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/documents/download/${documentId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -555,7 +555,7 @@ export function MonCompte() {
   const handleGetFacture = async (commande: Commande) => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/factures/get`,
+        `import.meta.env.VITE_BACKEND_HOST/api/factures/get`,
         {
           method: "POST",
           headers: {
@@ -606,7 +606,7 @@ export function MonCompte() {
         let commandeData;
         if (type === 'commande') {
             // Récupérer les détails de la commande depuis la BDD
-            const commandeResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/commandes/${id}`, {
+            const commandeResponse = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/commandes/${id}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
                 }
@@ -620,7 +620,7 @@ export function MonCompte() {
             commandeData = commandeResult.data;
         }
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/factures/generate`, {
+        const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/factures/generate`, {
             method: "POST",
             headers: { 
                 "Content-Type": "application/json",
@@ -658,7 +658,7 @@ export function MonCompte() {
         else if (billCommande) {
             try {
                 // 1. Transférer la commande vers la BDD
-                const transferResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/commandes/transferer`, {
+                const transferResponse = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/commandes/transferer`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -718,7 +718,7 @@ export function MonCompte() {
 
   const markNotificationAsRead = async (id: number) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${id}/read`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/notifications/${id}/read`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
@@ -742,7 +742,7 @@ export function MonCompte() {
 
   const deleteNotification = async (id: number) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${id}`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/notifications/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
@@ -763,7 +763,7 @@ export function MonCompte() {
 
   const handleDeleteCommande = async (commandeId: string) => {
     try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/commandes/${commandeId}`, {
+        const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/commandes/${commandeId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
@@ -788,7 +788,7 @@ export function MonCompte() {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/service-requests/${requestId}`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/service-requests/${requestId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
@@ -1206,7 +1206,7 @@ export function MonCompte() {
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 try {
-                                  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/service-requests/${doc.demande_id}`, {
+                                  const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/service-requests/${doc.demande_id}`, {
                                     headers: {
                                       'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
                                     }
