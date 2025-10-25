@@ -1,4 +1,7 @@
 // client/src/services/auth.ts
+console.log('=== DEBUG VARIABLES ===');
+console.log('VITE_BACKEND_HOST:', import.meta.env.VITE_BACKEND_HOST);
+console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_HOST;
 
