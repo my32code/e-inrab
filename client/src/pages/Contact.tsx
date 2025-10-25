@@ -43,7 +43,7 @@ export function Contact() {
 
   const onSubmit = async (data: ContactFormData) => {
     try {
-      const response = await fetch('${import.meta.env.VITE_BACKEND_HOST}/api/notifications/contact', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/notifications/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
