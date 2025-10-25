@@ -80,7 +80,7 @@ export function Catalogue() {
         params.append('search', searchTerm);
       }
 
-      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/produits?${params.toString()}`);
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/produits?${params.toString()}`);
       
       if (!response.ok) {
         throw new Error('Erreur lors de la récupération des produits');
