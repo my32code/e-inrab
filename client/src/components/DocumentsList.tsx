@@ -38,7 +38,7 @@ export function DocumentsList({ type, referenceId, onClose }: DocumentsListProps
   const fetchDocuments = async () => {
     try {
       const paramName = type === 'commande' ? 'commandeId' : 'demandeId';
-      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/documents/get?${paramName}=${referenceId}`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/admin/documents/get?${paramName}=${referenceId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -86,7 +86,7 @@ export function DocumentsList({ type, referenceId, onClose }: DocumentsListProps
         fileName: selectedFile.name
       });
 
-      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/documents/upload`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/admin/documents/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
@@ -121,7 +121,7 @@ export function DocumentsList({ type, referenceId, onClose }: DocumentsListProps
         source: 'documents'
       });
   
-      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/documents/${documentId}/download`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/admin/documents/${documentId}/download`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
