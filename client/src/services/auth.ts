@@ -1,5 +1,7 @@
-// client/src/services/auth.ts
-const API_BASE_URL = 'https://serveur-production-59e9.up.railway.app';
+// AJOUTEZ CE DEBUG AU DÉBUT DU FICHIER
+console.log('=== AUTH SERVICE DEBUG ===');
+console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+console.log('Toutes les variables env:', import.meta.env);
 
 export const register = async (userData: {
     nom: string;
@@ -7,7 +9,7 @@ export const register = async (userData: {
     mot_de_passe: string;
     role: string;
 }) => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
