@@ -25,7 +25,7 @@ export function DocumentsList() {
 
     const fetchDocuments = async () => {
         try {
-            const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/documents`, {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/admin/documents`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
                 }
@@ -61,7 +61,7 @@ export function DocumentsList() {
                 source: 'documents'
             });
 
-            const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/documents/${documentId}/download`, {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/admin/documents/${documentId}/download`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
                 }
@@ -93,7 +93,7 @@ export function DocumentsList() {
 
         try {
             const documentId = doc.document_demande_id || doc.id;
-            const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/documents/${documentId}`, {
+            const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/admin/documents/${documentId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
