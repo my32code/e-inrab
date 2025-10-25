@@ -38,7 +38,7 @@ export function CommandesList() {
 
   const fetchCommandes = async () => {
     try {
-      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/commandes`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/admin/commandes`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -60,7 +60,7 @@ export function CommandesList() {
 
   const handleStatusChange = async (commandeId: string, newStatus: string) => {
     try {
-      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/commandes/${commandeId}/status`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/admin/commandes/${commandeId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +95,7 @@ export function CommandesList() {
     formData.append('commandeId', selectedCommande.id.toString());
 
     try {
-      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/documents/upload`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/admin/documents/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
