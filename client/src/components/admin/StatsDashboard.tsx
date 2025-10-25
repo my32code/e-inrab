@@ -55,9 +55,9 @@ export function StatsDashboard() {
       };
 
       const [servicesRes, ordersRes, transactionsRes] = await Promise.all([
-        fetch(`import.meta.env.VITE_BACKEND_HOST/api/stats/services?annee=${selectedYear}${selectedMonth ? `&mois=${selectedMonth}` : ''}`, { headers }),
-        fetch(`import.meta.env.VITE_BACKEND_HOST/api/stats/orders?annee=${selectedYear}${selectedMonth ? `&mois=${selectedMonth}` : ''}`, { headers }),
-        fetch(`import.meta.env.VITE_BACKEND_HOST/api/stats/transactions?annee=${selectedYear}${selectedMonth ? `&mois=${selectedMonth}` : ''}`, { headers })
+        fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/stats/services?annee=${selectedYear}${selectedMonth ? `&mois=${selectedMonth}` : ''}`, { headers }),
+        fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/stats/orders?annee=${selectedYear}${selectedMonth ? `&mois=${selectedMonth}` : ''}`, { headers }),
+        fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/stats/transactions?annee=${selectedYear}${selectedMonth ? `&mois=${selectedMonth}` : ''}`, { headers })
       ]);
 
       if (!servicesRes.ok || !ordersRes.ok || !transactionsRes.ok) {
