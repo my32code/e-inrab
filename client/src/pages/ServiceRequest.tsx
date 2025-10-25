@@ -49,7 +49,7 @@ export function ServiceRequest() {
         formDataToSend.append('documents', file);
       });
 
-      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/service-requests`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/service-requests`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
