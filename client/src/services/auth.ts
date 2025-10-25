@@ -1,28 +1,18 @@
 // client/src/services/auth.ts
-console.log('=== DEBUG VARIABLES ===');
-console.log('VITE_BACKEND_HOST:', import.meta.env.VITE_BACKEND_HOST);
-console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
-
-const API_BASE_URL = import.meta.env.VITE_BACKEND_HOST;
-
 export const register = async (userData: {
     nom: string;
     email: string;
     mot_de_passe: string;
     role: string;
-}) => {
-    console.log('URL utilisée:', `${API_BASE_URL}/api/auth/register`);
-    
-    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
+  }) => {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
     });
     if (!response.ok) throw new Error(await response.text());
     return response.json();
-};
-
-
+  };
 
 export const login = async (credentials: {
   email: string;
