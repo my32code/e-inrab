@@ -27,7 +27,7 @@ export function StocksList() {
 
   const fetchProduits = async () => {
     try {
-      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/produits`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/admin/produits`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -57,7 +57,7 @@ export function StocksList() {
 
   const updateStock = async (produitId: number, newStock: number) => {
     try {
-      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/produits/${produitId}/stock`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/admin/produits/${produitId}/stock`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
