@@ -60,7 +60,7 @@ export function ServiceRequestsList() {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/service-requests`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/service-requests`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -107,7 +107,7 @@ export function ServiceRequestsList() {
   const updateRequestStatus = async (requestId: number, newStatus: string) => {
     try {
       const frontendStatus = statusMap[newStatus as DbStatus];
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/service-requests/${requestId}/status`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/service-requests/${requestId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ export function ServiceRequestsList() {
 
   const handleGenerateFacture = async (requestId: number) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/factures/generate`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/admin/factures/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
