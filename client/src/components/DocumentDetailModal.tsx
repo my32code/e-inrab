@@ -47,7 +47,7 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
         return;
       }
   
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/documents?${paramName}=${referenceId}`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/documents?${paramName}=${referenceId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -102,7 +102,7 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
     // Récupérer l'ID de la commande ou de la demande associée
     try {
       const paramName = document.type_document === 'commande' ? 'commandeId' : 'demandeId';
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/documents/user?${paramName}=${document.id}`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/documents/user?${paramName}=${document.id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
@@ -129,7 +129,7 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
       formData.append('categorie', 'complementaire');
 
       // Upload du document
-      const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/documents/upload`, {
+      const uploadResponse = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/documents/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
@@ -164,7 +164,7 @@ export function DocumentDetailModal({ document, isAdmin, onClose }: DocumentDeta
         source: 'documents'
       });
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/documents/download/${documentId}`, {
+      const response = await fetch(`import.meta.env.VITE_BACKEND_HOST/api/documents/download/${documentId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         }
