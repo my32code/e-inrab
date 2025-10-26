@@ -139,7 +139,7 @@ export function Catalogue() {
         ? produit.prix_numerique 
         : parseFloat(produit.prix.replace(/[^0-9.-]+/g, ''));
       
-      const response = await fetch('${import.meta.env.VITE_BACKEND_HOST}/api/commandes', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/commandes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
