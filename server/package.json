@@ -29,6 +29,7 @@
     "pdf-lib": "^1.17.1",
     "pg": "^8.15.6",
     "puppeteer": "^24.8.2",
+    "resend": "^6.2.2",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
