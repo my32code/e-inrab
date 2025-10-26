@@ -48,7 +48,7 @@ export const sendEmailNotification = async (destinataires: string[], titre: stri
     console.log('Message:', messageHtml);
 
      const { data, error } = await resend.emails.send({
-      from: 'INRAB <notifications@eservicesinrab.resend.com>', // Resend fournit cet email de test
+      from: 'INRAB <onboarding@resend.dev>', // Resend fournit cet email de test
       to: destinataires,
       subject: titre,
       html: `
