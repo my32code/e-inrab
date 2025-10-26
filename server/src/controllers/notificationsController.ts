@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { pool } from '../services/db';
-import nodemailer from 'nodemailer';
+// import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -12,13 +13,14 @@ interface AuthenticatedRequest extends Request {
 }
 
 // Configuration de l'email
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  }
-});
+// const transporter = nodemailer.createTransport({
+//   service: 'gmail',
+//   auth: {
+//     user: process.env.EMAIL_USER,
+//     pass: process.env.EMAIL_PASSWORD
+//   }
+// });
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Récupérer les notifications de l'utilisateur
 export const getNotifications = async (req: AuthenticatedRequest, res: Response) => {
@@ -72,21 +74,20 @@ export const markAsRead = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 // Envoyer une notification par email
-export const sendEmailNotification = async (destinataires: string[], titre: string, message: string) => {
+export const sendEmailNotification = async (destinataires: string[], titre: string, messageHtml: string) => {
   try {
-    console.log('Envoi d\'email de notification à:', destinataires);
+    console.log('📨 Envoi email via Resend à:', destinataires);
     console.log('Titre:', titre);
-    console.log('Message:', message);
+    console.log('Message:', messageHtml);
 
-    // Envoyer l'email
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+     const { data, error } = await resend.emails.send({
+      from: 'INRAB <onboarding@resend.dev>', // Resend fournit cet email de test
       to: destinataires,
       subject: titre,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2F855A;">${titre}</h2>
-          <p style="color: #4A5568;">${message}</p>
+          <div style="color: #4A5568;">${messageHtml}</div>
           <div style="margin-top: 20px; padding: 15px; background-color: #F7FAFC; border-radius: 5px;">
             <p style="margin: 0; color: #718096;">INRAB - Institut National de Recherche Agricole du Bénin</p>
           </div>
@@ -94,9 +95,16 @@ export const sendEmailNotification = async (destinataires: string[], titre: stri
       `
     });
 
-    console.log('Email de notification envoyé avec succès');
+    if (error) {
+      console.error('❌ Erreur Resend:', error);
+      throw error;
+    }
+
+    console.log('✅ Email envoyé via Resend avec succès:', data?.id);
+    
   } catch (error) {
-    console.error('Erreur lors de l\'envoi de l\'email de notification:', error);
+    console.error('❌ Erreur lors de l\'envoi de l\'email de notification:', error);
+    throw error; // Important pour que sendContactEmail capte l'erreur
   }
 };
 
