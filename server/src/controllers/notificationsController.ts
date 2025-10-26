@@ -141,7 +141,7 @@ export const sendContactEmail = async (req: Request, res: Response) => {
 
     // Envoyer l'email à l'admin
     await sendEmailNotification(
-      ['adilehouprince@gmail.com'],
+      ['princeadilehou@gmail.com'],
       `Nouveau message`,
       `
         <p><strong>De :</strong> ${firstName} ${lastName} (${email})</p>
