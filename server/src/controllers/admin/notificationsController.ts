@@ -44,11 +44,6 @@ export const sendEmailNotification = async (destinataires: string[], titre: stri
     console.log('Titre:', titre);
     console.log('Message:', messageHtml);
 
-    // Initialiser Mailjet
-    const mailjet = require('node-mailjet').connect(
-      process.env.MJ_APIKEY_PUBLIC,
-      process.env.MJ_APIKEY_PRIVATE
-    );
 
     // Préparer les destinataires pour Mailjet
     const toEmails = destinataires.map(email => ({
@@ -56,34 +51,48 @@ export const sendEmailNotification = async (destinataires: string[], titre: stri
       Name: email.split('@')[0] // Utilise le nom avant @ comme nom d'affichage
     }));
 
-    const request = mailjet.post('send', { version: 'v3.1' }).request({
-      Messages: [
-        {
-          From: {
-            Email: process.env.MJ_SENDER_EMAIL || 'inrab@votredomaine.bj',
-            Name: 'INRAB',
-          },
-          To: toEmails,
-          Subject: titre,
-          HTMLPart: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #2F855A;">${titre}</h2>
-              <div style="color: #4A5568;">${messageHtml}</div>
-              <div style="margin-top: 20px; padding: 15px; background-color: #F7FAFC; border-radius: 5px;">
-                <p style="margin: 0; color: #718096;">INRAB - Institut National de Recherche Agricole du Bénin</p>
+    const response = await fetch('https://api.mailjet.com/v3.1/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ' + Buffer.from(
+          `${process.env.MJ_APIKEY_PUBLIC}:${process.env.MJ_APIKEY_PRIVATE}`
+        ).toString('base64')
+      },
+      body: JSON.stringify({
+        Messages: [
+          {
+            From: {
+              Email: process.env.MJ_SENDER_EMAIL || 'princeadilehou@gmail.com',
+              Name: 'INRAB',
+            },
+            To: toEmails,
+            Subject: titre,
+            HTMLPart: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #2F855A;">${titre}</h2>
+                <div style="color: #4A5568;">${messageHtml}</div>
+                <div style="margin-top: 20px; padding: 15px; background-color: #F7FAFC; border-radius: 5px;">
+                  <p style="margin: 0; color: #718096;">INRAB - Institut National de Recherche Agricole du Bénin</p>
+                </div>
               </div>
-            </div>
-          `,
-          TextPart: `Notification INRAB: ${titre}\n\n${messageHtml.replace(/<[^>]*>/g, '')}`
-        },
-      ],
+            `,
+            TextPart: `Notification INRAB: ${titre}\n\n${messageHtml.replace(/<[^>]*>/g, '')}`
+          },
+        ],
+      }),
     });
 
-    const result = await request;
-    
-    console.log('✅ Email envoyé via Mailjet avec succès:', result.body.Messages[0]?.Status);
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('❌ Erreur Mailjet API:', errorData);
+      throw new Error(`Mailjet API error: ${response.status}`);
+    }
 
-    return result.body;
+    const result = await response.json();
+    console.log('✅ Email envoyé via Mailjet avec succès:', result);
+    
+    return result;
     
   } catch (error) {
     console.error('❌ Erreur lors de l\'envoi de l\'email de notification:', error);
