@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { pool } from '../services/db';
 // import nodemailer from 'nodemailer';
 // import { Resend } from 'resend';
-import * as Mailjet from 'node-mailjet';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -82,9 +81,9 @@ export const sendEmailNotification = async (destinataires: string[], titre: stri
     console.log('Message:', messageHtml);
 
     // Initialiser Mailjet
-    const mailjet = Mailjet.apiConnect(
-      process.env.MJ_APIKEY_PUBLIC!,
-      process.env.MJ_APIKEY_PRIVATE!
+    const mailjet = require('node-mailjet').connect(
+      process.env.MJ_APIKEY_PUBLIC,
+      process.env.MJ_APIKEY_PRIVATE
     );
 
     // Préparer les destinataires pour Mailjet
@@ -97,7 +96,7 @@ export const sendEmailNotification = async (destinataires: string[], titre: stri
       Messages: [
         {
           From: {
-            Email: process.env.MJ_SENDER_EMAIL,
+            Email: process.env.MJ_SENDER_EMAIL || 'inrab@votredomaine.bj',
             Name: 'INRAB',
           },
           To: toEmails,

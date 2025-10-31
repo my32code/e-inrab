@@ -37,7 +37,6 @@
 //   }
 // };
 
-import * as Mailjet from 'node-mailjet';
 
 export const sendEmailNotification = async (destinataires: string[], titre: string, messageHtml: string) => {
   try {
@@ -46,9 +45,9 @@ export const sendEmailNotification = async (destinataires: string[], titre: stri
     console.log('Message:', messageHtml);
 
     // Initialiser Mailjet
-    const mailjet = Mailjet.apiConnect(
-      process.env.MJ_APIKEY_PUBLIC!,
-      process.env.MJ_APIKEY_PRIVATE!
+    const mailjet = require('node-mailjet').connect(
+      process.env.MJ_APIKEY_PUBLIC,
+      process.env.MJ_APIKEY_PRIVATE
     );
 
     // Préparer les destinataires pour Mailjet
