@@ -21,7 +21,7 @@ interface AuthenticatedRequest extends Request {
 //     pass: process.env.EMAIL_PASSWORD
 //   }
 // });
-const resend = new Resend(process.env.RESEND_API_KEY);
+// const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Récupérer les notifications de l'utilisateur
 export const getNotifications = async (req: AuthenticatedRequest, res: Response) => {
@@ -161,7 +161,7 @@ export const sendContactEmail = async (req: Request, res: Response) => {
 
     // Envoyer l'email à l'admin
     await sendEmailNotification(
-      ['adilehouprince@gmail.com'],
+      ['princeadilehou@gmail.com'],
       `Nouveau message`,
       `
         <p><strong>De :</strong> ${firstName} ${lastName} (${email})</p>
