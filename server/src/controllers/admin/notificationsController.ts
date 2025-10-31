@@ -37,40 +37,57 @@
 //   }
 // };
 
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import * as Mailjet from 'node-mailjet';
 
 export const sendEmailNotification = async (destinataires: string[], titre: string, messageHtml: string) => {
   try {
-    console.log('📨 Envoi email via Resend à:', destinataires);
+    console.log('📨 Envoi email via Mailjet à:', destinataires);
     console.log('Titre:', titre);
     console.log('Message:', messageHtml);
 
-     const { data, error } = await resend.emails.send({
-      from: 'INRAB <onboarding@resend.dev>', // Resend fournit cet email de test
-      to: destinataires,
-      subject: titre,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2F855A;">${titre}</h2>
-          <div style="color: #4A5568;">${messageHtml}</div>
-          <div style="margin-top: 20px; padding: 15px; background-color: #F7FAFC; border-radius: 5px;">
-            <p style="margin: 0; color: #718096;">INRAB - Institut National de Recherche Agricole du Bénin</p>
-          </div>
-        </div>
-      `
+    // Initialiser Mailjet
+    const mailjet = require('node-mailjet').connect(
+      process.env.MJ_APIKEY_PUBLIC,
+      process.env.MJ_APIKEY_PRIVATE
+    );
+
+    // Préparer les destinataires pour Mailjet
+    const toEmails = destinataires.map(email => ({
+      Email: email,
+      Name: email.split('@')[0] // Utilise le nom avant @ comme nom d'affichage
+    }));
+
+    const request = mailjet.post('send', { version: 'v3.1' }).request({
+      Messages: [
+        {
+          From: {
+            Email: process.env.MJ_SENDER_EMAIL || 'inrab@votredomaine.bj',
+            Name: 'INRAB',
+          },
+          To: toEmails,
+          Subject: titre,
+          HTMLPart: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #2F855A;">${titre}</h2>
+              <div style="color: #4A5568;">${messageHtml}</div>
+              <div style="margin-top: 20px; padding: 15px; background-color: #F7FAFC; border-radius: 5px;">
+                <p style="margin: 0; color: #718096;">INRAB - Institut National de Recherche Agricole du Bénin</p>
+              </div>
+            </div>
+          `,
+          TextPart: `Notification INRAB: ${titre}\n\n${messageHtml.replace(/<[^>]*>/g, '')}`
+        },
+      ],
     });
 
-    if (error) {
-      console.error('❌ Erreur Resend:', error);
-      throw error;
-    }
+    const result = await request;
+    
+    console.log('✅ Email envoyé via Mailjet avec succès:', result.body.Messages[0]?.Status);
 
-    console.log('✅ Email envoyé via Resend avec succès:', data?.id);
+    return result.body;
     
   } catch (error) {
     console.error('❌ Erreur lors de l\'envoi de l\'email de notification:', error);
-    throw error; // Important pour que sendContactEmail capte l'erreur
+    throw error;
   }
 };
