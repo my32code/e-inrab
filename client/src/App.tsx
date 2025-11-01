@@ -9,6 +9,7 @@ import { Contact } from './pages/Contact';
 import { Catalogue } from './pages/Catalogue';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { ForgotPassword } from './pages/ForgotPassword';
 import { MonCompte } from './pages/MonCompte';
 import { Admin } from './pages/Admin';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -26,6 +27,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/services" element={
             
             <Services />

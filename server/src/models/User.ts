@@ -89,22 +89,24 @@ export const findUserBySessionId = async (sessionId: string): Promise<User | nul
 
 export const updateUserPassword = async (userId: number, currentPassword: string, newPassword: string): Promise<void> => {
   try {
-    // Récupérer le mot de passe actuel
-    const [user] = await pool.execute<RowDataPacket[]>(
-      'SELECT mot_de_passe FROM utilisateurs WHERE id = ?',
-      [userId]
-    );
+    if (currentPassword !== '') {
+      // Récupérer le mot de passe actuel
+      const [user] = await pool.execute<RowDataPacket[]>(
+        'SELECT mot_de_passe FROM utilisateurs WHERE id = ?',
+        [userId]
+      );
+
+      if (!user[0]) {
+        throw new Error('Utilisateur non trouvé');
+      }
+
+      // Vérifier le mot de passe actuel
+      const isValidPassword = await bcrypt.compare(currentPassword, user[0].mot_de_passe);
+      if (!isValidPassword) {
+        throw new Error('Mot de passe actuel incorrect');
+      }
+    }
     
-    if (!user[0]) {
-      throw new Error('Utilisateur non trouvé');
-    }
-
-    // Vérifier le mot de passe actuel
-    const isValidPassword = await bcrypt.compare(currentPassword, user[0].mot_de_passe);
-    if (!isValidPassword) {
-      throw new Error('Mot de passe actuel incorrect');
-    }
-
     // Hasher le nouveau mot de passe
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 

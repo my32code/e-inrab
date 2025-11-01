@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as bcrypt from 'bcryptjs';
 import { createUser, findUserByEmail, updateUserSession, findUserBySessionId, clearUserSession, updateUserProfile, updateUserPassword } from '../models/User';
+import { sendEmailNotification } from '../controllers/notificationsController';
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -217,6 +218,102 @@ export const changePassword = async (req: Request, res: Response) => {
       return res.status(400).json({ error: error.message });
     }
     console.error('Erreur changement mot de passe:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+export const requestPasswordReset = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'L\'email est requis' });
+    }
+
+    // Vérifier si l'utilisateur existe
+    const user = await findUserByEmail(email);
+    if (!user) {
+      // Pour la sécurité, on ne révèle pas si l'email existe
+      return res.json({ 
+        message: 'Si cet email existe, vous recevrez un code de vérification' 
+      });
+    }
+
+    // Envoyer un email avec un code simple (ou juste une notification)
+    await sendEmailNotification(
+      [email],
+      'Réinitialisation de mot de passe - INRAB',
+      `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2F855A;">Réinitialisation de mot de passe</h2>
+          <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+          <p>Veuillez retourner sur l'application et procéder à la réinitialisation.</p>
+          <p><strong>Si vous n'avez pas fait cette demande, ignorez cet email.</strong></p>
+          <div style="margin-top: 20px; padding: 15px; background-color: #F7FAFC; border-radius: 5px;">
+            <p style="margin: 0; color: #718096;">INRAB - Institut National de Recherche Agricole du Bénin</p>
+          </div>
+        </div>
+      `
+    );
+
+    res.json({ 
+      message: 'Si cet email existe, vous pouvez maintenant réinitialiser votre mot de passe',
+      email: email // On retourne l'email pour l'étape suivante
+    });
+  } catch (error) {
+    console.error('Erreur demande réinitialisation:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { email, newPassword, confirmPassword } = req.body;
+
+    if (!email || !newPassword || !confirmPassword) {
+      return res.status(400).json({ error: 'Tous les champs sont requis' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ error: 'Les mots de passe ne correspondent pas' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 8 caractères' });
+    }
+
+    // Récupérer l'utilisateur 
+    const user = await findUserByEmail(email);
+
+    // Vérification que l'utilisateur existe et a un ID
+    if (!user || !user.id) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+    // Utiliser votre fonction existante updateUserPassword
+    // En passant une chaîne vide comme ancien mot de passe pour bypass
+    await updateUserPassword(user.id, '', newPassword);
+
+    // Envoyer un email de confirmation
+    await sendEmailNotification(
+      [email],
+      'Mot de passe mis à jour - INRAB',
+      `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2F855A;">Mot de passe mis à jour</h2>
+          <p>Votre mot de passe a été modifié avec succès.</p>
+          <p>Si vous n'avez pas effectué cette modification, veuillez contacter immédiatement l'administrateur.</p>
+          <div style="margin-top: 20px; padding: 15px; background-color: #F7FAFC; border-radius: 5px;">
+            <p style="margin: 0; color: #718096;">INRAB - Institut National de Recherche Agricole du Bénin</p>
+          </div>
+        </div>
+      `
+    );
+
+    res.json({ 
+      message: 'Mot de passe mis à jour avec succès' 
+    });
+  } catch (error: any) {
+    console.error('Erreur réinitialisation mot de passe:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 };

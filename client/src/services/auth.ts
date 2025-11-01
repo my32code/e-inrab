@@ -150,3 +150,45 @@ export const changePassword = async (currentPassword: string, newPassword: strin
     throw error;
   }
 };
+
+export const requestPasswordReset = async (email: string): Promise<{ message: string; email?: string }> => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Erreur lors de la demande de réinitialisation');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Erreur demande réinitialisation:', error);
+    throw error;
+  }
+};
+
+export const resetPassword = async (email: string, newPassword: string, confirmPassword: string): Promise<{ message: string }> => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_HOST}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, newPassword, confirmPassword })
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Erreur lors de la réinitialisation du mot de passe');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Erreur réinitialisation mot de passe:', error);
+    throw error;
+  }
+};

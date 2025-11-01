@@ -133,15 +133,15 @@ export function Register() {
               )}
           </div>
 
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={isSubmitting}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="submit"
+            disabled={isSubmitting}
             className="auth-container button"
-            >
-              {isSubmitting ? 'Inscription...' : "S'inscrire"}
-            </motion.button>
+          >
+            {isSubmitting ? 'Inscription...' : "S'inscrire"}
+          </motion.button>
 
           <div className="text-center">
             <Link to="/login" className="link">

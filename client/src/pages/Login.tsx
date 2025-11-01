@@ -54,6 +54,10 @@ export function Login() {
     }
   };
 
+   const handleForgotPassword = () => {
+    navigate('/forgot-password');
+  };
+
   return (
     <div className="auth-background">
       <ThemeToggle />
@@ -95,6 +99,16 @@ export function Login() {
               value={formData.mot_de_passe}
               onChange={handleChange}
             />
+          </div>
+
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              Mot de passe oublié ?
+            </button>
           </div>
 
           <button
