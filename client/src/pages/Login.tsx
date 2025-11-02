@@ -101,11 +101,11 @@ export function Login() {
             />
           </div>
 
-          <div className="text-right">
+          <div className="text-center">
             <button
               type="button"
               onClick={handleForgotPassword}
-              className="text-center text-gray-600 mb-6"
+              className="link"
             >
               Mot de passe oublié ?
             </button>
