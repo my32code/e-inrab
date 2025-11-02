@@ -54,9 +54,6 @@ export function Login() {
     }
   };
 
-   const handleForgotPassword = () => {
-    navigate('/forgot-password');
-  };
 
   return (
     <div className="auth-background">
@@ -101,15 +98,11 @@ export function Login() {
             />
           </div>
 
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={handleForgotPassword}
-              className="link"
-            >
+          <p className="text-center text-gray-600 mb-6">
+            <Link to="/forgot-password" className="link">
               Mot de passe oublié ?
-            </button>
-          </div>
+            </Link>
+          </p>
 
           <button
             type="submit"
