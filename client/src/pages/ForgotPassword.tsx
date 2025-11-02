@@ -110,7 +110,7 @@ export function ForgotPassword() {
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
-                {isLoading ? 'Envoi en cours...' : 'Envoyer les instructions'}
+                {isLoading ? 'Envoi en cours...' : 'Continuer'}
               </motion.button>
             </form>
           </>

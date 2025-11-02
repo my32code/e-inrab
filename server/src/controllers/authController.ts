@@ -235,7 +235,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     if (!user) {
       // Pour la sécurité, on ne révèle pas si l'email existe
       return res.json({ 
-        message: 'Si cet email existe, vous recevrez un code de vérification' 
+        message: '' 
       });
     }
 
@@ -257,7 +257,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     );
 
     res.json({ 
-      message: 'Si cet email existe, vous pouvez maintenant réinitialiser votre mot de passe',
+      message: 'email de réinitialisation envoyé',
       email: email // On retourne l'email pour l'étape suivante
     });
   } catch (error) {

@@ -105,7 +105,7 @@ export function Login() {
             <button
               type="button"
               onClick={handleForgotPassword}
-              className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+              className="text-center text-gray-600 mb-6"
             >
               Mot de passe oublié ?
             </button>
