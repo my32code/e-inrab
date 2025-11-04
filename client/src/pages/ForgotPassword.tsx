@@ -79,127 +79,111 @@ export function ForgotPassword() {
     }
   };
 
+  let content;
+  
+  if (step === 'request') {
+    content = (
+      <div>
+        <h2 className="shine-text">Mot de passe oublié</h2>
+        <p className="text-center text-gray-600 mb-6">
+          Entrez votre adresse email pour recevoir les instructions de réinitialisation
+        </p>
+        <form onSubmit={handleRequestReset} className="space-y-6">
+          <div>
+            <label htmlFor="email" className="sr-only">Adresse email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              className="auth-container input"
+              placeholder="Adresse email"
+              value={email}
+              onChange={handleChange}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`auth-container button pulse w-full ${
+              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            {isLoading ? 'Envoi en cours...' : 'Continuer'}
+          </button>
+        </form>
+        <div className="text-center mt-6">
+          <Link to="/login" className="link">Retour à la connexion</Link>
+        </div>
+      </div>
+    );
+  }
+  
+  if (step === 'reset') {
+    content = (
+      <div>
+        <h2 className="shine-text">Réinitialiser le mot de passe</h2>
+        <p className="text-center text-gray-600 mb-6">
+          Créez votre nouveau mot de passe pour <strong>{email}</strong>
+        </p>
+        <form onSubmit={handleResetPassword} className="space-y-6">
+          <div>
+            <label htmlFor="newPassword" className="sr-only">Nouveau mot de passe</label>
+            <input
+              id="newPassword"
+              name="newPassword"
+              type="password"
+              required
+              className="auth-container input"
+              placeholder="Nouveau mot de passe"
+              value={formData.newPassword}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <label htmlFor="confirmPassword" className="sr-only">Confirmer le mot de passe</label>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              required
+              className="auth-container input"
+              placeholder="Confirmer le mot de passe"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="flex space-x-4">
+            <button
+              type="button"
+              onClick={() => setStep('request')}
+              className="auth-container button bg-gray-500 hover:bg-gray-600 flex-1"
+            >
+              Retour
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`auth-container button pulse flex-1 ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isLoading ? 'Réinitialisation...' : 'Réinitialiser'}
+            </button>
+          </div>
+        </form>
+        <div className="text-center mt-6">
+          <Link to="/login" className="link">Retour à la connexion</Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="auth-background">
       <ThemeToggle />
       <div className="auth-container glass-effect card-3d">
-        
-        {step === 'request' ? (
-          // ✅ ÉTAPE 1: Demande de réinitialisation
-          <div>
-            <h2 className="shine-text">Mot de passe oublié</h2>
-            <p className="text-center text-gray-600 mb-6">
-              Entrez votre adresse email pour recevoir les instructions de réinitialisation
-            </p>
-            <form onSubmit={handleRequestReset} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="sr-only">
-                  Adresse email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  className="auth-container input"
-                  placeholder="Adresse email"
-                  value={email}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                disabled={isLoading}
-                className={`auth-container button pulse w-full ${
-                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                {isLoading ? 'Envoi en cours...' : 'Continuer'}
-              </motion.button>
-            </form>
-
-            <div className="text-center mt-6">
-              <Link to="/login" className="link">
-                Retour à la connexion
-              </Link>
-            </div>
-          </div>
-        ) : (
-          // ✅ ÉTAPE 2: Réinitialisation du mot de passe
-          <div>
-            <h2 className="shine-text">Réinitialiser le mot de passe</h2>
-            <p className="text-center text-gray-600 mb-6">
-              Créez votre nouveau mot de passe pour <strong>{email}</strong>
-            </p>
-            <form onSubmit={handleResetPassword} className="space-y-6">
-              <div>
-                <label htmlFor="newPassword" className="sr-only">
-                  Nouveau mot de passe
-                </label>
-                <input
-                  id="newPassword"
-                  name="newPassword"
-                  type="password"
-                  required
-                  className="auth-container input"
-                  placeholder="Nouveau mot de passe"
-                  value={formData.newPassword}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="sr-only">
-                  Confirmer le mot de passe
-                </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  className="auth-container input"
-                  placeholder="Confirmer le mot de passe"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="flex space-x-4">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="button"
-                  onClick={() => setStep('request')}
-                  className="auth-container button bg-gray-500 hover:bg-gray-600 flex-1"
-                >
-                  Retour
-                </motion.button>
-                
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="submit"
-                  disabled={isLoading}
-                  className={`auth-container button pulse flex-1 ${
-                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {isLoading ? 'Réinitialisation...' : 'Réinitialiser'}
-                </motion.button>
-              </div>
-            </form>
-
-            <div className="text-center mt-6">
-              <Link to="/login" className="link">
-                Retour à la connexion
-              </Link>
-            </div>
-          </div>
-        )}
-        
+        {content}
       </div>
     </div>
   );
