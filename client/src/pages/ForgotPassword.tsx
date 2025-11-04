@@ -15,6 +15,7 @@ export function ForgotPassword() {
     confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     const urlEmail = searchParams.get('email');
     if (urlEmail) {
@@ -22,7 +23,7 @@ export function ForgotPassword() {
       setStep('reset'); // Passer directement à l'étape de réinitialisation
       console.log(`✅ Email pré-rempli depuis le lien: ${urlEmail}`);
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   // Étape 1: Demande de réinitialisation
   const handleRequestReset = async (e: React.FormEvent) => {
@@ -84,9 +85,9 @@ export function ForgotPassword() {
       <div className="auth-container glass-effect card-3d">
         
         {step === 'request' ? (
-          // ÉTAPE 1: Demande de réinitialisation
-          <>
-          <h2 className="shine-text">Mot de passe oublié</h2>
+          // ✅ ÉTAPE 1: Demande de réinitialisation
+          <div>
+            <h2 className="shine-text">Mot de passe oublié</h2>
             <p className="text-center text-gray-600 mb-6">
               Entrez votre adresse email pour recevoir les instructions de réinitialisation
             </p>
@@ -125,10 +126,11 @@ export function ForgotPassword() {
                 Retour à la connexion
               </Link>
             </div>
-          </>
+          </div>
         ) : (
-          // ÉTAPE 2: Réinitialisation du mot de passe
-          <>
+          // ✅ ÉTAPE 2: Réinitialisation du mot de passe
+          <div>
+            <h2 className="shine-text">Réinitialiser le mot de passe</h2>
             <p className="text-center text-gray-600 mb-6">
               Créez votre nouveau mot de passe pour <strong>{email}</strong>
             </p>
@@ -189,14 +191,15 @@ export function ForgotPassword() {
                 </motion.button>
               </div>
             </form>
-          </>
-        )}
 
-        <div className="text-center mt-6">
-          <Link to="/login" className="link">
-            Retour à la connexion
-          </Link>
-        </div>
+            <div className="text-center mt-6">
+              <Link to="/login" className="link">
+                Retour à la connexion
+              </Link>
+            </div>
+          </div>
+        )}
+        
       </div>
     </div>
   );
