@@ -32,7 +32,6 @@ export function ForgotPassword() {
     try {
       const response = await requestPasswordReset(email);
       toast.success(response.message);
-      setStep('reset'); // Passer à l'étape suivante
     } catch (error: any) {
       toast.error(error.message || 'Erreur lors de la demande');
     } finally {
@@ -83,13 +82,11 @@ export function ForgotPassword() {
     <div className="auth-background">
       <ThemeToggle />
       <div className="auth-container glass-effect card-3d">
-        <h2 className="shine-text">
-          {step === 'request' ? 'Mot de passe oublié' : 'Réinitialiser le mot de passe'}
-        </h2>
-
+        
         {step === 'request' ? (
           // ÉTAPE 1: Demande de réinitialisation
           <>
+          <h2 className="shine-text">Mot de passe oublié</h2>
             <p className="text-center text-gray-600 mb-6">
               Entrez votre adresse email pour recevoir les instructions de réinitialisation
             </p>
@@ -122,6 +119,12 @@ export function ForgotPassword() {
                 {isLoading ? 'Envoi en cours...' : 'Continuer'}
               </motion.button>
             </form>
+
+            <div className="text-center mt-6">
+              <Link to="/login" className="link">
+                Retour à la connexion
+              </Link>
+            </div>
           </>
         ) : (
           // ÉTAPE 2: Réinitialisation du mot de passe
