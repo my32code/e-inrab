@@ -245,9 +245,19 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
       'Réinitialisation de mot de passe - INRAB',
       `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2F855A;">Réinitialisation de mot de passe</h2>
+          
           <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
-          <p>Veuillez retourner sur l'application et procéder à la réinitialisation.</p>
+          <p>Cliquez sur le bouton ci-dessous pour accéder à la page de réinitialisation :</p>
+      
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.REACT_APP_API_URL}/forgot-password?email=${encodeURIComponent(email)}" 
+              style="background-color: #2F855A; color: white; padding: 12px 24px; 
+                      text-decoration: none; border-radius: 5px; display: inline-block;
+                      font-weight: bold;">
+              Réinitialiser mon mot de passe
+            </a>
+          </div>
+          
           <p><strong>Si vous n'avez pas fait cette demande, ignorez cet email.</strong></p>
           <div style="margin-top: 20px; padding: 15px; background-color: #F7FAFC; border-radius: 5px;">
             <p style="margin: 0; color: #718096;">INRAB - Institut National de Recherche Agricole du Bénin</p>
