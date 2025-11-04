@@ -256,6 +256,11 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
                       font-weight: bold;">
               Réinitialiser mon mot de passe
             </a>
+            <p>Ou copiez-collez ce lien dans votre navigateur :</p>
+            <p style="background-color: #F7FAFC; padding: 10px; border-radius: 5px; 
+                      word-break: break-all; font-family: monospace;">
+              ${process.env.REACT_APP_API_URL}/forgot-password?email=${encodeURIComponent(email)}
+            </p>
           </div>
           
           <p><strong>Si vous n'avez pas fait cette demande, ignorez cet email.</strong></p>

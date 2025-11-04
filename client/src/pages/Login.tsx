@@ -44,7 +44,7 @@ export function Login() {
         console.log('Redirecting to:', from);
         navigate(from, { replace: true });
       }
-      
+      8888
       toast.success('Connexion réussie !');
     } catch (error: any) {
       console.error('Login error:', error);

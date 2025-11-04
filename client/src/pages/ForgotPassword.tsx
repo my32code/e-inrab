@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import { requestPasswordReset, resetPassword } from '../services/auth';
@@ -7,6 +7,7 @@ import { ThemeToggle } from '../components/ThemeToggle';
 
 export function ForgotPassword() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState<'request' | 'reset'>('request');
   const [email, setEmail] = useState('');
   const [formData, setFormData] = useState({
@@ -14,6 +15,14 @@ export function ForgotPassword() {
     confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+    useEffect(() => {
+    const urlEmail = searchParams.get('email');
+    if (urlEmail) {
+      setEmail(urlEmail);
+      setStep('reset'); // Passer directement à l'étape de réinitialisation
+      console.log(`✅ Email pré-rempli depuis le lien: ${urlEmail}`);
+    }
+  }, [searchParams])
 
   // Étape 1: Demande de réinitialisation
   const handleRequestReset = async (e: React.FormEvent) => {
